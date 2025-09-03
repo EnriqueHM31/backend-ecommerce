@@ -1,12 +1,18 @@
 import { ModeloCompra } from "@/models/compra";
+import { CartItem } from "@/types/producto";
 import { Request, Response } from "express";
 
+interface Customer {
+    id: string;
+    name: string;
+    email: string;
+}
 
 export class CompraController {
 
     static async RealizarCompra(req: Request, res: Response) {
         try {
-            const { items, customer } = req.body;
+            const { items, customer }: { items: CartItem[], customer: Customer } = req.body;
 
             if (!items || items.length === 0) {
                 res.status(400).json({ success: false, error: "Carrito vacío" });
@@ -14,7 +20,7 @@ export class CompraController {
 
             // Validar items básicos
             for (const item of items) {
-                if (!item.product?.name || !item.configuration?.price || !item.quantity) {
+                if (!item.product.producto || !item.product.precio_base || !item.quantity) {
                     res.status(400).json({ success: false, error: "Item inválido en el carrito" });
                 }
             }

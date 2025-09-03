@@ -1,52 +1,34 @@
 export interface Producto {
-    id: number;
-    name: string;
-    price: number;
-    image: string;
-    description: string;
+    activo: number;
+    almacenamiento: string;
+    bateria: string;
+    camara: string;
+    categoria: string;
     color: string;
-    category: string;
+    conectividad: string;
+    created_at: string;
+    descripcion: string;
+    display: string;
+    id: number;
+    imagen_url: string;
+    marca: string;
+    precio_base: number;
+    procesador: string;
+    producto: string;
+    producto_id: number;
+    ram_especificacion: string;
+    ram_variante: string;
+    recomendado: number;
+    sistema_operativo: string;
+    sku: string;
     stock: number;
-    recommended: boolean;
-    variants: string[];
-    storage: string[];
-    specs: {
-        processor?: string;
-        ram?: string;
-        display?: string;
-        camera?: string;
-        color?: string;
-        image?: string;
-        battery?: string;
-        connectivity?: string;
-        os?: string;
-    };
-    configurations: ProductConfiguration[];
+    updated_at: string;
 }
 
-export interface ProductConfiguration {
-    id: string;
-    variant: string;
-    storage: string;
-    ram?: string;
-    price: number;
-    stock: number;
-    specs: {
-        processor?: string;
-        ram?: string;
-        display?: string;
-        camera?: string;
-        image?: string;
-        color?: string;
-        battery?: string;
-        connectivity?: string;
-        os?: string;
-    };
-}
+
 
 export interface CartItem {
     product: Producto;
-    configuration: ProductConfiguration;
     quantity: number;
 }
 

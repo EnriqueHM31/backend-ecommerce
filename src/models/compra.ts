@@ -14,37 +14,63 @@ export class ModeloCompra {
     static async RealizarCompra(items: CartItem[], customer: Customer) {
         // Crear sesión de Stripe Checkout
         // 1️⃣ Crear (o reutilizar) un Customer en Stripe
-        const stripeCustomer = await stripe.customers.create({
-            name: customer.name,
-            email: customer.email,
-            metadata: {
-                app_user_id: customer.id, // si tienes un id de usuario interno
-            },
-        });
+
 
         // 2️⃣ Crear sesión de pago vinculada al Customer
         const session = await stripe.checkout.sessions.create({
             payment_method_types: ["card"],
             mode: "payment",
-            customer: stripeCustomer.id, // ✅ vinculamos el customer
+            customer_email: customer.email,
+            billing_address_collection: "required",
+            shipping_address_collection: {
+                allowed_countries: ["MX", "US"],
+            },
+            // ✅ Configuración correcta de invoice_creation
+            invoice_creation: {
+                enabled: true,
+                invoice_data: {
+                    description: "Compra realizada con el ecommerce",
+                    metadata: {
+                        customer_name: customer.name,
+                        customer_email: customer.email,
+                        tipo_envio: 'Fedex', // ⚠️ Sin comillas simples en la key
+                    },
+                    // Agregar campos adicionales importantes
+                    footer: "Gracias por tu compra",
+                    custom_fields: [
+                        {
+                            name: "Tipo de Envío",
+                            value: "Fedex",
+                        },
+                    ],
+                },
+            },
             metadata: {
                 customer_name: customer.name,
+                customer_email: customer.email, // Agregar email en metadata también
             },
-            line_items: items.map((item: any) => ({
+            line_items: items.map((item: CartItem) => ({
                 price_data: {
                     currency: "mxn",
-                    product_data: { name: item.product.name },
-                    unit_amount: Math.round(item.configuration.price * 100), // en centavos
+                    product_data: {
+                        name: item.product.producto,
+                        // Agregar descripción para que aparezca en la factura
+                        description: item.product.descripcion || "Producto del ecommerce",
+                        images: [item.product.imagen_url],
+                    },
+                    unit_amount: Math.round(item.product.precio_base * 100),
                 },
                 quantity: item.quantity,
             })),
-            success_url: "http://localhost:5173/success",
+            success_url: "http://localhost:5173/success?session_id={CHECKOUT_SESSION_ID}",
             cancel_url: "http://localhost:5173/cancel",
             payment_method_options: {
                 card: {
                     request_three_d_secure: "any",
                 },
-            }
+            },
+            // ✅ Agregar para asegurar que el customer se cree
+            customer_creation: "always",
         });
 
 
@@ -52,6 +78,6 @@ export class ModeloCompra {
             return { success: false, data: null, message: "Error al crear la sesión de Stripe" };
         }
 
-        return { success: true, data: session.url, message: "Compra realizada correctamente" };
+        return { success: true, data: session, message: "Compra realizada correctamente" };
     }
 }

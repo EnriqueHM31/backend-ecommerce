@@ -3,44 +3,44 @@ import { db } from '../database/db';
 export class ModeloProductos {
     static async ListarProductos() {
 
+        console.log("Listar productos");
         const connection = await db.getConnection();
         try {
             const [resultProductos] = await connection.query(`
                 SELECT 
-                    p.producto_id,
-                    p.nombre AS producto,
-                    c.nombre_categoria AS categoria,
-                    p.precio_base,
-                    p.descripcion,
-                    pv.variante_id,
-                    pv.color,
-                    pv.almacenamiento,
-                    pv.ram AS ram_variante,
-                    pv.sistema_operativo,
-                    pv.sku,
-                    pv.imagen_url,
-                    s.cantidad AS stock,
-                    CASE 
-                        WHEN s.cantidad <= s.stock_minimo THEN 'Stock Bajo'
-                        WHEN s.cantidad > 20 THEN 'Stock Alto'
-                        ELSE 'Stock Normal'
-                    END AS estado_stock,
-                    p.recomendado,
-                    e.procesador,
-                    e.ram AS ram_especificacion,
-                    e.display,
-                    e.camara,
-                    e.sistema,
-                    e.conectividad,
-                    e.bateria
-                FROM Producto p
-                LEFT JOIN categorias c ON p.categoria_id = c.categoria_id
-                LEFT JOIN producto_variantes pv ON p.producto_id = pv.producto_id
-                LEFT JOIN stock s ON pv.variante_id = s.variante_id
-                LEFT JOIN especificaciones e ON p.producto_id = e.producto_id
-                WHERE p.activo = TRUE 
-                  AND (pv.disponible = TRUE OR pv.disponible IS NULL)
-                ORDER BY p.producto_id, p.nombre, pv.color, pv.almacenamiento;
+    sku.id as id,                                    -- ID único para cada producto individual
+    pb.id as producto_id,                            -- Para agrupación en el adapter
+    sku.sku,                                         -- SKU único
+    v.nombre_variante as producto,                   -- Nombre del producto
+    pb.descripcion,
+    cat.nombre as categoria,
+    pb.marca,
+    col.nombre as color,
+    alm.capacidad as almacenamiento,
+    ram.capacidad as ram_variante,
+    v.procesador as ram_especificacion,
+    v.procesador,
+    v.display,
+    v.camara,
+    v.bateria,
+    v.conectividad,
+    v.sistema_operativo,
+    sku.precio_base,
+    sku.stock,
+    sku.imagen_url,
+    pb.recomendado,
+    sku.activo,
+    sku.created_at,
+    sku.updated_at
+FROM productos_sku sku
+INNER JOIN productos_base pb ON sku.producto_base_id = pb.id
+INNER JOIN variantes v ON sku.variante_id = v.id
+INNER JOIN categorias cat ON pb.categoria_id = cat.id
+INNER JOIN colores col ON sku.color_id = col.id
+INNER JOIN almacenamientos alm ON sku.almacenamiento_id = alm.id
+INNER JOIN ram_specs ram ON sku.ram_id = ram.id
+WHERE sku.activo = TRUE AND pb.activo = TRUE AND v.activa = TRUE
+ORDER BY pb.nombre, v.nombre_variante, col.nombre, alm.capacidad;
                 `);
 
 
