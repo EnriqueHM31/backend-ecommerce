@@ -28,7 +28,7 @@ export class ModeloProductos {
     sku.precio_base,
     sku.stock,
     sku.imagen_url,
-    pb.recomendado,
+    v.recomendado,
     sku.activo,
     sku.created_at,
     sku.updated_at

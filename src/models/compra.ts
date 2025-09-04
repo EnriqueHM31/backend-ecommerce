@@ -14,9 +14,8 @@ export class ModeloCompra {
     static async RealizarCompra(items: CartItem[], customer: Customer) {
         // Crear sesión de Stripe Checkout
         // 1️⃣ Crear (o reutilizar) un Customer en Stripe
-
-
         // 2️⃣ Crear sesión de pago vinculada al Customer
+
         const session = await stripe.checkout.sessions.create({
             payment_method_types: ["card"],
             mode: "payment",
@@ -25,7 +24,6 @@ export class ModeloCompra {
             shipping_address_collection: {
                 allowed_countries: ["MX", "US"],
             },
-            // ✅ Configuración correcta de invoice_creation
             invoice_creation: {
                 enabled: true,
                 invoice_data: {
@@ -51,12 +49,12 @@ export class ModeloCompra {
             },
             line_items: items.map((item: CartItem) => ({
                 price_data: {
-                    currency: "mxn",
+                    currency: "MXN",
                     product_data: {
                         name: item.product.producto,
                         // Agregar descripción para que aparezca en la factura
-                        description: item.product.descripcion || "Producto del ecommerce",
-                        images: [item.product.imagen_url],
+                        description: item.product.descripcion || "Producto del ecommerce",  // Agregar descripción para que aparezca en la factura
+                        images: [item.product.imagen_url], // 👈 tiene que ser un array
                     },
                     unit_amount: Math.round(item.product.precio_base * 100),
                 },
