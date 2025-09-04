@@ -1,0 +1,770 @@
+{
+    "compras": [
+        {
+            "usuario": "user_8kL9mP3nQ7vR2wX5b11111111",
+            "producto": "IP15PRO-256-AZUT-8 - iPhone 15 Pro"
+        },
+        {
+            "usuario": "user_8kL9mP3nQ7vR2wX5b11111111",
+            "producto": "IP15PRO-256-AZUT-8 - iPhone 15 Pro"
+        },
+        {
+            "usuario": "user_8kL9mP3nQ7vR2wX5b11111111",
+            "producto": "IP15PRO-256-AZUT-8 - iPhone 15 Pro"
+        },
+        {
+            "usuario": "user_8kL9mP3nQ7vR2wX5b11111111",
+            "producto": "IP15PRO-256-AZUT-8 - iPhone 15 Pro"
+        },
+        {
+            "usuario": "user_8kL9mP3nQ7vR2wX5bN6cA1dE",
+            "producto": "IP15PRO-256-AZUT-8 - iPhone 15 Pro",
+            "cantidad": 1
+        },
+        {
+            "usuario": "user_8kL9mP3nQ7vR2wX5bN6cA1dE",
+            "producto": "MBA-M3-512-GR-16 - MacBook Air M3",
+            "cantidad": 1
+        },
+        {
+            "usuario": "user_8kL9mP3nQ7vR2wX5bN6cA1dE",
+            "producto": "AIRPMAX-AZU - AirPods Max",
+            "cantidad": 1
+        },
+        {
+            "usuario": "user_8kL9mP3nQ7vR2wX5bN6cA1dE",
+            "producto": "IPADPRO11-256-GR-16 - iPad Pro 11\"",
+            "cantidad": 1
+        },
+        {
+            "usuario": "user_8kL9mP3nQ7vR2wX5bN6cA1dE",
+            "producto": "AIRPP2-BLA - AirPods Pro (2ª Gen)",
+            "cantidad": 1
+        },
+        {
+            "usuario": "user_8kL9mP3nQ7vR2wX5bN6cA1dE",
+            "producto": "IP15P-256-NEG-6 - iPhone 15 Plus",
+            "cantidad": 1
+        },
+        {
+            "usuario": "user_5xT2nM8pL4jK9vB6qS3cY7wE",
+            "producto": "GS24U-256-NEG-12 - Galaxy S24 Ultra",
+            "cantidad": 1
+        },
+        {
+            "usuario": "user_5xT2nM8pL4jK9vB6qS3cY7wE",
+            "producto": "GTS9U-512-NEG-12 - Galaxy Tab S9 Ultra",
+            "cantidad": 1
+        },
+        {
+            "usuario": "user_5xT2nM8pL4jK9vB6qS3cY7wE",
+            "producto": "XPS14-U7-1TB-NEG-32 - XPS 14",
+            "cantidad": 1
+        },
+        {
+            "usuario": "user_5xT2nM8pL4jK9vB6qS3cY7wE",
+            "producto": "GS24P-512-NEG-8 - Galaxy S24+",
+            "cantidad": 1
+        },
+        {
+            "usuario": "user_5xT2nM8pL4jK9vB6qS3cY7wE",
+            "producto": "GTS9P-256-PL-8 - Galaxy Tab S9+",
+            "cantidad": 1
+        },
+        {
+            "usuario": "user_3nR7qV9mK2pL5xB8wN4cS6jY",
+            "producto": "PX8P-256-NEG-12 - Pixel 8 Pro",
+            "cantidad": 1
+        },
+        {
+            "usuario": "user_3nR7qV9mK2pL5xB8wN4cS6jY",
+            "producto": "PX8A-128-NEG-8 - Pixel 8a",
+            "cantidad": 1
+        },
+        {
+            "usuario": "user_3nR7qV9mK2pL5xB8wN4cS6jY",
+            "producto": "SP11-256-NEG-16 - Surface Pro 11",
+            "cantidad": 1
+        },
+        {
+            "usuario": "user_3nR7qV9mK2pL5xB8wN4cS6jY",
+            "producto": "PX8-256-AZU-8 - Pixel 8",
+            "cantidad": 1
+        },
+        {
+            "usuario": "user_3nR7qV9mK2pL5xB8wN4cS6jY",
+            "producto": "SG4-256-NEG-8 - Surface Go 4",
+            "cantidad": 1
+        },
+        {
+            "usuario": "user_9mQ4pX7nL8vR3kB5wN2cS6jT",
+            "producto": "MBP14-M3P-1TB-GR-32 - MacBook Pro 14\"",
+            "cantidad": 1
+        },
+        {
+            "usuario": "user_9mQ4pX7nL8vR3kB5wN2cS6jT",
+            "producto": "P1-U9-2TB-NEG-32 - ThinkPad P1",
+            "cantidad": 1
+        },
+        {
+            "usuario": "user_9mQ4pX7nL8vR3kB5wN2cS6jT",
+            "producto": "XPS16-U9-2TB-NEG-32 - XPS 16",
+            "cantidad": 1
+        },
+        {
+            "usuario": "user_9mQ4pX7nL8vR3kB5wN2cS6jT",
+            "producto": "IPADPRO11-512-GR-16 - iPad Pro 11\"",
+            "cantidad": 1
+        },
+        {
+            "usuario": "user_9mQ4pX7nL8vR3kB5wN2cS6jT",
+            "producto": "X1C-U7-1TB-NEG-16 - ThinkPad X1 Carbon",
+            "cantidad": 2
+        },
+        {
+            "usuario": "user_9mQ4pX7nL8vR3kB5wN2cS6jT",
+            "producto": "X1C-U7-1TB-NEG-16 - ThinkPad X1 Carbon",
+            "cantidad": 4
+        },
+        {
+            "usuario": "user_9mQ4pX7nL8vR3kB5wN2cS6jT",
+            "producto": "X1C-U7-1TB-NEG-16 - ThinkPad X1 Carbon",
+            "cantidad": 10
+        },
+        {
+            "usuario": "user_9mQ4pX7nL8vR3kB5wN2cS6jT",
+            "producto": "X1C-U7-1TB-NEG-16 - ThinkPad X1 Carbon",
+            "cantidad": 24
+        },
+        {
+            "usuario": "user_9mQ4pX7nL8vR3kB5wN2cS6jT",
+            "producto": "T14-R7-1TB-NEG-16 - ThinkPad T14",
+            "cantidad": 1
+        },
+        {
+            "usuario": "user_6nL2mQ8pK4vX9jB7wS3cN5rY",
+            "producto": "IP15-128-AZU-6 - iPhone 15",
+            "cantidad": 1
+        },
+        {
+            "usuario": "user_6nL2mQ8pK4vX9jB7wS3cN5rY",
+            "producto": "MBA-M2-256-GR-16 - MacBook Air M2",
+            "cantidad": 1
+        },
+        {
+            "usuario": "user_6nL2mQ8pK4vX9jB7wS3cN5rY",
+            "producto": "AIRP2-BLA - AirPods (2ª Gen)",
+            "cantidad": 1
+        },
+        {
+            "usuario": "user_6nL2mQ8pK4vX9jB7wS3cN5rY",
+            "producto": "IPAD10-64-AZU-6 - iPad 10ª Gen",
+            "cantidad": 1
+        },
+        {
+            "usuario": "user_6nL2mQ8pK4vX9jB7wS3cN5rY",
+            "producto": "IPADAIR-128-MOR-8 - iPad Air (M2)",
+            "cantidad": 1
+        },
+        {
+            "usuario": "user_4xP8mN5qL7vK3jB9wR2cS6nT",
+            "producto": "GS24-256-NEG-8 - Galaxy S24",
+            "cantidad": 1
+        },
+        {
+            "usuario": "user_4xP8mN5qL7vK3jB9wR2cS6nT",
+            "producto": "GTS9-128-NEG-8 - Galaxy Tab S9",
+            "cantidad": 1
+        },
+        {
+            "usuario": "user_4xP8mN5qL7vK3jB9wR2cS6nT",
+            "producto": "XPS13-U7-512-NEG-16 - XPS 13",
+            "cantidad": 1
+        },
+        {
+            "usuario": "user_4xP8mN5qL7vK3jB9wR2cS6nT",
+            "producto": "GS24U-512-PLA-12 - Galaxy S24 Ultra",
+            "cantidad": 1
+        },
+        {
+            "usuario": "user_4xP8mN5qL7vK3jB9wR2cS6nT",
+            "producto": "GTS9P-512-PL-8 - Galaxy Tab S9+",
+            "cantidad": 1
+        },
+        {
+            "usuario": "user_7qK9nM3pL5vX8jR4wB6cS2nY",
+            "producto": "MBP14-M3P-1TB-PL-32 - MacBook Pro 14\"",
+            "cantidad": 1
+        },
+        {
+            "usuario": "user_7qK9nM3pL5vX8jR4wB6cS2nY",
+            "producto": "IPADPRO11-512-PL-16 - iPad Pro 11\"",
+            "cantidad": 1
+        },
+        {
+            "usuario": "user_7qK9nM3pL5vX8jR4wB6cS2nY",
+            "producto": "AIRPMAX-PLA - AirPods Max",
+            "cantidad": 1
+        },
+        {
+            "usuario": "user_7qK9nM3pL5vX8jR4wB6cS2nY",
+            "producto": "IP15PRO-512-TITN-8 - iPhone 15 Pro",
+            "cantidad": 1
+        },
+        {
+            "usuario": "user_7qK9nM3pL5vX8jR4wB6cS2nY",
+            "producto": "MBP14-M3P-512-PL-32 - MacBook Pro 14\"",
+            "cantidad": 1
+        },
+        {
+            "usuario": "user_7qK9nM3pL5vX8jR4wB6cS2nY",
+            "producto": "AIRPP2-PLA - AirPods Pro (2ª Gen)",
+            "cantidad": 1
+        },
+        {
+            "usuario": "user_1mK7nQ4pL9vX3jB8wR5cS2nT",
+            "producto": "T14-R7-512-NEG-16 - ThinkPad T14",
+            "cantidad": 8
+        },
+        {
+            "usuario": "user_1mK7nQ4pL9vX3jB8wR5cS2nT",
+            "producto": "X1C-U7-512-NEG-16 - ThinkPad X1 Carbon",
+            "cantidad": 5
+        },
+        {
+            "usuario": "user_1mK7nQ4pL9vX3jB8wR5cS2nT",
+            "producto": "P1-U9-1TB-NEG-32 - ThinkPad P1",
+            "cantidad": 2
+        },
+        {
+            "usuario": "user_2pL8mN5qK4vX7jB3wS9cN6rY",
+            "producto": "MBA-M3-256-GR-16 - MacBook Air M3",
+            "cantidad": 3
+        },
+        {
+            "usuario": "user_2pL8mN5qK4vX7jB3wS9cN6rY",
+            "producto": "IP15-256-NEG-6 - iPhone 15",
+            "cantidad": 2
+        },
+        {
+            "usuario": "user_2pL8mN5qK4vX7jB3wS9cN6rY",
+            "producto": "IPADAIR-256-PL-8 - iPad Air (M2)",
+            "cantidad": 1
+        },
+        {
+            "usuario": "user_3qR9mP6pL2vK5xB8wN4cS7jT",
+            "producto": "XPS16-U9-2TB-NEG-32 - XPS 16",
+            "cantidad": 1
+        },
+        {
+            "usuario": "user_3qR9mP6pL2vK5xB8wN4cS7jT",
+            "producto": "P1-U9-2TB-PL-32 - ThinkPad P1",
+            "cantidad": 1
+        },
+        {
+            "usuario": "user_3qR9mP6pL2vK5xB8wN4cS7jT",
+            "producto": "GS24U-1TB-NEG-12 - Galaxy S24 Ultra",
+            "cantidad": 1
+        },
+        {
+            "usuario": "user_4nL5mQ8pK7vX2jB6wR3cS9nY",
+            "producto": "IP15PRO-512-AZUT-8 - iPhone 15 Pro",
+            "cantidad": 1
+        },
+        {
+            "usuario": "user_4nL5mQ8pK7vX2jB6wR3cS9nY",
+            "producto": "PX8P-512-NEG-12 - Pixel 8 Pro",
+            "cantidad": 1
+        },
+        {
+            "usuario": "user_4nL5mQ8pK7vX2jB6wR3cS9nY",
+            "producto": "MBP14-M3P-1TB-GR-32 - MacBook Pro 14\"",
+            "cantidad": 1
+        },
+        {
+            "usuario": "user_5mQ2nP7pL4vK8xB5wS3cN6jT",
+            "producto": "IPAD10-64-PL-6 - iPad 10ª Gen",
+            "cantidad": 20
+        },
+        {
+            "usuario": "user_5mQ2nP7pL4vK8xB5wS3cN6jT",
+            "producto": "MBA-M2-256-PL-16 - MacBook Air M2",
+            "cantidad": 15
+        },
+        {
+            "usuario": "user_6pK3mN8qL5vX4jB7wR2cS9nY",
+            "producto": "MBP14-M3P-512-GR-32 - MacBook Pro 14\"",
+            "cantidad": 1
+        },
+        {
+            "usuario": "user_6pK3mN8qL5vX4jB7wR2cS9nY",
+            "producto": "IPADPRO11-256-PL-16 - iPad Pro 11\"",
+            "cantidad": 1
+        },
+        {
+            "usuario": "user_6pK3mN8qL5vX4jB7wR2cS9nY",
+            "producto": "IP15PRO-256-TITN-8 - iPhone 15 Pro",
+            "cantidad": 1
+        },
+        {
+            "usuario": "user_7qR4mP9pL6vK3xB8wN5cS2jT",
+            "producto": "X1C-U7-1TB-PL-16 - ThinkPad X1 Carbon",
+            "cantidad": 12
+        },
+        {
+            "usuario": "user_7qR4mP9pL6vK3xB8wN5cS2jT",
+            "producto": "T14-R7-1TB-PL-16 - ThinkPad T14",
+            "cantidad": 8
+        },
+        {
+            "usuario": "user_8nL6mQ3pK7vX5jB4wS8cN9rY",
+            "producto": "IP15-128-NEG-6 - iPhone 15",
+            "cantidad": 3
+        },
+        {
+            "usuario": "user_8nL6mQ3pK7vX5jB4wS8cN9rY",
+            "producto": "IPAD10-256-AZU-6 - iPad 10ª Gen",
+            "cantidad": 2
+        },
+        {
+            "usuario": "user_8nL6mQ3pK7vX5jB4wS8cN9rY",
+            "producto": "AIRP2-NEG - AirPods (2ª Gen)",
+            "cantidad": 3
+        },
+        {
+            "usuario": "user_9mP7nQ5pL8vK2xB6wR4cS3jT",
+            "producto": "AIRPMAX-NEG - AirPods Max",
+            "cantidad": 2
+        },
+        {
+            "usuario": "user_9mP7nQ5pL8vK2xB6wR4cS3jT",
+            "producto": "AIRPP2-GR - AirPods Pro (2ª Gen)",
+            "cantidad": 2
+        },
+        {
+            "usuario": "user_9mP7nQ5pL8vK2xB6wR4cS3jT",
+            "producto": "IP15PRO-256-AZUT-8 - iPhone 15 Pro",
+            "cantidad": 1
+        },
+        {
+            "usuario": "user_10qK8mN4pL9vX6jB5wS2cN7rY",
+            "producto": "PX8A-256-VER-8 - Pixel 8a",
+            "cantidad": 1
+        },
+        {
+            "usuario": "user_10qK8mN4pL9vX6jB5wS2cN7rY",
+            "producto": "SG3-256-NEG-8 - Surface Go 3",
+            "cantidad": 1
+        },
+        {
+            "usuario": "user_10qK8mN4pL9vX6jB5wS2cN7rY",
+            "producto": "T14-R7-512-PL-16 - ThinkPad T14",
+            "cantidad": 1
+        },
+        {
+            "usuario": "user_11nR9mP2pL5vK8xB3wN6cS4jT",
+            "producto": "IPADPRO11-512-GR-16 - iPad Pro 11\"",
+            "cantidad": 1
+        },
+        {
+            "usuario": "user_11nR9mP2pL5vK8xB3wN6cS4jT",
+            "producto": "GTS9U-1TB-PL-12 - Galaxy Tab S9 Ultra",
+            "cantidad": 1
+        },
+        {
+            "usuario": "user_11nR9mP2pL5vK8xB3wN6cS4jT",
+            "producto": "SP11-512-PL-16 - Surface Pro 11",
+            "cantidad": 1
+        },
+        {
+            "usuario": "user_12pL5mQ7nK4vX9jB6wR3cS8nY",
+            "producto": "GS24U-512-NEG-12 - Galaxy S24 Ultra",
+            "cantidad": 1
+        },
+        {
+            "usuario": "user_12pL5mQ7nK4vX9jB6wR3cS8nY",
+            "producto": "MBA-M3-512-PL-16 - MacBook Air M3",
+            "cantidad": 1
+        },
+        {
+            "usuario": "user_12pL5mQ7nK4vX9jB6wR3cS8nY",
+            "producto": "AIRPMAX-ROJ - AirPods Max",
+            "cantidad": 1
+        },
+        {
+            "usuario": "user_13mQ8nP6pL2vK7xB4wS9cN5jT",
+            "producto": "XPS14-U7-1TB-PL-32 - XPS 14",
+            "cantidad": 1
+        },
+        {
+            "usuario": "user_13mQ8nP6pL2vK7xB4wS9cN5jT",
+            "producto": "PX8P-256-PLA-12 - Pixel 8 Pro",
+            "cantidad": 1
+        },
+        {
+            "usuario": "user_13mQ8nP6pL2vK7xB4wS9cN5jT",
+            "producto": "XPS13-U7-1TB-PL-16 - XPS 13",
+            "cantidad": 1
+        },
+        {
+            "usuario": "user_14qR3mN9pL6vK5xB8wN2cS7jY",
+            "producto": "MBP14-M3P-1TB-GR-32 - MacBook Pro 14\"",
+            "cantidad": 4
+        },
+        {
+            "usuario": "user_14qR3mN9pL6vK5xB8wN2cS7jY",
+            "producto": "IPADPRO11-256-GR-16 - iPad Pro 11\"",
+            "cantidad": 3
+        },
+        {
+            "usuario": "user_15nL4mQ8pK7vX3jB6wR9cS2nT",
+            "producto": "IP15P-256-ROS-6 - iPhone 15 Plus",
+            "cantidad": 1
+        },
+        {
+            "usuario": "user_15nL4mQ8pK7vX3jB6wR9cS2nT",
+            "producto": "GS24P-512-MOR-8 - Galaxy S24+",
+            "cantidad": 1
+        },
+        {
+            "usuario": "user_15nL4mQ8pK7vX3jB6wR9cS2nT",
+            "producto": "PX8-256-NEG-8 - Pixel 8",
+            "cantidad": 1
+        },
+        {
+            "usuario": "user_16pK7mN5qL8vX4jB3wS6cN9rY",
+            "producto": "SP11-512-NEG-16 - Surface Pro 11",
+            "cantidad": 2
+        },
+        {
+            "usuario": "user_16pK7mN5qL8vX4jB3wS6cN9rY",
+            "producto": "SG4-128-PL-8 - Surface Go 4",
+            "cantidad": 2
+        },
+        {
+            "usuario": "user_16pK7mN5qL8vX4jB3wS6cN9rY",
+            "producto": "SG3-128-NEG-8 - Surface Go 3",
+            "cantidad": 1
+        },
+        {
+            "usuario": "user_6nL2mQ8pK4vX9jB7wS3cN5rY",
+            "producto": "IP15-128-AZU-6 - iPhone 15",
+            "cantidad": 1
+        },
+        {
+            "usuario": "user_6nL2mQ8pK4vX9jB7wS3cN5rY",
+            "producto": "MBA-M2-256-GR-16 - MacBook Air M2",
+            "cantidad": 1
+        },
+        {
+            "usuario": "user_6nL2mQ8pK4vX9jB7wS3cN5rY",
+            "producto": "AIRP2-BLA - AirPods (2ª Gen)",
+            "cantidad": 1
+        },
+        {
+            "usuario": "user_6nL2mQ8pK4vX9jB7wS3cN5rY",
+            "producto": "IPAD10-64-AZU-6 - iPad 10ª Gen",
+            "cantidad": 1
+        },
+        {
+            "usuario": "user_6nL2mQ8pK4vX9jB7wS3cN5rY",
+            "producto": "IPADAIR-128-MOR-8 - iPad Air (M2)",
+            "cantidad": 1
+        },
+        {
+            "usuario": "user_4xP8mN5qL7vK3jB9wR2cS6nT",
+            "producto": "GS24-256-NEG-8 - Galaxy S24",
+            "cantidad": 1
+        },
+        {
+            "usuario": "user_4xP8mN5qL7vK3jB9wR2cS6nT",
+            "producto": "GTS9-128-NEG-8 - Galaxy Tab S9",
+            "cantidad": 1
+        },
+        {
+            "usuario": "user_4xP8mN5qL7vK3jB9wR2cS6nT",
+            "producto": "XPS13-U7-512-NEG-16 - XPS 13",
+            "cantidad": 1
+        },
+        {
+            "usuario": "user_4xP8mN5qL7vK3jB9wR2cS6nT",
+            "producto": "GS24U-512-PLA-12 - Galaxy S24 Ultra",
+            "cantidad": 1
+        },
+        {
+            "usuario": "user_4xP8mN5qL7vK3jB9wR2cS6nT",
+            "producto": "GTS9P-512-PL-8 - Galaxy Tab S9+",
+            "cantidad": 1
+        },
+        {
+            "usuario": "user_7qK9nM3pL5vX8jR4wB6cS2nY",
+            "producto": "MBP14-M3P-1TB-PL-32 - MacBook Pro 14\"",
+            "cantidad": 1
+        },
+        {
+            "usuario": "user_7qK9nM3pL5vX8jR4wB6cS2nY",
+            "producto": "IPADPRO11-512-PL-16 - iPad Pro 11\"",
+            "cantidad": 1
+        },
+        {
+            "usuario": "user_7qK9nM3pL5vX8jR4wB6cS2nY",
+            "producto": "AIRPMAX-PLA - AirPods Max",
+            "cantidad": 1
+        },
+        {
+            "usuario": "user_7qK9nM3pL5vX8jR4wB6cS2nY",
+            "producto": "IP15PRO-512-TITN-8 - iPhone 15 Pro",
+            "cantidad": 1
+        },
+        {
+            "usuario": "user_7qK9nM3pL5vX8jR4wB6cS2nY",
+            "producto": "MBP14-M3P-512-PL-32 - MacBook Pro 14\"",
+            "cantidad": 1
+        },
+        {
+            "usuario": "user_7qK9nM3pL5vX8jR4wB6cS2nY",
+            "producto": "AIRPP2-PLA - AirPods Pro (2ª Gen)",
+            "cantidad": 1
+        },
+        {
+            "usuario": "user_1mK7nQ4pL9vX3jB8wR5cS2nT",
+            "producto": "T14-R7-512-NEG-16 - ThinkPad T14",
+            "cantidad": 8
+        },
+        {
+            "usuario": "user_1mK7nQ4pL9vX3jB8wR5cS2nT",
+            "producto": "X1C-U7-512-NEG-16 - ThinkPad X1 Carbon",
+            "cantidad": 5
+        },
+        {
+            "usuario": "user_1mK7nQ4pL9vX3jB8wR5cS2nT",
+            "producto": "P1-U9-1TB-NEG-32 - ThinkPad P1",
+            "cantidad": 2
+        },
+        {
+            "usuario": "user_6nL2mQ8pK4vX9jB7wS3cN522",
+            "producto": "IP15-128-AZU-6 - iPhone 15",
+            "cantidad": 1
+        },
+        {
+            "usuario": "user_6nL2mQ8pK4vX9jB7wS3cN522",
+            "producto": "MBA-M2-256-GR-16 - MacBook Air M2",
+            "cantidad": 1
+        },
+        {
+            "usuario": "user_6nL2mQ8pK4vX9jB7wS3cN522",
+            "producto": "IPADAIR-128-MOR-8 - iPad Air (M2)",
+            "cantidad": 1
+        },
+        {
+            "usuario": "user_7qK9nM3pL5vX8jR4wB6cS222",
+            "producto": "MBP14-M3P-1TB-PL-32 - MacBook Pro 14\"",
+            "cantidad": 1
+        },
+        {
+            "usuario": "user_7qK9nM3pL5vX8jR4wB6cS222",
+            "producto": "IPADPRO11-512-PL-16 - iPad Pro 11\"",
+            "cantidad": 1
+        },
+        {
+            "usuario": "user_7qK9nM3pL5vX8jR4wB6cS222",
+            "producto": "AIRPMAX-PLA - AirPods Max",
+            "cantidad": 1
+        },
+        {
+            "usuario": "user_7qK9nM3pL5vX8jR4wB6cS222",
+            "producto": "IP15PRO-512-TITN-8 - iPhone 15 Pro",
+            "cantidad": 1
+        },
+        {
+            "usuario": "user_1mK7nQ4pL9vX3jB8wR5cS222",
+            "producto": "P1-U9-1TB-NEG-32 - ThinkPad P1",
+            "cantidad": 2
+        },
+        {
+            "usuario": "user_6nL2mQ8pK4vX9jB7wS3cN333",
+            "producto": "IP15-128-AZU-6 - iPhone 15",
+            "cantidad": 1
+        },
+        {
+            "usuario": "user_6nL2mQ8pK4vX9jB7wS3cN333",
+            "producto": "MBA-M2-256-GR-16 - MacBook Air M2",
+            "cantidad": 1
+        },
+        {
+            "usuario": "user_4xP8mN5qL7vK3jB9wR2cS333",
+            "producto": "GS24U-512-PLA-12 - Galaxy S24 Ultra",
+            "cantidad": 1
+        },
+        {
+            "usuario": "user_7qK9nM3pL5vX8jR4wB6cS333",
+            "producto": "IPADPRO11-512-PL-16 - iPad Pro 11\"",
+            "cantidad": 1
+        },
+        {
+            "usuario": "user_7qK9nM3pL5vX8jR4wB6cS333",
+            "producto": "AIRPMAX-PLA - AirPods Max",
+            "cantidad": 1
+        },
+        {
+            "usuario": "user_7qK9nM3pL5vX8jR4wB6cS333",
+            "producto": "IP15PRO-512-TITN-8 - iPhone 15 Pro",
+            "cantidad": 1
+        },
+        {
+            "usuario": "user_6nL2mQ8pK4vX9jB7wS3cN444",
+            "producto": "IP15-128-AZU-6 - iPhone 15",
+            "cantidad": 1
+        },
+        {
+            "usuario": "user_6nL2mQ8pK4vX9jB7wS3cN444",
+            "producto": "MBA-M2-256-GR-16 - MacBook Air M2",
+            "cantidad": 1
+        },
+        {
+            "usuario": "user_6nL2mQ8pK4vX9jB7wS3cN444",
+            "producto": "IPADAIR-128-MOR-8 - iPad Air (M2)",
+            "cantidad": 1
+        },
+        {
+            "usuario": "user_4xP8mN5qL7vK3jB9wR2cS444",
+            "producto": "GS24-256-NEG-8 - Galaxy S24",
+            "cantidad": 1
+        },
+        {
+            "usuario": "user_1mK7nQ4pL9vX3jB8wR5cS444",
+            "producto": "P1-U9-1TB-NEG-32 - ThinkPad P1",
+            "cantidad": 2
+        },
+        {
+            "usuario": "user_4xP8mN5qL7vK3jB9wR2cs555",
+            "producto": "GS24-256-NEG-8 - Galaxy S24",
+            "cantidad": 1
+        },
+        {
+            "usuario": "user_4xP8mN5qL7vK3jB9wR2cs555",
+            "producto": "GS24U-512-PLA-12 - Galaxy S24 Ultra",
+            "cantidad": 1
+        },
+        {
+            "usuario": "user_7qK9nM3pL5vX8jR4wB6cs555",
+            "producto": "MBP14-M3P-1TB-PL-32 - MacBook Pro 14\"",
+            "cantidad": 1
+        },
+        {
+            "usuario": "user_7qK9nM3pL5vX8jR4wB6cs555",
+            "producto": "IPADPRO11-512-PL-16 - iPad Pro 11\"",
+            "cantidad": 1
+        },
+        {
+            "usuario": "user_7qK9nM3pL5vX8jR4wB6cs555",
+            "producto": "IP15PRO-512-TITN-8 - iPhone 15 Pro",
+            "cantidad": 1
+        },
+        {
+            "usuario": "user_1mK7nQ4pL9vX3jB8wR5cs555",
+            "producto": "P1-U9-1TB-NEG-32 - ThinkPad P1",
+            "cantidad": 2
+        },
+        {
+            "usuario": "user_6nL2mQ8pK4vX9jB7wS3cs666",
+            "producto": "MBA-M2-256-GR-16 - MacBook Air M2",
+            "cantidad": 1
+        },
+        {
+            "usuario": "user_6nL2mQ8pK4vX9jB7wS3cs666",
+            "producto": "IPADAIR-128-MOR-8 - iPad Air (M2)",
+            "cantidad": 1
+        },
+        {
+            "usuario": "user_4xP8mN5qL7vK3jB9wR2cs666",
+            "producto": "GS24-256-NEG-8 - Galaxy S24",
+            "cantidad": 1
+        },
+        {
+            "usuario": "user_4xP8mN5qL7vK3jB9wR2cs666",
+            "producto": "GS24U-512-PLA-12 - Galaxy S24 Ultra",
+            "cantidad": 1
+        },
+        {
+            "usuario": "user_7qK9nM3pL5vX8jR4wB6cs666",
+            "producto": "AIRPMAX-PLA - AirPods Max",
+            "cantidad": 1
+        },
+        {
+            "usuario": "user_7qK9nM3pL5vX8jR4wB6cs666",
+            "producto": "IP15PRO-512-TITN-8 - iPhone 15 Pro",
+            "cantidad": 1
+        },
+        {
+            "usuario": "user_1mK7nQ4pL9vX3jB8wR5cs666",
+            "producto": "P1-U9-1TB-NEG-32 - ThinkPad P1",
+            "cantidad": 2
+        },
+        {
+            "usuario": "user_6nL2mQ8pK4vX9jB7wS37775",
+            "producto": "IP15-128-AZU-6 - iPhone 15",
+            "cantidad": 1
+        },
+        {
+            "usuario": "user_6nL2mQ8pK4vX9jB7wS3c777",
+            "producto": "IPADAIR-128-MOR-8 - iPad Air (M2)",
+            "cantidad": 1
+        },
+        {
+            "usuario": "user_4xP8mN5qL7vK3jB9wR2c777",
+            "producto": "GS24-256-NEG-8 - Galaxy S24",
+            "cantidad": 1
+        },
+        {
+            "usuario": "user_7qK9nM3pL5vX8jR4wB6c777",
+            "producto": "MBP14-M3P-1TB-PL-32 - MacBook Pro 14\"",
+            "cantidad": 1
+        },
+        {
+            "usuario": "user_7qK9nM3pL5vX8jR4wB6c777",
+            "producto": "IP15PRO-512-TITN-8 - iPhone 15 Pro",
+            "cantidad": 1
+        },
+        {
+            "usuario": "user_1mK7nQ4pL9vX3jB8wR5c777",
+            "producto": "P1-U9-1TB-NEG-32 - ThinkPad P1",
+            "cantidad": 2
+        },
+        {
+            "usuario": "user_6nL2mQ8pK4vX9jB7wS3c8885",
+            "producto": "IP15-128-AZU-6 - iPhone 15",
+            "cantidad": 1
+        },
+        {
+            "usuario": "user_6nL2mQ8pK4vX9jB7wS3cs888",
+            "producto": "MBA-M2-256-GR-16 - MacBook Air M2",
+            "cantidad": 1
+        },
+        {
+            "usuario": "user_4xP8mN5qL7vK3jB9wR2cs888",
+            "producto": "GS24U-512-PLA-12 - Galaxy S24 Ultra",
+            "cantidad": 1
+        },
+        {
+            "usuario": "user_4xP8mN5qL7vK3jB9wR2cs888",
+            "producto": "GTS9P-512-PL-8 - Galaxy Tab S9+",
+            "cantidad": 1
+        },
+        {
+            "usuario": "user_7qK9nM3pL5vX8jR4wB6cs888",
+            "producto": "AIRPMAX-PLA - AirPods Max",
+            "cantidad": 1
+        },
+        {
+            "usuario": "user_7qK9nM3pL5vX8jR4wB6cs888",
+            "producto": "IP15PRO-512-TITN-8 - iPhone 15 Pro",
+            "cantidad": 1
+        },
+        {
+            "usuario": "user_1mK7nQ4pL9vX3jB8wR5cs888",
+            "producto": "P1-U9-1TB-NEG-32 - ThinkPad P1",
+            "cantidad": 2
+        }
+    ]
+}
