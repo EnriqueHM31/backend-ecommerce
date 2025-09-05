@@ -22,7 +22,8 @@ if (fs.existsSync(DATA_FILE)) {
 const sistemaRecomendacion = new SistemaRecomendacion();
 
 // Entrenar modelo al iniciar si hay datos
-if (comprasPersistentes.length > 0) {
+if (comprasPersistentes.length > 0 && !sistemaRecomendacion.isInitialized) {
+
     sistemaRecomendacion.entrenar(comprasPersistentes)
         .then(() => console.log('Modelo entrenado con datos persistentes'))
         .catch(err => console.error('Error entrenando modelo inicial:', err));
@@ -109,8 +110,9 @@ PrediccionRouter.post('/prediccion/entrenar', async (req: RequestEntrenamiento, 
         }
 
         comprasPersistentes.push(...compras);
+        console.log('comprasPersistentes', comprasPersistentes);
         guardarCompras();
-        await sistemaRecomendacion.entrenar(comprasPersistentes);
+        await sistemaRecomendacion.entrenar(comprasPersistentes, 100);
 
         res.json({
             mensaje: 'Modelo reentrenado exitosamente',

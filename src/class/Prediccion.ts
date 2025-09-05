@@ -281,46 +281,52 @@ export class SistemaRecomendacion {
     async entrenar(compras: Compra[], epochs: number = 50): Promise<void> {
         console.log('Iniciando entrenamiento del modelo...');
 
-        const { matriz, numUsuarios, numProductos } = this.preprocesarDatos(compras);
+        try {
 
-        // NUEVO: Guardar matriz para usar en predicciones
-        this.matrizOriginal = matriz.map(row => [...row]); // Deep copy
 
-        await this.crearModelo(numUsuarios, numProductos);
+            const { matriz, numUsuarios, numProductos } = this.preprocesarDatos(compras);
 
-        const datosEntrenamiento = this.prepararDatosEntrenamiento(matriz);
+            // NUEVO: Guardar matriz para usar en predicciones
+            this.matrizOriginal = matriz.map(row => [...row]); // Deep copy
 
-        // NUEVO: Más épocas para mejor aprendizaje
-        const epochsAjustados = Math.max(epochs, 100); // Mínimo 100 épocas
+            await this.crearModelo(numUsuarios, numProductos);
 
-        // Entrenar modelo
-        if (this.model) {
-            await this.model.fit(
-                [datosEntrenamiento.userIds, datosEntrenamiento.itemIds],
-                datosEntrenamiento.ratings,
-                {
-                    epochs: epochsAjustados,
-                    batchSize: Math.min(32, datosEntrenamiento.userIds.shape[0]), // Batch size adaptativo
-                    validationSplit: 0.1, // Menos datos para validación
-                    verbose: 1,
-                    callbacks: {
-                        onEpochEnd: (epoch: number, logs?: tf.Logs) => {
-                            if (logs && logs.loss && epoch % 10 === 0) { // Log cada 10 épocas
-                                console.log(`Época ${epoch + 1}/${epochsAjustados}: pérdida = ${logs.loss.toFixed(4)}`);
+            const datosEntrenamiento = this.prepararDatosEntrenamiento(matriz);
+
+            // NUEVO: Más épocas para mejor aprendizaje
+            const epochsAjustados = Math.max(epochs, 200); // Mínimo 100 épocas
+
+            // Entrenar modelo
+            if (this.model) {
+                await this.model.fit(
+                    [datosEntrenamiento.userIds, datosEntrenamiento.itemIds],
+                    datosEntrenamiento.ratings,
+                    {
+                        epochs: epochsAjustados,
+                        batchSize: Math.min(32, datosEntrenamiento.userIds.shape[0]), // Batch size adaptativo
+                        validationSplit: 0.1, // Menos datos para validación
+                        verbose: 1,
+                        callbacks: {
+                            onEpochEnd: (epoch: number, logs?: tf.Logs) => {
+                                if (logs && logs.loss && epoch % 10 === 0) { // Log cada 10 épocas
+                                    console.log(`Época ${epoch + 1}/${epochsAjustados}: pérdida = ${logs.loss.toFixed(4)}`);
+                                }
                             }
                         }
                     }
-                }
-            );
+                );
+            }
+
+            // Limpiar tensores
+            datosEntrenamiento.userIds.dispose();
+            datosEntrenamiento.itemIds.dispose();
+            datosEntrenamiento.ratings.dispose();
+
+            this.isInitialized = true;
+            console.log(`Modelo entrenado exitosamente con ${epochsAjustados} épocas`);
+        } catch (error) {
+            throw new Error('Error al entrenar el modelo: ' + error);
         }
-
-        // Limpiar tensores
-        datosEntrenamiento.userIds.dispose();
-        datosEntrenamiento.itemIds.dispose();
-        datosEntrenamiento.ratings.dispose();
-
-        this.isInitialized = true;
-        console.log(`Modelo entrenado exitosamente con ${epochsAjustados} épocas`);
     }
 
 
