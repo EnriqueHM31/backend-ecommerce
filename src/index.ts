@@ -4,7 +4,7 @@ import express from 'express';
 import cors from 'cors';
 import { ComentariosRouter } from './routes/comentarios.routes';
 import { ProductosRouter } from './routes/productos.routes';
-import { CompraRouter } from './routes/compra.routes';
+import { CompraRouter } from './routes/pagos.routes';
 import { UsuarioRouter } from './routes/usuario.routes';
 import { PrediccionRouter } from './routes/prediccion.routes';
 import { PORT } from './config';

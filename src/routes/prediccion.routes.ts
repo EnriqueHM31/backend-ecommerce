@@ -4,11 +4,17 @@ import path from 'path';
 import type { RequestEntrenamiento, RequestPrediccion } from '../types/prediccion';
 import { SistemaRecomendacion } from '../class/Prediccion';
 
+interface Compra {
+    usuario: string;
+    producto: string;
+    cantidad?: number;
+}
+
 // Ruta del archivo de persistencia
 const DATA_FILE = path.join(__dirname, '../data/compras.json');
 
 // Cargar compras persistentes
-let comprasPersistentes: any[] = [];
+let comprasPersistentes: Compra[] = [];
 if (fs.existsSync(DATA_FILE)) {
     try {
         const rawData = fs.readFileSync(DATA_FILE, 'utf8');
@@ -23,6 +29,7 @@ const sistemaRecomendacion = new SistemaRecomendacion();
 
 // Entrenar modelo al iniciar si hay datos
 if (comprasPersistentes.length > 0 && !sistemaRecomendacion.isInitialized) {
+    console.log({ hola: sistemaRecomendacion.isInitialized });
 
     sistemaRecomendacion.entrenar(comprasPersistentes)
         .then(() => console.log('Modelo entrenado con datos persistentes'))

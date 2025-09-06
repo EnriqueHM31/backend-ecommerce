@@ -294,7 +294,7 @@ export class SistemaRecomendacion {
             const datosEntrenamiento = this.prepararDatosEntrenamiento(matriz);
 
             // NUEVO: Más épocas para mejor aprendizaje
-            const epochsAjustados = Math.max(epochs, 200); // Mínimo 100 épocas
+            const epochsAjustados = Math.max(epochs, 50); // Mínimo 100 épocas
 
             // Entrenar modelo
             if (this.model) {
@@ -323,6 +323,7 @@ export class SistemaRecomendacion {
             datosEntrenamiento.ratings.dispose();
 
             this.isInitialized = true;
+
             console.log(`Modelo entrenado exitosamente con ${epochsAjustados} épocas`);
         } catch (error) {
             throw new Error('Error al entrenar el modelo: ' + error);
