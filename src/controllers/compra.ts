@@ -24,8 +24,7 @@ export class CompraController {
                     res.status(400).json({ success: false, error: "Item inválido en el carrito" });
                 }
             }
-
-            const { success, data, message } = await ModeloCompra.RealizarCompra(items, customer);
+            const { success, data, message } = await ModeloCompra.RealizarCompra(items, customer, "");
 
             if (!success) {
                 res.status(400).json({ success: false, message });

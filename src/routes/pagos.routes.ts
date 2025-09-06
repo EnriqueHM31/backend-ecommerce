@@ -10,7 +10,6 @@ export const CompraRouter = Router();
 CompraRouter.post("/checkout-session", CompraController.RealizarCompra);
 
 CompraRouter.get("/checkout-session", async (req, res) => {
-    console.log("📂 CompraRouter cargado");
     try {
         console.log(req.query);
         const { sessionId } = req.query;

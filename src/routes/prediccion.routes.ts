@@ -15,7 +15,7 @@ const DATA_FILE = path.join(__dirname, '../data/compras.json');
 
 // Cargar compras persistentes
 let comprasPersistentes: Compra[] = [];
-if (fs.existsSync(DATA_FILE)) {
+/*if (fs.existsSync(DATA_FILE)) {
     try {
         const rawData = fs.readFileSync(DATA_FILE, 'utf8');
         comprasPersistentes = rawData ? JSON.parse(rawData) : [];
@@ -23,7 +23,7 @@ if (fs.existsSync(DATA_FILE)) {
         console.error('Error leyendo compras persistentes, se inicializa vacío:', err);
         comprasPersistentes = [];
     }
-}
+}*/
 // Instancia global del sistema de recomendación
 const sistemaRecomendacion = new SistemaRecomendacion();
 
