@@ -6,7 +6,7 @@ import { ComentariosRouter } from './routes/comentarios.routes';
 import { ProductosRouter } from './routes/productos.routes';
 import { CompraRouter } from './routes/pagos.routes';
 import { UsuarioRouter } from './routes/usuario.routes';
-import { PrediccionRouter } from './routes/prediccion.routes';
+//import { PrediccionRouter } from './routes/prediccion.routes';
 import { PORT } from './config';
 
 
@@ -34,7 +34,7 @@ app.use('/api', ComentariosRouter);
 app.use('/api/productos', ProductosRouter);
 app.use('/api/compra', CompraRouter);
 app.use('/api/usuario', UsuarioRouter);
-app.use('/api', PrediccionRouter);
+//app.use('/api', PrediccionRouter);
 
 app.use("/", (_req, res) => {
     res.send("Ecommerce API");

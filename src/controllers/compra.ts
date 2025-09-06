@@ -24,7 +24,7 @@ export class CompraController {
                     res.status(400).json({ success: false, error: "Item inválido en el carrito" });
                 }
             }
-            const { success, data, message } = await ModeloCompra.RealizarCompra(items, customer, "");
+            const { success, data, message } = await ModeloCompra.RealizarCompra(items, customer);
 
             if (!success) {
                 res.status(400).json({ success: false, message });
@@ -33,7 +33,7 @@ export class CompraController {
             res.status(200).json({ success: true, data: data, message });
         } catch (error) {
             console.error("Error creando sesión de Stripe:", error);
-            res.status(500).json({ error: "Error creando la sesión de pago" });
+            res.status(500).json({ error: "Error creando la sesión de pago" + error });
         }
     }
 }

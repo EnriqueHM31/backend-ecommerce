@@ -1,4 +1,5 @@
-const { db } = require('../database/db');
+import { db } from '../database/db';
+import { ResultSetHeader, RowDataPacket } from 'mysql2';
 
 
 interface Producto {
@@ -33,41 +34,31 @@ interface CartItem {
     quantity: number;
 }
 
-interface crearPedido {
-    user_id: string;
-    cart_items: CartItem[];
-    direccion_envio: string;
-    referencias: string;
-}
+interface ProductoExtendido extends Producto, RowDataPacket { }
 
-
-interface responsePedido {
-    success: boolean;
-    pedido_id: number;
-    total: number;
-    items_count: number;
+interface Pedido {
+    id: number;
+    usuario_id: number;
+    fecha_pedido: string;
     estado: string;
-    items: {
-        producto_id: number;
-        cantidad: number;
-        precio_unitario: number;
-        subtotal: number;
-        nombre_producto: string;
-    }[];
+    total: number;
     direccion_envio: string;
     referencias: string;
 }
+
+interface PedidoExtendido extends Pedido, RowDataPacket { }
+
 
 export class PedidosService {
 
-
-
-    static async crearPedido({ user_id, cart_items, direccion_envio, referencias = '' }: crearPedido): Promise<responsePedido> {
+    static async crearPedido(user_id: string, cart_items: CartItem[], referencias: string = '') {
 
         console.log("ENTRO")
-        console.log({ user_id, cart_items, direccion_envio, referencias });
+        console.log({ user_id, cart_items, referencias });
+
+        const connection = await db.getConnection();
         // Validar datos requeridos
-        if (!user_id || !cart_items || !direccion_envio) {
+        if (!user_id || !cart_items) {
             throw new Error('Faltan datos requeridos: user_id, cart_items, direccion_envio');
         }
 
@@ -77,15 +68,17 @@ export class PedidosService {
         }
 
         try {
-            await db.beginTransaction();
+            await connection.beginTransaction();
 
             // 1. Verificar que el usuario existe
-            const [userCheck] = await db.execute(
+            const [userCheck] = await connection.execute(
                 'SELECT id FROM customer WHERE id = ?',
                 [user_id]
             );
 
-            if (userCheck.length === 0) {
+            console.log({ userCheck });
+
+            if (!userCheck) {
                 throw new Error('Usuario no encontrado');
             }
 
@@ -107,17 +100,19 @@ export class PedidosService {
                 }
 
                 // Verificar que el producto existe y obtener datos actuales
-                const [productCheck] = await db.execute(`
-                    SELECT id, producto, precio_base, stock, activo 
+                const [productCheck] = await connection.execute<ProductoExtendido[]>(`
+                    SELECT id, precio_base, stock, activo 
                     FROM productos_sku 
                     WHERE id = ? AND activo = 1
                 `, [product.id]);
 
-                if (productCheck.length === 0) {
+                console.log({ productCheck });
+
+                if (!productCheck) {
                     throw new Error(`Producto no encontrado o inactivo: ${product.producto}`);
                 }
 
-                const producto_db = productCheck[0];
+                const producto_db = productCheck[0] as ProductoExtendido;
 
                 // Verificar stock disponible (para pedido pendiente_pago no reducimos aún)
                 if (producto_db.stock < quantity) {
@@ -133,25 +128,29 @@ export class PedidosService {
                     cantidad: quantity,
                     precio_unitario: precio_unitario,
                     subtotal: subtotal,
-                    nombre_producto: producto_db.producto
                 });
+
             }
+            console.log({ items_procesados });
 
             // 3. Crear el pedido principal en estado pendiente_pago
-            const [pedidoResult] = await db.execute(`
-                INSERT INTO pedidos (usuario_id, total, direccion_envio, referencias, estado)
-                VALUES (?, ?, ?, ?, 'pendiente_pago')
-            `, [user_id, total.toFixed(2), direccion_envio, referencias]);
+            const pedidoResult = await connection.execute<ResultSetHeader>(`
+                INSERT INTO pedidos (usuario_id, total, direccion_envio, referencias)
+                VALUES (?, ?, ?, ?)
+            `, [user_id, total.toFixed(2), "hola", referencias]);
 
-            const pedido_id = pedidoResult.insertId;
+            if (!pedidoResult) throw new Error("Error al crear el pedido 34");
+
+
+
 
             // 4. Insertar items del pedido
             for (const item of items_procesados) {
-                await db.execute(`
+                await connection.execute(`
                     INSERT INTO pedido_items (pedido_id, producto_id, cantidad, precio_unitario, subtotal)
                     VALUES (?, ?, ?, ?, ?)
                 `, [
-                    pedido_id,
+                    pedidoResult[0].insertId,
                     item.producto_id,
                     item.cantidad,
                     item.precio_unitario,
@@ -159,22 +158,22 @@ export class PedidosService {
                 ]);
             }
 
-            await db.commit();
+            await connection.commit();
 
             // Retornar datos del pedido creado
             return {
                 success: true,
-                pedido_id: pedido_id,
+                pedido_id: pedidoResult[0].insertId,
                 total: parseFloat(total.toFixed(2)),
                 items_count: items_procesados.length,
                 estado: 'pendiente_pago',
                 items: items_procesados,
-                direccion_envio,
                 referencias
             };
 
         } catch (error) {
-            await db.rollback();
+            await connection.rollback();
+            console.log(error);
             throw error; // Relanzar el error para que lo maneje quien llama
         }
     }
@@ -189,17 +188,17 @@ export class PedidosService {
             await db.beginTransaction();
 
             // Verificar que el pedido existe y está en estado pendiente_pago
-            const [pedidoCheck] = await db.execute(
+            const [pedidoCheck] = await db.execute<PedidoExtendido[]>(
                 'SELECT id, estado, total FROM pedidos WHERE id = ? AND estado = "pendiente_pago"',
                 [pedido_id]
             );
 
-            if (pedidoCheck.length === 0) {
+            if (pedidoCheck) {
                 throw new Error('Pedido no encontrado o ya procesado');
             }
 
             // Verificar stock nuevamente antes de confirmar
-            const [stockCheck] = await db.execute(`
+            const [stockCheck] = await db.execute<ProductoExtendido[]>(`
                 SELECT 
                     pi.producto_id,
                     pi.cantidad,
@@ -263,7 +262,7 @@ export class PedidosService {
                 [nuevo_estado, pedido_id, ...estados_cancelables]
             );
 
-            if (result.affectedRows === 0) {
+            if (result) {
                 throw new Error('Pedido no encontrado o no se puede cancelar');
             }
 
@@ -303,7 +302,7 @@ export class PedidosService {
                 WHERE p.id = ?
             `, [pedido_id]);
 
-            if (pedidoData.length === 0) {
+            if (pedidoData) {
                 throw new Error('Pedido no encontrado');
             }
 
@@ -350,8 +349,8 @@ export class PedidosService {
 
             return {
                 success: true,
-                pedidos_cancelados: result.affectedRows,
-                message: `${result.affectedRows} pedidos expirados cancelados`
+                pedidos_cancelados: result,
+                message: `${result} pedidos expirados cancelados`
             };
 
         } catch (error) {
@@ -359,5 +358,3 @@ export class PedidosService {
         }
     }
 }
-
-module.exports = PedidosService;
