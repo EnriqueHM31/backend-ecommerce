@@ -7,9 +7,6 @@ export class PedidosService {
 
     static async crearPedido(user_id: string, cart_items: CartItem[], referencias: string = '') {
 
-        console.log("ENTRO")
-        console.log({ user_id, cart_items, referencias });
-
         const connection = await db.getConnection();
         // Validar datos requeridos
         if (!user_id || !cart_items) {

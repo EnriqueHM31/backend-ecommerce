@@ -1,6 +1,8 @@
 import { Router } from 'express';
 import { db } from '../database/db';
 import { RowDataPacket } from 'mysql2/promise';
+import { CartItemsValidation } from '@/utils/Validaciones/CartItems';
+import { UsuarioValidation } from '@/utils/Validaciones/usuario';
 
 export const RouterCompras = Router();
 
@@ -63,21 +65,19 @@ export interface PedidoItem extends RowDataPacket {
 
 // POST /api/compras/crear-pedido
 RouterCompras.post('/crear-pedido', async (req, res) => {
-    const { user_id, cart_items, direccion_envio, referencias = '' } = req.body;
+    const { user_id, cart_items, direccion_envio = '', referencias = '' } = req.body;
 
-    // Validar datos requeridos
-    if (!user_id || !cart_items || !direccion_envio) {
-        res.status(400).json({
-            error: 'Faltan datos requeridos',
-            required: ['user_id', 'cart_items', 'direccion_envio']
-        });
+    const resultadoValidarCartItems = CartItemsValidation.RevisarItems(cart_items);
+
+    if (!resultadoValidarCartItems.success) {
+        res.status(400).json({ success: false, error: resultadoValidarCartItems.error.message });
+        return
     }
 
-    // Validar que cart_items sea un array y no esté vacío
-    if (!Array.isArray(cart_items) || cart_items.length === 0) {
-        res.status(400).json({
-            error: 'El carrito está vacío o no es válido'
-        });
+    const resultadoValidarUsuario = UsuarioValidation.RevisarUsuario(user_id);
+    if (!resultadoValidarUsuario.success) {
+        res.status(400).json({ success: false, error: resultadoValidarUsuario.error.message });
+        return
     }
 
     try {
