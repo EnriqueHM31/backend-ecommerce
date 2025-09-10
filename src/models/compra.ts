@@ -1,22 +1,10 @@
 import type { CartItem, Customer } from "../types/producto";
-import Stripe from "stripe";
 import { PedidosService } from "../class/Pedido";
-
-// --- Configuración Stripe ---
-const CLAVE_STRIPE = process.env.CLAVE_SECRET_STRIPE;
-if (!CLAVE_STRIPE) {
-    throw new Error("CLAVE_SECRET_STRIPE no está definida en .env");
-}
-
-// Usa la última versión estable de Stripe
-const stripe = new Stripe(CLAVE_STRIPE);
+import { obtenerStripe } from "@/constants/Stripe";
 
 export class ModeloCompra {
     static async RealizarCompra(items: CartItem[], customer: Customer) {
-
-        console.log({ items, customer });
-
-
+        const stripe = obtenerStripe();
         const pedido = await PedidosService.crearPedido(customer.id, items);
         console.log({ pedido });
 

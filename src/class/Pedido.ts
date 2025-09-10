@@ -1,52 +1,6 @@
 import { db } from '../database/db';
-import { ResultSetHeader, RowDataPacket } from 'mysql2';
-
-
-interface Producto {
-    activo: number;
-    almacenamiento: string;
-    bateria: string;
-    camara: string;
-    categoria: string;
-    color: string;
-    conectividad: string;
-    created_at: string;
-    descripcion: string;
-    display: string;
-    id: number;
-    imagen_url: string;
-    marca: string;
-    precio_base: number;
-    procesador: string;
-    producto: string;
-    producto_id: number;
-    ram_especificacion: string;
-    ram_variante: string;
-    recomendado: number;
-    sistema_operativo: string;
-    sku: string;
-    stock: number;
-    updated_at: string;
-}
-
-interface CartItem {
-    product: Producto;
-    quantity: number;
-}
-
-interface ProductoExtendido extends Producto, RowDataPacket { }
-
-interface Pedido {
-    id: number;
-    usuario_id: number;
-    fecha_pedido: string;
-    estado: string;
-    total: number;
-    direccion_envio: string;
-    referencias: string;
-}
-
-interface PedidoExtendido extends Pedido, RowDataPacket { }
+import { ResultSetHeader, } from 'mysql2';
+import type { CartItem, ProductoExtendido, PedidoExtendido } from '../types/producto';
 
 
 export class PedidosService {

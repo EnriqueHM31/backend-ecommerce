@@ -1,3 +1,5 @@
+
+import type { RowDataPacket } from 'mysql2';
 export interface Producto {
     activo: number;
     almacenamiento: string;
@@ -38,3 +40,19 @@ export interface Customer {
     name: string;
     email: string;
 }
+
+
+
+interface ProductoExtendido extends Producto, RowDataPacket { }
+
+interface Pedido {
+    id: number;
+    usuario_id: number;
+    fecha_pedido: string;
+    estado: string;
+    total: number;
+    direccion_envio: string;
+    referencias: string;
+}
+
+interface PedidoExtendido extends Pedido, RowDataPacket { }
