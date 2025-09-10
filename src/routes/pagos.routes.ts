@@ -1,8 +1,8 @@
 // routes/compra.ts
+import { obtenerStripe } from "@/constants/Stripe";
 import { CompraController } from "@/controllers/compra";
+import { StripeValidation } from "@/utils/Validaciones/Sprite";
 import { Router } from "express";
-import Stripe from "stripe";
-const stripe = new Stripe(process.env.CLAVE_SECRET_STRIPE!);
 
 export const CompraRouter = Router();
 
@@ -10,40 +10,30 @@ export const CompraRouter = Router();
 CompraRouter.post("/checkout-session", CompraController.RealizarCompra);
 
 CompraRouter.get("/checkout-session", async (req, res) => {
+    const stripe = obtenerStripe();
     try {
-        console.log(req.query);
         const { sessionId } = req.query;
 
-        console.log({ sessionId });
+        const resultadoValidarSessionId = StripeValidation.RevisarSessionId(sessionId as string);
 
-        if (!sessionId || typeof sessionId !== "string") {
-            res.status(400).json({
-                success: false,
-                message: "No se ha proporcionado un id de sesión válido",
-                data: null,
-            });
+        if (!resultadoValidarSessionId.success) {
+            res.status(400).json({ success: false, message: resultadoValidarSessionId.error.message });
+            return;
         }
 
         const session = await stripe.checkout.sessions.retrieve(sessionId as string, {
             expand: ["line_items", "customer"],
         });
 
-        res.status(200).json({
-            success: true,
-            message: "Sesión de compra encontrada",
-            data: session,
-        });
+        res.status(200).json({ success: true, message: "Sesión de compra encontrada", data: session, });
     } catch (error: any) {
         console.error("Error al obtener sesión de Stripe:", error);
-        res.status(500).json({
-            success: false,
-            message: "Error al obtener la sesión de compra",
-            data: null,
-        });
+        res.status(500).json({ success: false, message: "Error al obtener la sesión de compra", data: null, });
     }
 });
 
 CompraRouter.get("/pedidos/:email", async (req, res) => {
+    const stripe = obtenerStripe();
     try {
         const { email } = req.params;
 
@@ -68,8 +58,6 @@ CompraRouter.get("/pedidos/:email", async (req, res) => {
                     limit: 10,
                     expand: ["data.price.product"], // ✅ expandimos el objeto Product
                 });
-                console.log({ hola: lineItems.data });
-
                 return {
                     id: session.id,
                     amount_total: session.amount_total,
