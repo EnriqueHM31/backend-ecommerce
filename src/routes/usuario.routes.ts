@@ -1,8 +1,6 @@
-import { CheckearUsuario } from "@/utils/consultas/compras";
-import { InsertarUsuario } from "@/utils/consultas/Usuario";
+import { CheckearUsuario, InsertarUsuario } from "@/utils/consultas/Usuario";
 import { UsuarioValidation } from "@/utils/Validaciones/usuario";
 import { Router } from "express";
-
 export const UsuarioRouter = Router();
 
 UsuarioRouter.post("/auth", async (req, res) => {
@@ -37,7 +35,7 @@ UsuarioRouter.post("/auth", async (req, res) => {
             res.status(203).json({
                 success: true,
                 creado: false,
-                message: 'Ocurrio un problema con tu registro',
+                message: 'Usuario ya registrado',
                 data: { usuario_id, nombre, correo, avatar }
             });
         }

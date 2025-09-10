@@ -1,8 +1,9 @@
-import { CheckearCompra, CheckearProducto, CheckearUsuario, CrearCompra, disminuirStock, InsertarItems, ModificarEstado, obtenerCompras, restaurarStock } from '@/utils/consultas/compras';
+import { CheckearCompra, CheckearProducto, CrearCompra, disminuirStock, InsertarItems, ModificarEstado, obtenerCompras, restaurarStock } from '@/utils/consultas/compras';
 import { CartItemsValidation } from '@/utils/Validaciones/CartItems';
 import { UsuarioValidation } from '@/utils/Validaciones/usuario';
 import { Router } from 'express';
 import { db } from '../database/db';
+import { CheckearUsuario } from '@/utils/consultas/Usuario';
 
 export const RouterCompras = Router();
 
