@@ -56,3 +56,35 @@ interface Pedido {
 }
 
 interface PedidoExtendido extends Pedido, RowDataPacket { }
+
+
+
+export interface ProductoConsulta extends RowDataPacket, Producto { }
+
+export type ProductoPartial = Partial<Producto>;
+
+export interface ProductoExtendido extends Producto, RowDataPacket { }
+
+export interface Pedido extends RowDataPacket {
+    id: number;
+    usuario_id: number;
+    fecha_pedido: string;
+    estado: string;
+    total: number;
+    direccion_envio: string;
+    referencias: string;
+    cliente_nombre: string;
+    cliente_email: string;
+}
+
+export type PedidoPartial = Partial<Pedido>;
+
+export interface PedidoExtendido extends Pedido, RowDataPacket { }
+
+export interface PedidoItem extends RowDataPacket {
+    id: number;
+    cantidad: number;
+    precio_unitario: number;
+    subtotal: number;
+    nombre_producto: string;
+}

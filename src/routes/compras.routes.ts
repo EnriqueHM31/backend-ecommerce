@@ -1,67 +1,11 @@
-import { Router } from 'express';
-import { db } from '../database/db';
-import { RowDataPacket } from 'mysql2/promise';
+import type { PedidoExtendido } from '@/types/producto';
+import { CheckearProducto, CheckearUsuario, CrearCompra, InsertarItems } from '@/utils/consultas/compras';
 import { CartItemsValidation } from '@/utils/Validaciones/CartItems';
 import { UsuarioValidation } from '@/utils/Validaciones/usuario';
+import { Router } from 'express';
+import { db } from '../database/db';
 
 export const RouterCompras = Router();
-
-
-
-export interface Producto extends RowDataPacket {
-    activo: number;
-    almacenamiento: string;
-    bateria: string;
-    camara: string;
-    categoria: string;
-    color: string;
-    conectividad: string;
-    created_at: string;
-    descripcion: string;
-    display: string;
-    id: number;
-    imagen_url: string;
-    marca: string;
-    precio_base: number;
-    procesador: string;
-    producto: string;
-    producto_id: number;
-    ram_especificacion: string;
-    ram_variante: string;
-    recomendado: number;
-    sistema_operativo: string;
-    sku: string;
-    stock: number;
-    updated_at: string;
-}
-
-export type ProductoPartial = Partial<Producto>;
-
-export interface ProductoExtendido extends Producto, RowDataPacket { }
-
-export interface Pedido extends RowDataPacket {
-    id: number;
-    usuario_id: number;
-    fecha_pedido: string;
-    estado: string;
-    total: number;
-    direccion_envio: string;
-    referencias: string;
-    cliente_nombre: string;
-    cliente_email: string;
-}
-
-export type PedidoPartial = Partial<Pedido>;
-
-export interface PedidoExtendido extends Pedido, RowDataPacket { }
-
-export interface PedidoItem extends RowDataPacket {
-    id: number;
-    cantidad: number;
-    precio_unitario: number;
-    subtotal: number;
-    nombre_producto: string;
-}
 
 // POST /api/compras/crear-pedido
 RouterCompras.post('/crear-pedido', async (req, res) => {
@@ -84,49 +28,19 @@ RouterCompras.post('/crear-pedido', async (req, res) => {
         await db.beginTransaction();
 
         // 1. Verificar que el usuario existe
-        const [userCheck] = await db.execute(
-            'SELECT id FROM customer WHERE id = ?',
-            [user_id]
-        );
-
-        if (userCheck) {
-            throw new Error('Usuario no encontrado');
-        }
+        await CheckearUsuario(user_id);
 
         // 2. Validar productos y calcular total
         let total = 0;
         const items_procesados = [];
 
         for (const item of cart_items) {
-            // Validar estructura del item
-            if (!item.product || !item.quantity) {
-                throw new Error('Estructura de item inválida');
-            }
 
             const product = item.product;
             const quantity = parseInt(item.quantity);
 
-            if (quantity <= 0) {
-                throw new Error('La cantidad debe ser mayor a 0');
-            }
-
             // Verificar que el producto existe y obtener datos actuales
-            const [productCheck] = await db.execute<ProductoExtendido[]>(`
-                SELECT id, producto, precio_base, stock, activo 
-                FROM productos_sku 
-                WHERE id = ? AND activo = 1
-            `, [product.id]);
-
-            if (productCheck) {
-                throw new Error(`Producto no encontrado o inactivo: ${product.producto}`);
-            }
-
-            const producto_db: Producto = productCheck[0];
-
-            // Verificar stock disponible
-            if (producto_db.stock < quantity) {
-                throw new Error(`Stock insuficiente para ${producto_db.producto}. Disponible: ${producto_db.stock}, Solicitado: ${quantity}`);
-            }
+            const { producto_db } = await CheckearProducto(product, quantity);
 
             const precio_unitario = parseFloat(Number(producto_db.precio_base).toFixed(2));
             const subtotal = precio_unitario * quantity;
@@ -142,124 +56,40 @@ RouterCompras.post('/crear-pedido', async (req, res) => {
         }
 
         // 3. Crear el pedido principal
-        const [pedidoResult] = await db.execute<PedidoExtendido[]>(`
-            INSERT INTO pedidos (usuario_id, total, direccion_envio, referencias)
-            VALUES (?, ?, ?, ?)
-        `, [user_id, total.toFixed(2), direccion_envio, referencias]);
-
-        const pedido_id = pedidoResult[0].insertId;
+        const { pedido_id } = await CrearCompra(user_id, total, direccion_envio, referencias);
 
         // 4. Insertar items del pedido
         for (const item of items_procesados) {
-            await db.execute(`
-                INSERT INTO pedido_items (pedido_id, producto_id, cantidad, precio_unitario, subtotal)
-                VALUES (?, ?, ?, ?, ?)
-            `, [
-                pedido_id,
-                item.producto_id,
-                item.cantidad,
-                item.precio_unitario,
-                item.subtotal
-            ]);
+            await InsertarItems(pedido_id, item);
         }
 
         await db.commit();
 
+        const data = {
+            pedido_id: pedido_id,
+            total: total.toFixed(2),
+            items_count: items_procesados.length,
+            estado: 'pendiente'
+        }
+
         // Respuesta exitosa
-        res.status(201).json({
-            success: true,
-            message: 'Pedido creado exitosamente',
-            data: {
-                pedido_id: pedido_id,
-                total: total.toFixed(2),
-                items_count: items_procesados.length,
-                estado: 'pendiente'
-            }
-        });
+        res.status(201).json({ success: true, message: 'Pedido creado exitosamente', data: data })
 
     } catch (error) {
         await db.rollback();
         console.error('Error al crear pedido:', error);
 
-        res.status(500).json({
-            success: false,
-            error: error
-        });
+        res.status(500).json({ success: false, error: error });
     }
 });
 
-// GET /api/compras/pedido/:id - Obtener detalles de un pedido
-RouterCompras.get('/pedido/:id', async (req, res) => {
-    const pedido_id = req.params.id;
 
-    try {
-        // Obtener información del pedido
-        const [pedidoData] = await db.execute<PedidoExtendido[]>(`
-            SELECT 
-                p.id,
-                p.usuario_id,
-                p.fecha_pedido,
-                p.estado,
-                p.total,
-                p.direccion_envio,
-                p.referencias,
-                c.name as cliente_nombre,
-                c.email as cliente_email
-            FROM pedidos p
-            JOIN customer c ON p.usuario_id = c.id
-            WHERE p.id = ?
-        `, [pedido_id]);
-
-        if (pedidoData) {
-            res.status(404).json({
-                success: false,
-                error: 'Pedido no encontrado'
-            });
-        }
-
-        // Obtener items del pedido
-        const [items] = await db.execute<PedidoItem[]>(`
-            SELECT 
-                pi.id,
-                pi.cantidad,
-                pi.precio_unitario,
-                pi.subtotal,
-                ps.producto as nombre_producto,
-                ps.descripcion,
-                ps.imagen_url,
-                ps.marca,
-                ps.sku
-            FROM pedido_items pi
-            JOIN productos_sku ps ON pi.producto_id = ps.id
-            WHERE pi.pedido_id = ?
-        `, [pedido_id]);
-
-        res.json({
-            success: true,
-            data: {
-                pedido: pedidoData[0],
-                items: items
-            }
-        });
-
-    } catch (error) {
-        console.error('Error al obtener pedido:', error);
-        res.status(500).json({
-            success: false,
-            error: error
-        });
-    }
-});
-
-// GET /api/compras/usuario/:user_id - Obtener pedidos de un usuario
+// GET /api/compras/usuario/:user_id - Obtener TODOS los pedidos de un usuario (sin paginación)
 RouterCompras.get('/usuario/:user_id', async (req, res) => {
     const user_id = req.params.user_id;
-    const page = parseInt(req.query.page as string) || 1;
-    const limit = parseInt(req.query.limit as string) || 10;
-    const offset = (page - 1) * limit;
 
     try {
-        // Obtener pedidos del usuario con paginación
+        // Obtener pedidos del usuario sin paginación
         const [pedidos] = await db.execute(`
             SELECT 
                 p.id,
@@ -272,29 +102,11 @@ RouterCompras.get('/usuario/:user_id', async (req, res) => {
             WHERE p.usuario_id = ?
             GROUP BY p.id
             ORDER BY p.fecha_pedido DESC
-            LIMIT ? OFFSET ?
-        `, [user_id, limit, offset]);
-
-        // Contar total de pedidos para paginación
-        const [countResult] = await db.execute<PedidoExtendido[]>(
-            'SELECT COUNT(*) as total FROM pedidos WHERE usuario_id = ?',
-            [user_id]
-        );
-
-        const total_pedidos = countResult[0].total;
-        const total_pages = Math.ceil(total_pedidos / limit);
+        `, [user_id]);
 
         res.json({
             success: true,
-            data: {
-                pedidos,
-                pagination: {
-                    current_page: page,
-                    total_pages,
-                    total_pedidos,
-                    items_per_page: limit
-                }
-            }
+            data: pedidos
         });
 
     } catch (error) {
