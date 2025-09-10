@@ -15,7 +15,7 @@ export const ProductoSchema = z.object({
     id: z.number(),
     imagen_url: z.string().url(), // asumo que es url
     marca: z.string(),
-    precio_base: z.number(),
+    precio_base: z.string(),
     procesador: z.string(),
     producto: z.string(),
     producto_id: z.number(),

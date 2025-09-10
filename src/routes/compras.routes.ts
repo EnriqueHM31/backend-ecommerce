@@ -100,16 +100,16 @@ RouterCompras.put('/pedido/:id/estado', async (req, res) => {
     const { nuevo_estado } = req.body;
 
     const estados_validos = ['pendiente', 'confirmado', 'enviado', 'entregado', 'cancelado'];
-
-    if (!nuevo_estado || !estados_validos.includes(nuevo_estado)) {
-        res.status(400).json({
-            success: false,
-            error: 'Estado no válido',
-            estados_validos
-        });
-    }
-
     try {
+
+        if (!nuevo_estado || !estados_validos.includes(nuevo_estado)) {
+            res.status(400).json({
+                success: false,
+                error: 'Estado no válido',
+                estados_validos
+            });
+        }
+
         await db.beginTransaction();
 
         // Verificar que el pedido existe y obtener estado actual

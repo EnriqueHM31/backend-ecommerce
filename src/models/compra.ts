@@ -8,8 +8,6 @@ export class ModeloCompra {
         try {
 
             const pedido = await PedidosService.crearPedido(customer.id, items);
-            console.log({ pedido });
-
             if (!pedido.success) {
                 throw new Error("Error al crear el pedido");
             }
@@ -74,7 +72,7 @@ export class ModeloCompra {
                 return { success: false, data: null, message: "Error al crear la sesión de Stripe" };
             }
 
-            return { success: true, data: session, message: "Compra realizada correctamente" };
+            return { success: true, data: session.url, message: "Compra realizada correctamente" };
         } catch (error) {
             console.error("Error al crear la compra:", error);
             return { success: false, data: null, message: error || "Error al crear la compra" };

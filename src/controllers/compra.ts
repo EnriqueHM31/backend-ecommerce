@@ -19,14 +19,16 @@ export class CompraController {
             const resultadoValidarItems = CartItemsValidation.RevisarItems(items);
 
             if (!resultadoValidarItems.success) {
-                res.status(400).json({ success: false, error: resultadoValidarItems.error.message });
+                res.status(400).json({ success: false, error: JSON.stringify(resultadoValidarItems.error) });
                 return
             }
 
             const resultadoValidarUsuario = UsuarioValidation.RevisarUsuario({ usuario_id: customer.id, nombre: customer.name, correo: customer.email, });
 
+            console.log({ resultadoValidarUsuario });
+
             if (!resultadoValidarUsuario.success) {
-                res.status(400).json({ success: false, error: resultadoValidarUsuario.error.message });
+                res.status(400).json({ success: false, error: JSON.stringify(resultadoValidarUsuario.error) });
                 return
             }
             const { success, data, message } = await ModeloCompra.RealizarCompra(items, customer);
@@ -35,9 +37,10 @@ export class CompraController {
                 res.status(400).json({ success: false, message: message, data: [] });
             }
 
+            console.log({ data, message });
             res.status(200).json({ success: true, data: data, message: message });
         } catch (error) {
-            console.error("Error creando sesión de Stripe:", error);
+            console.error("Error creando sesión de Stripe:", JSON.stringify(error));
             res.status(500).json({ error: "Error creando la sesión de pago" + error });
         }
     }
