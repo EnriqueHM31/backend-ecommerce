@@ -7,21 +7,49 @@ export const UsuarioRouter = Router();
 
 UsuarioRouter.post("/auth", async (req, res) => {
     try {
-
         const { usuario_id, nombre, correo, avatar } = req.body;
 
-        const resultadoValidarUsuario = await UsuarioValidation.RevisarUsuario({ id: usuario_id, nombre, email: correo, avatar });
+        // Validación con Zod
+        const resultadoValidarUsuario = UsuarioValidation.RevisarUsuario({ usuario_id, nombre, correo, avatar });
 
         if (!resultadoValidarUsuario.success) {
-            res.status(400).json({ success: false, message: resultadoValidarUsuario.error.message });
-            return;
+            res.status(400).json({
+                creado: false,
+                success: false,
+                message: resultadoValidarUsuario.error.issues.map(err => err.message).join(", ")
+            });
         }
 
-        await CheckearUsuario(usuario_id);
+        // Revisar si ya existe el usuario
+        const { existe } = await CheckearUsuario(usuario_id);
 
-        await InsertarUsuario(usuario_id, nombre, correo, avatar);
+        if (!existe) {
+            console.log('Creando usuario...');
+            await InsertarUsuario(usuario_id, nombre, correo, avatar);
+
+            res.status(203).json({
+                success: true,
+                creado: true,
+                message: 'Registro exitoso',
+                data: { usuario_id, nombre, correo, avatar }
+            });
+        } else {
+            res.status(203).json({
+                success: true,
+                creado: false,
+                message: 'Ocurrio un problema con tu registro',
+                data: { usuario_id, nombre, correo, avatar }
+            });
+        }
+
 
     } catch (error) {
-        res.status(500).json({ success: false, message: error || "Error al obtener usuarios", data: null, creado: false });
+        console.error("Error en /auth:", error);
+        res.status(500).json({
+            success: false,
+            message: error instanceof Error ? error.message : "Error al procesar la autenticación",
+            data: null,
+            creado: false
+        });
     }
 });

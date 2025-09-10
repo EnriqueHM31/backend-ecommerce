@@ -1,15 +1,18 @@
 import { PedidoExtendido, Producto, ProductoExtendido } from "@/types/producto";
 import { db } from "../../database/db";
+import { Usuario } from "@/types/usuario";
+import { RowDataPacket } from "mysql2";
+
+interface UsuarioExtendido extends Usuario, RowDataPacket { }
 
 export async function CheckearUsuario(user_id: string) {
-    const [userCheck] = await db.execute(
+    const [userCheck] = await db.execute<UsuarioExtendido[]>(
         'SELECT id FROM customer WHERE id = ?',
         [user_id]
     );
+    if (userCheck.length !== 0) return { existe: true }
 
-    if (userCheck) {
-        throw new Error('Usuario no encontrado');
-    }
+    return { existe: false }
 }
 
 export async function CheckearProducto(product: Producto, quantity: number) {
