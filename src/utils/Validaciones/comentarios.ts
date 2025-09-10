@@ -8,8 +8,6 @@ export class ValidacionComentarios {
         correo: z.string(),
         mensaje: z.string().min(1, { message: "El comentario es requerido" }),
     })
-
-
 }
 
 export function validarComentario(data: { nombre: string, ranking: number, email: string, categoria: string, comentario: string }) {
