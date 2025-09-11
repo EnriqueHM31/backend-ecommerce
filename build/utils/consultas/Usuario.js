@@ -11,7 +11,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.CheckearUsuario = CheckearUsuario;
 exports.InsertarUsuario = InsertarUsuario;
-const db_1 = require("@/database/db");
+const db_1 = require("../../database/db");
 function CheckearUsuario(user_id) {
     return __awaiter(this, void 0, void 0, function* () {
         const [userCheck] = yield db_1.db.execute('SELECT id FROM customer WHERE id = ?', [user_id]);
