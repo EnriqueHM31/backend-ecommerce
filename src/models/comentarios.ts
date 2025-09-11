@@ -1,5 +1,5 @@
-import { MensajeCorreo } from '../utils/mensaje';
-import { transporter } from '../utils/contacto';
+import { MensajeCorreo } from '../utils/contacto/mensaje';
+import { transporter } from '../utils/contacto/contacto';
 
 interface ComentarioResponseProps {
     nombre: string;

@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { validarComentario } from '../utils/Validaciones/comentarios';
+import { validarComentario } from '../utils/validaciones/comentarios';
 import { ModeloContacto } from '../models/comentarios';
 
 export class ComentariosController {

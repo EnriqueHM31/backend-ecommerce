@@ -1,5 +1,5 @@
 import { CheckearUsuario, InsertarUsuario } from "@/utils/consultas/Usuario";
-import { UsuarioValidation } from "@/utils/Validaciones/usuario";
+import { UsuarioValidation } from "@/utils/validaciones/usuario";
 import { Request, Response } from "express";
 
 export class AutenticacionController {
