@@ -3,7 +3,7 @@ import { guardarCompras } from '../utils/pagos/predicciones';
 import { SistemaRecomendacion } from '../class/Prediccion';
 import type { RequestEntrenamiento, RequestPrediccion } from '../types/prediccion';
 import fs from 'fs';
-import { DATA_FILE } from '@/constants/prediccion';
+import { DATA_FILE } from '../constants/prediccion';
 
 interface Compra {
     usuario: string;

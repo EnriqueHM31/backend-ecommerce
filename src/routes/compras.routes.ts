@@ -1,4 +1,4 @@
-import { pedidosController } from '@/controllers/pedidos';
+import { pedidosController } from '../controllers/pedidos';
 import { Router } from 'express';
 
 export const RouterCompras = Router();

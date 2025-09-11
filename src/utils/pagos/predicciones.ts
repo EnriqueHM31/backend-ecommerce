@@ -1,5 +1,5 @@
 // Función para guardar compras persistentes
-import { DATA_FILE } from '@/constants/prediccion';
+import { DATA_FILE } from '../../constants/prediccion';
 import fs from 'fs';
 
 interface Compra {
