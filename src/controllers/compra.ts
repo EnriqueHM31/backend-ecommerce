@@ -41,7 +41,6 @@ export class CompraController {
                 res.status(400).json({ success: false, message: message, data: [] });
             }
 
-            console.log({ data, message });
             res.status(200).json({ success: true, data: data, message: message });
         } catch (error) {
             console.error("Error creando sesión de Stripe:", JSON.stringify(error));
@@ -51,20 +50,35 @@ export class CompraController {
 
     static async ObtenerCompraIdSession(req: Request, res: Response) {
         const stripe = obtenerStripe();
+
         try {
             const { sessionId } = req.query;
 
+            // ✅ Validar sessionId
             const resultadoValidarSessionId = StripeValidation.RevisarSessionId(sessionId as string);
-
             if (!resultadoValidarSessionId.success) {
-                res.status(400).json({ success: false, message: resultadoValidarSessionId.error.message });
-                return;
+                res.status(400).json({
+                    success: false,
+                    message: resultadoValidarSessionId.error.message,
+                });
             }
 
+            // ✅ Recuperar sesión con line_items + customer
             const session = await stripe.checkout.sessions.retrieve(sessionId as string, {
                 expand: ["line_items", "customer"],
             });
 
+            // ✅ Verificar si ya se envió factura (usando metadata de Stripe)
+            if (session.metadata?.facturaEnviada === "true") {
+                res.status(200).json({
+                    success: true,
+                    message: "Factura ya fue enviada previamente",
+                    data: session,
+                });
+                return
+            }
+
+            // 🚀 Generar y enviar factura PDF
             await ModeloFactura.EnviarFacturaPDF({
                 nombre: session.customer_details?.name || "Cliente",
                 correo: session.customer_details?.email || "sin-correo@dominio.com",
@@ -78,20 +92,32 @@ export class CompraController {
                 cp: session.customer_details?.address?.postal_code || "",
                 pais: session.customer_details?.address?.country || "",
 
-                items: session.line_items?.data.map((item: any) => {
-                    return {
-                        producto: item.description,
-                        cantidad: item.quantity,
-                        precio: `$${(item.price.unit_amount / 100).toFixed(2)} MXN`,
-                        total: `$${(item.amount_total / 100).toFixed(2)} MXN`,
-                    };
-                }) || [],
+                items: session.line_items?.data.map((item: any) => ({
+                    producto: item.description,
+                    cantidad: item.quantity,
+                    precio: `$${(item.price.unit_amount / 100).toFixed(2)} MXN`,
+                    total: `$${(item.amount_total / 100).toFixed(2)} MXN`,
+                })) || [],
             });
 
-            res.status(200).json({ success: true, message: "Sesión de compra encontrada", data: session, });
+            // ✅ Marcar como enviada en metadata de Stripe
+            await stripe.checkout.sessions.update(sessionId as string, {
+                metadata: { ...session.metadata, facturaEnviada: "true" },
+            });
+
+            res.status(200).json({
+                success: true,
+                message: "Factura enviada exitosamente",
+                data: session,
+            });
+
         } catch (error) {
             console.error("Error al obtener sesión de Stripe:", error);
-            res.status(500).json({ success: false, message: "Error al obtener la sesión de compra", data: null, });
+            res.status(500).json({
+                success: false,
+                message: "Error al obtener la sesión de compra",
+                data: null,
+            });
         }
     }
 
