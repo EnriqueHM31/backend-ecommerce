@@ -1,5 +1,5 @@
 // routes/compra.ts
-import { CompraController } from "@/controllers/compra";
+import { CompraController } from "../controllers/compra";
 import { Router } from "express";
 
 export const CompraRouter = Router();
