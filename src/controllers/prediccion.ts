@@ -2,6 +2,8 @@ import { Request, Response } from 'express';
 import { guardarCompras } from '@/utils/pagos/predicciones';
 import { SistemaRecomendacion } from '../class/Prediccion';
 import type { RequestEntrenamiento, RequestPrediccion } from '../types/prediccion';
+import fs from 'fs';
+import { DATA_FILE } from '@/constants/prediccion';
 
 interface Compra {
     usuario: string;
@@ -9,42 +11,58 @@ interface Compra {
     cantidad?: number;
 }
 
-// Persistencia en memoria
-let comprasPersistentes: Compra[] = [];
-
-// Instancia global
-const sistemaRecomendacion = new SistemaRecomendacion();
-
-// Entrenar modelo si hay datos
-if (comprasPersistentes.length > 0 && !sistemaRecomendacion.isInitialized) {
-    sistemaRecomendacion.entrenar(comprasPersistentes)
-        .then(() => console.log('Modelo entrenado con datos persistentes'))
-        .catch(err => console.error('Error entrenando modelo inicial:', err));
+// --- Persistencia en disco ---
+function cargarCompras(): Compra[] {
+    if (!fs.existsSync(DATA_FILE)) return [];
+    try {
+        return JSON.parse(fs.readFileSync(DATA_FILE, 'utf8')) as Compra[];
+    } catch (e) {
+        console.error("Error al leer compras persistidas:", e);
+        return [] as Compra[];
+    }
 }
 
+let comprasPersistentes: Compra[] = cargarCompras();
+
+// --- Instancia global del sistema ---
+const sistemaRecomendacion = new SistemaRecomendacion();
+
+// ===============================
+// 🚀 Inicialización del modelo
+// ===============================
+(async () => {
+    try {
+        // Intenta cargar modelo exportado (ej: backend-ecommerce/modelo/model.json)
+        await sistemaRecomendacion.cargarModelo('./modelo/model.json');
+        console.log("✅ Modelo cargado desde archivo");
+
+    } catch (err) {
+        console.warn("⚠️ No se encontró modelo guardado, se usará entrenamiento inicial");
+        if (comprasPersistentes.length > 0) {
+            sistemaRecomendacion.entrenar(comprasPersistentes)
+                .then(() => console.log('✅ Modelo entrenado con datos persistentes'))
+                .catch(err => console.error('❌ Error entrenando modelo inicial:', err));
+        }
+    }
+})();
+
 export const PrediccionController = {
+    // --- Obtener predicciones ---
     prediccion: async (req: RequestPrediccion, res: Response) => {
         try {
             const { usuario, compras, entrenar = false, topK = 5 } = req.body;
 
-
-            if (entrenar || !sistemaRecomendacion.isInitialized) {
-
-                const comprasValidas = compras?.every(c =>
-                    c.usuario && c.producto &&
-                    typeof c.usuario === 'string' &&
-                    typeof c.producto === 'string'
-                );
-
-                if (!comprasValidas) {
-                    res.status(400).json({
-                        error: 'Las compras deben tener formato: { usuario: string, producto: string, cantidad?: number }'
-                    });
-                }
-
-                comprasPersistentes.push(...compras ?? []);
+            // Guardar compras nuevas (solo persistencia, no reentrenar en Windows)
+            if (Array.isArray(compras) && compras.length > 0) {
+                comprasPersistentes.push(...compras as Compra[]);
                 guardarCompras({ comprasPersistentes });
-                //await sistemaRecomendacion.entrenar(comprasPersistentes);
+            }
+
+            // ⚠️ Opción: si quieres reentrenar en Linux/Colab, habilita esto
+            if (entrenar) {
+                sistemaRecomendacion.entrenar(comprasPersistentes)
+                    .then(() => console.log("🔄 Modelo reentrenado automáticamente"))
+                    .catch(err => console.error("❌ Error reentrenando:", err));
             }
 
             const recomendaciones = await sistemaRecomendacion.predecir(usuario, topK);
@@ -65,6 +83,7 @@ export const PrediccionController = {
         }
     },
 
+    // --- Info del modelo ---
     info: (_req: Request, res: Response) => {
         res.json({
             modeloEntrenado: sistemaRecomendacion.isInitialized,
@@ -74,20 +93,27 @@ export const PrediccionController = {
         });
     },
 
+    // --- Reentrenar manualmente ---
     entrenar: async (req: RequestEntrenamiento, res: Response) => {
         try {
             const { compras } = req.body;
 
-            if (!compras || !Array.isArray(compras) || compras.length === 0) {
+            if (!Array.isArray(compras) || compras.length === 0) {
                 res.status(400).json({ error: 'Los datos de "compras" son requeridos' });
+                return;
             }
 
+            // Actualizar persistencia
             comprasPersistentes.push(...compras);
             guardarCompras({ comprasPersistentes });
-            await sistemaRecomendacion.entrenar(comprasPersistentes, 100);
+
+            // 🚀 Entrenamiento manual (solo si puedes en tu entorno)
+            sistemaRecomendacion.entrenar(comprasPersistentes, 100)
+                .then(() => console.log("✅ Reentrenamiento manual completado"))
+                .catch(err => console.error("❌ Error en reentrenamiento manual:", err));
 
             res.json({
-                mensaje: 'Modelo reentrenado exitosamente',
+                mensaje: 'Reentrenamiento iniciado en background',
                 numUsuarios: sistemaRecomendacion.numUsuarios,
                 numProductos: sistemaRecomendacion.numProductos
             });

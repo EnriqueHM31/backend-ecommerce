@@ -1,13 +1,16 @@
-import * as tf from '@tensorflow/tfjs';
 import type { Compra, Prediccion, DatosPreprocessed, DatosEntrenamiento } from '../types/prediccion';
+// ⚠️ Si solo harás predicciones en Windows, cambia a:
+// import * as tf from '@tensorflow/tfjs';
 
-// Clase para el sistema de recomendación
+import { input, layers, LayersModel, loadLayersModel, Logs, model, SymbolicTensor, Tensor, tensor2d, train } from '@tensorflow/tfjs';
+
 export class SistemaRecomendacion {
-    private model: tf.LayersModel | null;
+    private model: LayersModel | null;
     private productEncoder: Map<string, number>;
     private userEncoder: Map<string, number>;
     private productDecoder: Map<number, string>;
     private userDecoder: Map<number, string>;
+    private matrizOriginal: number[][] | null;
     public isInitialized: boolean;
 
     constructor() {
@@ -16,12 +19,14 @@ export class SistemaRecomendacion {
         this.userEncoder = new Map();
         this.productDecoder = new Map();
         this.userDecoder = new Map();
+        this.matrizOriginal = null;
         this.isInitialized = false;
     }
 
-    // Preprocesa los datos de compras
+    // ==============================
+    // 🚀 PREPROCESAMIENTO DE DATOS
+    // ==============================
     preprocesarDatos(compras: Compra[]): DatosPreprocessed {
-        // Crear encoders para usuarios y productos
         const usuarios: string[] = [...new Set(compras.map(c => c.usuario))];
         const productos: string[] = [...new Set(compras.map(c => c.producto))];
 
@@ -35,7 +40,6 @@ export class SistemaRecomendacion {
             this.productDecoder.set(idx, producto);
         });
 
-        // Crear matriz de interacciones usuario-producto
         const numUsuarios = usuarios.length;
         const numProductos = productos.length;
         const matriz: number[][] = Array(numUsuarios).fill(null).map(() => Array(numProductos).fill(0));
@@ -44,57 +48,45 @@ export class SistemaRecomendacion {
             const userIdx = this.userEncoder.get(compra.usuario);
             const prodIdx = this.productEncoder.get(compra.producto);
             if (userIdx !== undefined && prodIdx !== undefined) {
-                // Usar cantidad o rating, default 1
-                matriz[userIdx][prodIdx] = compra.cantidad || compra.rating || 1;
+                matriz[userIdx][prodIdx] = compra.cantidad || (compra as any).rating || 1;
             }
         });
 
-        return {
-            matriz,
-            numUsuarios,
-            numProductos
-        };
+        return { matriz, numUsuarios, numProductos };
     }
 
-    // Crea y entrena el modelo de factorización matricial
-    async crearModelo(numUsuarios: number, numProductos: number, embedding_dim: number = 50): Promise<tf.LayersModel> {
-        // Entrada para usuarios
-        const userInput = tf.input({ shape: [1], name: 'user_input' });
-        const userEmbedding = tf.layers.embedding({
+    // ==============================
+    // 🚀 CREAR MODELO
+    // ==============================
+    async crearModelo(numUsuarios: number, numProductos: number, embedding_dim: number = 50): Promise<LayersModel> {
+        const userInput = input({ shape: [1], name: 'user_input' });
+        const userEmbedding = layers.embedding({
             inputDim: numUsuarios,
             outputDim: embedding_dim,
             name: 'user_embedding'
-        }).apply(userInput) as tf.SymbolicTensor;
-        const userVec = tf.layers.flatten().apply(userEmbedding) as tf.SymbolicTensor;
+        }).apply(userInput) as SymbolicTensor;
+        const userVec = layers.flatten().apply(userEmbedding) as SymbolicTensor;
 
-        // Entrada para productos
-        const itemInput = tf.input({ shape: [1], name: 'item_input' });
-        const itemEmbedding = tf.layers.embedding({
+        const itemInput = input({ shape: [1], name: 'item_input' });
+        const itemEmbedding = layers.embedding({
             inputDim: numProductos,
             outputDim: embedding_dim,
             name: 'item_embedding'
-        }).apply(itemInput) as tf.SymbolicTensor;
-        const itemVec = tf.layers.flatten().apply(itemEmbedding) as tf.SymbolicTensor;
+        }).apply(itemInput) as SymbolicTensor;
+        const itemVec = layers.flatten().apply(itemEmbedding) as SymbolicTensor;
 
-        // Producto punto entre embeddings de usuario e item
-        const dotProduct = tf.layers.dot({ axes: 1 }).apply([userVec, itemVec]) as tf.SymbolicTensor;
+        const dotProduct = layers.dot({ axes: 1 }).apply([userVec, itemVec]) as SymbolicTensor;
 
-        // Salida con activación sigmoide para normalizar entre 0 y 1
-        const output = tf.layers.dense({
+        const output = layers.dense({
             units: 1,
             activation: 'sigmoid',
             name: 'output'
-        }).apply(dotProduct) as tf.SymbolicTensor;
+        }).apply(dotProduct) as SymbolicTensor;
 
-        // Crear modelo
-        this.model = tf.model({
-            inputs: [userInput, itemInput],
-            outputs: output
-        });
+        this.model = model({ inputs: [userInput, itemInput], outputs: output });
 
-        // Compilar modelo
         this.model.compile({
-            optimizer: tf.train.adam(0.001),
+            optimizer: train.adam(0.001),
             loss: 'meanSquaredError',
             metrics: ['mae']
         });
@@ -102,13 +94,14 @@ export class SistemaRecomendacion {
         return this.model;
     }
 
-    // Prepara datos de entrenamiento
+    // ==============================
+    // 🚀 PREPARAR DATOS ENTRENAMIENTO
+    // ==============================
     prepararDatosEntrenamiento(matriz: number[][]): DatosEntrenamiento {
         const userIds: number[] = [];
         const itemIds: number[] = [];
         const ratings: number[] = [];
 
-        // Crear ejemplos de entrenamiento
         for (let i = 0; i < matriz.length; i++) {
             for (let j = 0; j < matriz[i].length; j++) {
                 if (matriz[i][j] > 0) {
@@ -116,8 +109,6 @@ export class SistemaRecomendacion {
                     itemIds.push(j);
                     ratings.push(matriz[i][j]);
                 }
-
-                // Agregar algunos ejemplos negativos (productos no comprados)
                 if (matriz[i][j] === 0 && Math.random() < 0.1) {
                     userIds.push(i);
                     itemIds.push(j);
@@ -126,31 +117,87 @@ export class SistemaRecomendacion {
             }
         }
 
-        // Normalizar ratings entre 0 y 1
         const maxRating = Math.max(...ratings);
         const normalizedRatings = ratings.map(r => maxRating > 0 ? r / maxRating : 0);
 
         return {
-            userIds: tf.tensor2d(userIds, [userIds.length, 1], 'int32'),
-            itemIds: tf.tensor2d(itemIds, [itemIds.length, 1], 'int32'),
-            ratings: tf.tensor2d(normalizedRatings, [normalizedRatings.length, 1])
+            userIds: tensor2d(userIds, [userIds.length, 1], 'int32'),
+            itemIds: tensor2d(itemIds, [itemIds.length, 1], 'int32'),
+            ratings: tensor2d(normalizedRatings, [normalizedRatings.length, 1])
         };
     }
 
+    // ==============================
+    // 🚀 ENTRENAR MODELO
+    // ==============================
+    async entrenar(compras: Compra[], epochs: number = 50): Promise<void> {
+        console.log('Iniciando entrenamiento...');
+        try {
+            const { matriz, numUsuarios, numProductos } = this.preprocesarDatos(compras);
+            this.matrizOriginal = matriz.map(row => [...row]);
 
+            await this.crearModelo(numUsuarios, numProductos);
 
-    // Predice recomendaciones para un usuario - VERSIÓN MEJORADA
+            const datos = this.prepararDatosEntrenamiento(matriz);
+            const epochsAjustados = Math.max(epochs, 50);
+
+            if (this.model) {
+                await this.model.fit(
+                    [datos.userIds, datos.itemIds],
+                    datos.ratings,
+                    {
+                        epochs: epochsAjustados,
+                        batchSize: Math.min(32, datos.userIds.shape[0]),
+                        validationSplit: 0.1,
+                        verbose: 1,
+                        callbacks: {
+                            onEpochEnd: (epoch: number, logs?: Logs) => {
+                                if (logs?.loss && epoch % 10 === 0) {
+                                    console.log(`Época ${epoch + 1}/${epochsAjustados}: pérdida = ${logs.loss.toFixed(4)}`);
+                                }
+                            }
+                        }
+                    }
+                );
+            }
+
+            datos.userIds.dispose();
+            datos.itemIds.dispose();
+            datos.ratings.dispose();
+
+            this.isInitialized = true;
+            console.log(`✅ Modelo entrenado con ${epochsAjustados} épocas`);
+        } catch (err) {
+            throw new Error('Error en entrenamiento: ' + err);
+        }
+    }
+
+    // ==============================
+    // 🚀 GUARDAR Y CARGAR MODELO
+    // ==============================
+    async guardarModelo(ruta: string = './modelo-entrenado'): Promise<void> {
+        if (!this.model) throw new Error('No hay modelo entrenado para guardar');
+        await this.model.save(`file://${ruta}`);
+        console.log(`✅ Modelo guardado en ${ruta}`);
+    }
+
+    async cargarModelo(ruta: string = './modelo-entrenado/model.json'): Promise<void> {
+        this.model = await loadLayersModel(`file://${ruta}`);
+        this.isInitialized = true;
+        console.log(`✅ Modelo cargado desde ${ruta}`);
+    }
+
+    // ==============================
+    // 🚀 PREDICCIÓN (con filtros)
+    // ==============================
     async predecir(usuario: string, topK: number = 5, excluirComprados: boolean = true): Promise<Prediccion[]> {
         if (!this.isInitialized || !this.model) {
-            throw new Error('El modelo no ha sido entrenado');
+            throw new Error('El modelo no ha sido entrenado ni cargado');
         }
 
         const userIdx = this.userEncoder.get(usuario);
-        if (userIdx === undefined) {
-            throw new Error(`Usuario ${usuario} no encontrado`);
-        }
+        if (userIdx === undefined) throw new Error(`Usuario ${usuario} no encontrado`);
 
-        // NUEVO: Obtener productos ya comprados por el usuario
         const productosComprados = new Set<string>();
         if (excluirComprados && this.matrizOriginal) {
             for (let prodIdx = 0; prodIdx < this.productEncoder.size; prodIdx++) {
@@ -162,177 +209,69 @@ export class SistemaRecomendacion {
         }
 
         const predicciones: Prediccion[] = [];
-        const numProductos = this.productEncoder.size;
-
-        // Obtener predicciones para todos los productos
-        for (let prodIdx = 0; prodIdx < numProductos; prodIdx++) {
+        for (let prodIdx = 0; prodIdx < this.productEncoder.size; prodIdx++) {
             const producto = this.productDecoder.get(prodIdx);
+            if (producto && excluirComprados && productosComprados.has(producto)) continue;
 
-            // NUEVO: Saltar productos ya comprados
-            if (producto && excluirComprados && productosComprados.has(producto)) {
-                continue;
-            }
+            const userTensor = tensor2d([[userIdx]], [1, 1], 'int32');
+            const itemTensor = tensor2d([[prodIdx]], [1, 1], 'int32');
 
-            const userTensor = tf.tensor2d([[userIdx]], [1, 1], 'int32');
-            const itemTensor = tf.tensor2d([[prodIdx]], [1, 1], 'int32');
-
-            const prediccion = this.model.predict([userTensor, itemTensor]) as tf.Tensor;
+            const prediccion = this.model.predict([userTensor, itemTensor]) as Tensor;
             const score = await prediccion.data();
 
-            if (producto) {
-                predicciones.push({
-                    producto,
-                    score: score[0]
-                });
-            }
+            if (producto) predicciones.push({ producto, score: score[0] });
 
-            // Limpiar tensores
             userTensor.dispose();
             itemTensor.dispose();
             prediccion.dispose();
         }
 
-        // NUEVO: Aplicar filtros adicionales por ecosistema
-        const prediccionesFiltradas = this.aplicarFiltrosEcosistema(predicciones, usuario);
-
-        // Ordenar por score y tomar los top K
-        return prediccionesFiltradas
-            .sort((a, b) => b.score - a.score)
-            .slice(0, topK);
+        const predFiltradas = this.aplicarFiltrosEcosistema(predicciones, usuario);
+        return predFiltradas.sort((a, b) => b.score - a.score).slice(0, topK);
     }
 
-    // NUEVO: Método para aplicar filtros por ecosistema
+    // ==============================
+    // 🚀 FILTROS DE ECOSISTEMA
+    // ==============================
     private aplicarFiltrosEcosistema(predicciones: Prediccion[], usuario: string): Prediccion[] {
         const userIdx = this.userEncoder.get(usuario);
         if (userIdx === undefined || !this.matrizOriginal) return predicciones;
 
-        // Detectar ecosistema predominante del usuario
-        const ecosistemas = {
-            apple: 0,
-            samsung: 0,
-            google: 0,
-            microsoft: 0,
-            lenovo: 0,
-            dell: 0
-        };
+        const ecosistemas = { apple: 0, samsung: 0, google: 0, microsoft: 0, lenovo: 0, dell: 0 };
 
-        // Contar productos por ecosistema ya comprados
         for (let prodIdx = 0; prodIdx < this.productEncoder.size; prodIdx++) {
             if (this.matrizOriginal[userIdx][prodIdx] > 0) {
                 const producto = this.productDecoder.get(prodIdx);
-                if (producto) {
-                    if (producto.includes('IP15') || producto.includes('MBA') || producto.includes('MBP') || producto.includes('IPAD') || producto.includes('AIRP')) {
-                        ecosistemas.apple += this.matrizOriginal[userIdx][prodIdx];
-                    } else if (producto.includes('GS24') || producto.includes('GTS9')) {
-                        ecosistemas.samsung += this.matrizOriginal[userIdx][prodIdx];
-                    } else if (producto.includes('PX8')) {
-                        ecosistemas.google += this.matrizOriginal[userIdx][prodIdx];
-                    } else if (producto.includes('SP') || producto.includes('SG')) {
-                        ecosistemas.microsoft += this.matrizOriginal[userIdx][prodIdx];
-                    } else if (producto.includes('T14') || producto.includes('X1C') || producto.includes('P1')) {
-                        ecosistemas.lenovo += this.matrizOriginal[userIdx][prodIdx];
-                    } else if (producto.includes('XPS')) {
-                        ecosistemas.dell += this.matrizOriginal[userIdx][prodIdx];
-                    }
-                }
+                if (!producto) continue;
+                if (producto.includes('IP15') || producto.includes('MBA') || producto.includes('MBP') || producto.includes('IPAD') || producto.includes('AIRP')) ecosistemas.apple++;
+                else if (producto.includes('GS24') || producto.includes('GTS9')) ecosistemas.samsung++;
+                else if (producto.includes('PX8')) ecosistemas.google++;
+                else if (producto.includes('SP') || producto.includes('SG')) ecosistemas.microsoft++;
+                else if (producto.includes('T14') || producto.includes('X1C') || producto.includes('P1')) ecosistemas.lenovo++;
+                else if (producto.includes('XPS')) ecosistemas.dell++;
             }
         }
 
-        // Encontrar ecosistema predominante
         const ecosistemaPredominante = Object.entries(ecosistemas).reduce((a, b) =>
-            ecosistemas[a[0] as keyof typeof ecosistemas] > ecosistemas[b[0] as keyof typeof ecosistemas] ? a : b
+            a[1] > b[1] ? a : b
         )[0];
 
-        // Aplicar bonus/penalty basado en ecosistema
         return predicciones.map(pred => {
             let bonus = 1.0;
             const producto = pred.producto.toLowerCase();
 
-            if (ecosistemaPredominante === 'apple' && (
-                producto.includes('ip15') || producto.includes('mba') ||
-                producto.includes('mbp') || producto.includes('ipad') || producto.includes('airp')
-            )) {
-                bonus = 1.3; // Bonus para productos Apple
-            } else if (ecosistemaPredominante === 'samsung' && (
-                producto.includes('gs24') || producto.includes('gts9')
-            )) {
-                bonus = 1.3; // Bonus para productos Samsung
-            } else if (ecosistemaPredominante === 'apple' && (
-                producto.includes('gs24') || producto.includes('px8')
-            )) {
-                bonus = 0.7; // Penalty para competidores
-            } else if (ecosistemaPredominante === 'samsung' && (
-                producto.includes('ip15') || producto.includes('ipad')
-            )) {
-                bonus = 0.7; // Penalty para competidores
-            }
+            if (ecosistemaPredominante === 'apple' && (producto.includes('ip15') || producto.includes('mba') || producto.includes('mbp') || producto.includes('ipad') || producto.includes('airp'))) bonus = 1.3;
+            else if (ecosistemaPredominante === 'samsung' && (producto.includes('gs24') || producto.includes('gts9'))) bonus = 1.3;
+            else if (ecosistemaPredominante === 'apple' && (producto.includes('gs24') || producto.includes('px8'))) bonus = 0.7;
+            else if (ecosistemaPredominante === 'samsung' && (producto.includes('ip15') || producto.includes('ipad'))) bonus = 0.7;
 
-            return {
-                ...pred,
-                score: Math.min(pred.score * bonus, 1.0) // Cap a 1.0
-            };
+            return { ...pred, score: Math.min(pred.score * bonus, 1.0) };
         });
     }
 
-    // NUEVO: Guardar matriz original para referencias
-    private matrizOriginal: number[][] | null = null;
-
-    // Modificar el método entrenar para guardar la matriz
-    async entrenar(compras: Compra[], epochs: number = 50): Promise<void> {
-        console.log('Iniciando entrenamiento del modelo...');
-
-        try {
-
-
-            const { matriz, numUsuarios, numProductos } = this.preprocesarDatos(compras);
-
-            // NUEVO: Guardar matriz para usar en predicciones
-            this.matrizOriginal = matriz.map(row => [...row]); // Deep copy
-
-            await this.crearModelo(numUsuarios, numProductos);
-
-            const datosEntrenamiento = this.prepararDatosEntrenamiento(matriz);
-
-            // NUEVO: Más épocas para mejor aprendizaje
-            const epochsAjustados = Math.max(epochs, 50); // Mínimo 100 épocas
-
-            // Entrenar modelo
-            if (this.model) {
-                await this.model.fit(
-                    [datosEntrenamiento.userIds, datosEntrenamiento.itemIds],
-                    datosEntrenamiento.ratings,
-                    {
-                        epochs: epochsAjustados,
-                        batchSize: Math.min(32, datosEntrenamiento.userIds.shape[0]), // Batch size adaptativo
-                        validationSplit: 0.1, // Menos datos para validación
-                        verbose: 1,
-                        callbacks: {
-                            onEpochEnd: (epoch: number, logs?: tf.Logs) => {
-                                if (logs && logs.loss && epoch % 10 === 0) { // Log cada 10 épocas
-                                    console.log(`Época ${epoch + 1}/${epochsAjustados}: pérdida = ${logs.loss.toFixed(4)}`);
-                                }
-                            }
-                        }
-                    }
-                );
-            }
-
-            // Limpiar tensores
-            datosEntrenamiento.userIds.dispose();
-            datosEntrenamiento.itemIds.dispose();
-            datosEntrenamiento.ratings.dispose();
-
-            this.isInitialized = true;
-
-            console.log(`Modelo entrenado exitosamente con ${epochsAjustados} épocas`);
-        } catch (error) {
-            throw new Error('Error al entrenar el modelo: ' + error);
-        }
-    }
-
-
-
-    // Getters para acceso a información
+    // ==============================
+    // 🚀 GETTERS
+    // ==============================
     get numUsuarios(): number {
         return this.userEncoder.size;
     }
