@@ -1,9 +1,9 @@
-import { CheckearCompra, CheckearProducto, CrearCompra, disminuirStock, InsertarItems, ModificarEstado, obtenerCompras, restaurarStock } from '@/utils/consultas/compras';
-import { CheckearUsuario } from '@/utils/consultas/Usuario';
-import { CartItemsValidation } from '@/utils/validaciones/CartItems';
+import { CheckearCompra, CheckearProducto, CrearCompra, disminuirStock, InsertarItems, ModificarEstado, obtenerCompras, restaurarStock } from '../utils/consultas/compras';
+import { CheckearUsuario } from '../utils/consultas/Usuario';
+import { CartItemsValidation } from '../utils/validaciones/CartItems';
 import { Request, Response } from 'express';
 import { db } from '../database/db';
-import { UsuarioValidation } from '@/utils/validaciones/usuario';
+import { UsuarioValidation } from '../utils/validaciones/usuario';
 
 export class pedidosController {
     static async crearPedido(req: Request, res: Response) {
