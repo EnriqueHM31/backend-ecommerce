@@ -57,8 +57,6 @@ export class PedidosService {
                     WHERE id = ? AND activo = 1
                 `, [product.id]);
 
-                console.log({ productCheck });
-
                 if (!productCheck) {
                     throw new Error(`Producto no encontrado o inactivo: ${product.producto}`);
                 }
@@ -82,8 +80,6 @@ export class PedidosService {
                 });
 
             }
-            console.log({ items_procesados });
-
             // 3. Crear el pedido principal en estado pendiente_pago
             const pedidoResult = await connection.execute<ResultSetHeader>(`
                 INSERT INTO pedidos (usuario_id, total, direccion_envio, referencias)
@@ -91,9 +87,6 @@ export class PedidosService {
             `, [user_id, total.toFixed(2), "hola", referencias]);
 
             if (!pedidoResult) throw new Error("Error al crear el pedido 34");
-
-
-
 
             // 4. Insertar items del pedido
             for (const item of items_procesados) {
@@ -129,11 +122,6 @@ export class PedidosService {
         }
     }
 
-    /**
-     * Confirmar pedido después del pago exitoso (reduce stock)
-     * @param {number} pedido_id - ID del pedido a confirmar
-     * @returns {Promise<Object>} - Resultado de la confirmación
-     */
     static async confirmarPedido(pedido_id: number) {
         try {
             await db.beginTransaction();
@@ -197,12 +185,6 @@ export class PedidosService {
         }
     }
 
-    /**
-     * Cancelar pedido por pago fallido o timeout
-     * @param {number} pedido_id - ID del pedido a cancelar
-     * @param {string} motivo - Motivo de cancelación
-     * @returns {Promise<Object>} - Resultado de la cancelación
-     */
     static async cancelarPedido({ pedido_id, motivo = 'pago_fallido' }: { pedido_id: number, motivo?: string }) {
         try {
             const estados_cancelables = ['pendiente_pago', 'pago_fallido'];
@@ -229,11 +211,6 @@ export class PedidosService {
         }
     }
 
-    /**
-     * Obtener detalles de un pedido
-     * @param {number} pedido_id - ID del pedido
-     * @returns {Promise<Object>} - Datos completos del pedido
-     */
     static async obtenerPedido(pedido_id: number) {
         try {
             // Obtener información del pedido
@@ -285,10 +262,7 @@ export class PedidosService {
         }
     }
 
-    /**
-     * Limpiar pedidos expirados (más de 30 minutos sin pagar)
-     * @returns {Promise<Object>} - Resultado de la limpieza
-     */
+
     static async limpiarPedidosExpirados() {
         try {
             const [result] = await db.execute(`

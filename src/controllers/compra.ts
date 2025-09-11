@@ -65,8 +65,10 @@ export class CompraController {
 
             // ✅ Recuperar sesión con line_items + customer
             const session = await stripe.checkout.sessions.retrieve(sessionId as string, {
-                expand: ["line_items", "customer"],
+                expand: ["line_items", "customer", "line_items.data.price.product"],
             });
+
+
 
             // ✅ Verificar si ya se envió factura (usando metadata de Stripe)
             if (session.metadata?.facturaEnviada === "true") {
