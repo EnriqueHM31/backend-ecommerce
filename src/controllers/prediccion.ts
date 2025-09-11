@@ -11,7 +11,9 @@ interface Compra {
     cantidad?: number;
 }
 
-// --- Persistencia en disco ---
+// ===============================
+// 🚀 Persistencia en disco
+// ===============================
 function cargarCompras(): Compra[] {
     if (!fs.existsSync(DATA_FILE)) return [];
     try {
@@ -24,20 +26,20 @@ function cargarCompras(): Compra[] {
 
 let comprasPersistentes: Compra[] = cargarCompras();
 
-// --- Instancia global del sistema ---
+// ===============================
+// 🚀 Instancia global del sistema
+// ===============================
 const sistemaRecomendacion = new SistemaRecomendacion();
 
 // ===============================
-// 🚀 Inicialización del modelo
+// 🚀 Inicialización automática
 // ===============================
 (async () => {
     try {
-        // Intenta cargar modelo exportado (ej: backend-ecommerce/modelo/model.json)
-        await sistemaRecomendacion.cargarModelo('./modelo/model.json');
+        await sistemaRecomendacion.cargarModelo('./modelo-entrenado/model.json');
         console.log("✅ Modelo cargado desde archivo");
-
     } catch (err) {
-        console.warn("⚠️ No se encontró modelo guardado, se usará entrenamiento inicial");
+        console.warn("⚠️ No se encontró modelo guardado, se intentará entrenar con datos persistentes");
         if (comprasPersistentes.length > 0) {
             sistemaRecomendacion.entrenar(comprasPersistentes)
                 .then(() => console.log('✅ Modelo entrenado con datos persistentes'))
@@ -46,25 +48,29 @@ const sistemaRecomendacion = new SistemaRecomendacion();
     }
 })();
 
+// ===============================
+// 🚀 Controlador
+// ===============================
 export const PrediccionController = {
     // --- Obtener predicciones ---
     prediccion: async (req: RequestPrediccion, res: Response) => {
         try {
             const { usuario, compras, entrenar = false, topK = 5 } = req.body;
 
-            // Guardar compras nuevas (solo persistencia, no reentrenar en Windows)
+            // 🔹 Guardar nuevas compras en persistencia
             if (Array.isArray(compras) && compras.length > 0) {
                 comprasPersistentes.push(...compras as Compra[]);
                 guardarCompras({ comprasPersistentes });
             }
 
-            // ⚠️ Opción: si quieres reentrenar en Linux/Colab, habilita esto
+            // 🔹 Opcional: reentrenar si se solicita
             if (entrenar) {
                 sistemaRecomendacion.entrenar(comprasPersistentes)
                     .then(() => console.log("🔄 Modelo reentrenado automáticamente"))
                     .catch(err => console.error("❌ Error reentrenando:", err));
             }
 
+            // 🔹 Generar predicciones
             const recomendaciones = await sistemaRecomendacion.predecir(usuario, topK);
 
             res.json({
@@ -73,7 +79,6 @@ export const PrediccionController = {
                 timestamp: new Date().toISOString(),
                 mensaje: 'Recomendaciones generadas exitosamente'
             });
-
         } catch (error) {
             console.error('Error en predicción:', error);
             res.status(500).json({
@@ -103,11 +108,11 @@ export const PrediccionController = {
                 return;
             }
 
-            // Actualizar persistencia
+            // 🔹 Actualizar persistencia
             comprasPersistentes.push(...compras);
             guardarCompras({ comprasPersistentes });
 
-            // 🚀 Entrenamiento manual (solo si puedes en tu entorno)
+            // 🔹 Entrenamiento manual
             sistemaRecomendacion.entrenar(comprasPersistentes, 100)
                 .then(() => console.log("✅ Reentrenamiento manual completado"))
                 .catch(err => console.error("❌ Error en reentrenamiento manual:", err));
@@ -117,7 +122,6 @@ export const PrediccionController = {
                 numUsuarios: sistemaRecomendacion.numUsuarios,
                 numProductos: sistemaRecomendacion.numProductos
             });
-
         } catch (error) {
             console.error('Error en entrenamiento:', error);
             res.status(500).json({
