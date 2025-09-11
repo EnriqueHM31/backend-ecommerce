@@ -3,8 +3,8 @@ import { ModeloCompra } from "../models/compra";
 import { CartItem } from "../types/producto";
 import { ModeloFactura } from "../utils/contacto/factura";
 import { getAllLineItems, getAllSessions } from "../utils/pagos/stripe";
-import { CartItemsValidation } from "../utils/validaciones/CartItems";
-import { StripeValidation } from "../utils/validaciones/Sprite";
+import { CartItemsValidation } from "../utils/validaciones/cartItems";
+import { StripeValidation } from "../utils/validaciones/sprite";
 import { UsuarioValidation } from "../utils/validaciones/usuario";
 import { Request, Response } from "express";
 
