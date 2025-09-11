@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { guardarCompras } from '@/utils/predicciones';
+import { guardarCompras } from '@/utils/pagos/predicciones';
 import { SistemaRecomendacion } from '../class/Prediccion';
 import type { RequestEntrenamiento, RequestPrediccion } from '../types/prediccion';
 
@@ -27,14 +27,8 @@ export const PrediccionController = {
         try {
             const { usuario, compras, entrenar = false, topK = 5 } = req.body;
 
-            if (!usuario || !compras || !Array.isArray(compras) || compras.length === 0) {
-                res.status(400).json({ error: 'Los datos de "compras" son requeridos' });
-            }
 
             if (entrenar || !sistemaRecomendacion.isInitialized) {
-                if (!compras || !Array.isArray(compras) || compras.length === 0) {
-                    res.status(400).json({ error: 'Los datos de "compras" son requeridos para entrenar el modelo' });
-                }
 
                 const comprasValidas = compras?.every(c =>
                     c.usuario && c.producto &&

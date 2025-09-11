@@ -1,4 +1,4 @@
-import { DESTINATARIO, REMITENTE } from "../config";
+import { DESTINATARIO, REMITENTE } from "../../config";
 
 interface ComentarioProps {
     nombre: string;
