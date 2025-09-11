@@ -1,6 +1,7 @@
 import { obtenerStripe } from "@/constants/Stripe";
 import { ModeloCompra } from "@/models/compra";
 import { CartItem } from "@/types/producto";
+import { ModeloFactura } from "@/utils/contacto/factura";
 import { getAllLineItems, getAllSessions } from "@/utils/pagos/stripe";
 import { CartItemsValidation } from "@/utils/validaciones/CartItems";
 import { StripeValidation } from "@/utils/validaciones/Sprite";
@@ -62,6 +63,34 @@ export class CompraController {
 
             const session = await stripe.checkout.sessions.retrieve(sessionId as string, {
                 expand: ["line_items", "customer"],
+            });
+
+            await ModeloFactura.EnviarFacturaPDF({
+                nombre: session.customer_details?.name || "Cliente",
+                correo: session.customer_details?.email || "sin-correo@dominio.com",
+                monto: `$${(session.amount_total === null ? 0 : session.amount_total) / 100} MXN`,
+                fecha: new Date().toLocaleString("es-MX", { timeZone: "America/Mexico_City" }),
+
+                direccion1: session.customer_details?.address?.line1 || "",
+                direccion2: session.customer_details?.address?.line2 || "",
+                ciudad: session.customer_details?.address?.city || "",
+                estado: session.customer_details?.address?.state || "",
+                cp: session.customer_details?.address?.postal_code || "",
+                pais: session.customer_details?.address?.country || "",
+
+                items: session.line_items?.data.map((item: any) => {
+                    const producto =
+                        typeof item.price.product === "string"
+                            ? "Producto"
+                            : item.price.product.name;
+
+                    return {
+                        producto,
+                        cantidad: item.quantity,
+                        precio: `$${(item.price.unit_amount / 100).toFixed(2)} MXN`,
+                        total: `$${(item.amount_total / 100).toFixed(2)} MXN`,
+                    };
+                }) || [],
             });
 
             res.status(200).json({ success: true, message: "Sesión de compra encontrada", data: session, });

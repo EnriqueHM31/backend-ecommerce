@@ -10,7 +10,7 @@ export const MensajeCorreo = ({ nombre, correo, mensaje }: ComentarioProps) => {
     return {
         from: REMITENTE,
         to: DESTINATARIO,
-        subject: 'Nuevo comentario de un cliente en TechStore',
+        subject: 'Nuevo comentario de un cliente en StoreTecBPL',
         text: mensaje,
         html: `
         <div style="background-color: #0d1117; color: #ffffff; font-family: Arial, sans-serif; padding: 24px; border-radius: 10px; max-width: 600px; margin: auto;">
@@ -32,13 +32,13 @@ export const MensajeCorreo = ({ nombre, correo, mensaje }: ComentarioProps) => {
 
             <!-- Footer -->
             <div style="text-align: center; margin-top: 30px; font-size: 14px; color: #888;">
-                <p>Gracias por confiar en TechStore</p>
+                <p>Gracias por confiar en StoreTecBPL</p>
                 <div style="margin-top: 10px;">
                     <a href="https://facebook.com" style="margin: 0 5px; text-decoration: none;"><img src="https://cdn-icons-png.flaticon.com/24/733/733547.png" alt="Facebook"></a>
                     <a href="https://twitter.com" style="margin: 0 5px; text-decoration: none;"><img src="https://cdn-icons-png.flaticon.com/24/733/733579.png" alt="Twitter"></a>
                     <a href="https://instagram.com" style="margin: 0 5px; text-decoration: none;"><img src="https://cdn-icons-png.flaticon.com/24/733/733558.png" alt="Instagram"></a>
                 </div>
-                <p style="margin-top: 10px;">&copy; ${new Date().getFullYear()} TechStore. Todos los derechos reservados.</p>
+                <p style="margin-top: 10px;">&copy; ${new Date().getFullYear()} StoreTecBPL. Todos los derechos reservados.</p>
             </div>
         </div>
         `
