@@ -11,7 +11,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.ModeloCompra = void 0;
 const Pedido_1 = require("../class/Pedido");
-const Stripe_1 = require("@/constants/Stripe");
+const Stripe_1 = require("../constants/Stripe");
 class ModeloCompra {
     static RealizarCompra(items, customer) {
         return __awaiter(this, void 0, void 0, function* () {

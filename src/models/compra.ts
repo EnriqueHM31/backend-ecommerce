@@ -1,6 +1,6 @@
 import type { CartItem, Customer } from "../types/producto";
 import { PedidosService } from "../class/Pedido";
-import { obtenerStripe } from "@/constants/Stripe";
+import { obtenerStripe } from "../constants/Stripe";
 
 export class ModeloCompra {
     static async RealizarCompra(items: CartItem[], customer: Customer) {
