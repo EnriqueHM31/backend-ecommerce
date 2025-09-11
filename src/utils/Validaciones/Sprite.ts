@@ -6,6 +6,6 @@ export const StripeSchema = z.object({
 
 export class StripeValidation {
     static RevisarSessionId(sessionId: string) {
-        return StripeSchema.safeParse(sessionId);
+        return StripeSchema.safeParse({ sessionId });
     }
 }

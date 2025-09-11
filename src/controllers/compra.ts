@@ -79,13 +79,8 @@ export class CompraController {
                 pais: session.customer_details?.address?.country || "",
 
                 items: session.line_items?.data.map((item: any) => {
-                    const producto =
-                        typeof item.price.product === "string"
-                            ? "Producto"
-                            : item.price.product.name;
-
                     return {
-                        producto,
+                        producto: item.description,
                         cantidad: item.quantity,
                         precio: `$${(item.price.unit_amount / 100).toFixed(2)} MXN`,
                         total: `$${(item.amount_total / 100).toFixed(2)} MXN`,

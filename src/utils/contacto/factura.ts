@@ -64,7 +64,7 @@ export class ModeloFactura {
             .moveDown(1);
 
         // --- Detalles de la transacción ---
-        doc.fontSize(14).fillColor("blue").text("📑 Detalles de la transacción");
+        doc.fontSize(14).fillColor("blue").text("Detalles de la transacción");
         doc.moveDown(0.3);
         doc.fontSize(12).fillColor("black");
         doc.text(`Nombre: ${datos.nombre}`);
@@ -74,7 +74,7 @@ export class ModeloFactura {
         doc.moveDown(1);
 
         // --- Dirección ---
-        doc.fontSize(14).fillColor("blue").text("📍 Detalles de la dirección");
+        doc.fontSize(14).fillColor("blue").text("Detalles de la dirección");
         doc.moveDown(0.3);
         doc.fontSize(12).fillColor("black");
         doc.text(`Dirección 1: ${datos.direccion1}`);
@@ -86,7 +86,7 @@ export class ModeloFactura {
         doc.moveDown(1);
 
         // --- Tabla de productos ---
-        doc.fontSize(14).fillColor("blue").text("🛒 Detalles de la transacción");
+        doc.fontSize(14).fillColor("blue").text("Detalles de la transacción");
         doc.moveDown(0.5);
 
         const tableTop = doc.y;
