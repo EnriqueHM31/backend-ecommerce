@@ -1,4 +1,4 @@
-import { PedidoExtendido, Producto, ProductoExtendido } from "@/types/producto";
+import { PedidoExtendido, Producto, ProductoExtendido } from "../../types/producto";
 import { db } from "../../database/db";
 
 export async function CheckearProducto(product: Producto, quantity: number) {

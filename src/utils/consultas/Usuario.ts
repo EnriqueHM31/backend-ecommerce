@@ -1,5 +1,5 @@
-import { db } from "@/database/db";
-import { Usuario } from "@/types/usuario";
+import { db } from "../../database/db";
+import { Usuario } from "../../types/producto";
 import { RowDataPacket } from "mysql2";
 
 interface UsuarioExtendido extends Usuario, RowDataPacket { }
