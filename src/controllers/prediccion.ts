@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { guardarCompras } from '@/utils/pagos/predicciones';
+import { guardarCompras } from '../utils/pagos/predicciones';
 import { SistemaRecomendacion } from '../class/Prediccion';
 import type { RequestEntrenamiento, RequestPrediccion } from '../types/prediccion';
 import fs from 'fs';
