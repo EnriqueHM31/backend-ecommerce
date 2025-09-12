@@ -30,8 +30,7 @@ export class ModeloProductos {
     sku.imagen_url,
     v.recomendado,
     sku.activo,
-    sku.created_at,
-    sku.updated_at
+    sku.created_at
 FROM productos_sku sku
 INNER JOIN productos_base pb ON sku.producto_base_id = pb.id
 INNER JOIN variantes v ON sku.variante_id = v.id
