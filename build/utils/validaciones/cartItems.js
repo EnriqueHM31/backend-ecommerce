@@ -27,7 +27,6 @@ exports.ProductoSchema = zod_1.z.object({
     sistema_operativo: zod_1.z.string(),
     sku: zod_1.z.string(),
     stock: zod_1.z.number(),
-    updated_at: zod_1.z.string()
 });
 // Schema de un CartItem
 exports.CartItemSchema = zod_1.z.object({

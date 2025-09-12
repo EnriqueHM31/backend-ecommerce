@@ -25,7 +25,6 @@ export const ProductoSchema = z.object({
     sistema_operativo: z.string(),
     sku: z.string(),
     stock: z.number(),
-    updated_at: z.string()
 });
 
 // Schema de un CartItem
