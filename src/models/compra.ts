@@ -1,26 +1,13 @@
-import type { CartItem, Customer } from "../types/producto";
 import { PedidosService } from "../class/Pedido";
 import { obtenerStripe } from "../constants/Stripe";
-import { SistemaRecomendacion } from "../class/Prediccion2";
-import fs from "fs";
-import { DATA_FILE } from "../constants/prediccion";
-import { Compra } from "@/types/prediccion";
+import type { CartItem, Customer } from "../types/producto";
 
-function cargarCompras(): Compra[] {
-    if (!fs.existsSync(DATA_FILE)) return [];
-    try {
-        return JSON.parse(fs.readFileSync(DATA_FILE, 'utf8')) as Compra[];
-    } catch (e) {
-        console.error("Error al leer compras persistidas:", e);
-        return [] as Compra[];
-    }
-}
+
 
 
 export class ModeloCompra {
 
     static async RealizarCompra(items: CartItem[], customer: Customer) {
-        const sistemaRecomendacion = new SistemaRecomendacion();
         const stripe = obtenerStripe();
         try {
             // Crear pedido en tu base de datos
@@ -66,26 +53,9 @@ export class ModeloCompra {
 
 
             console.log("SESSION", session);
-            const formattedArray = items.map((item: CartItem) => ({
-                usuario: customer.id,
-                producto: `${item.product.sku} - ${item.product.producto}`,
-                cantidad: item.quantity
-            }));
-
-            const comprasPersistentes = cargarCompras();
-            comprasPersistentes.push(...formattedArray);
-            fs.writeFileSync(DATA_FILE, JSON.stringify(comprasPersistentes, null, 2), "utf-8");
 
 
-            await sistemaRecomendacion.entrenar(comprasPersistentes, 50)
-            console.log("Entrenamiento completado COMPRASSSSSS");
-
-            const predicciones = await sistemaRecomendacion.predecir(customer.id, 5);
-            console.log("Predicciones COMPRASSSSSS", predicciones);
-
-
-
-            return { success: true, data: session.url, recomendaciones: predicciones, message: "Compra realizada con éxito" };
+            return { success: true, data: session.url, message: "Compra realizada con éxito" };
         } catch (error) {
             console.error("Error al crear la compra:", error);
             return { success: false, data: null, message: error || "Error al crear la compra" };

@@ -1,320 +1,382 @@
-import { input, io, layers, LayersModel, loadLayersModel, Logs, model, SymbolicTensor, Tensor, tensor2d, train } from '@tensorflow/tfjs';
+// types/prediccion.ts
+export interface Compra {
+    usuario: string;
+    producto: string;
+    cantidad: number;
+    rating?: number;
+    fecha?: Date;
+}
+
+export interface Prediccion {
+    producto: string;
+    score: number;
+    razon?: string;
+}
+
+export interface SimilitudUsuario {
+    usuario: string;
+    similitud: number;
+}
+
+export interface MatrizUsuarioProducto {
+    [usuario: string]: {
+        [producto: string]: number;
+    };
+}
+
+// sistema/FiltradoColaborativo.ts
 import fs from "fs";
-import type { Compra, DatosEntrenamiento, Prediccion } from '../types/prediccion';
+import path from "path";
 
-export class SistemaRecomendacion {
-    public model: LayersModel | null;
-    public productEncoder: Map<string, number>;
-    public userEncoder: Map<string, number>;
-    public productDecoder: Map<number, string>;
-    public userDecoder: Map<number, string>;
-    public matrizOriginal: number[][] | null;
-    public isInitialized: boolean;
-    public maxRating: number;
-    public minRating: number;
-    public meanRating: number;
-    public userBiases: Map<number, number>;
-    public itemBiases: Map<number, number>;
+export class FiltradoColaborativo {
+    private matriz: MatrizUsuarioProducto = {};
+    private usuarios: Set<string> = new Set();
+    private productos: Set<string> = new Set();
+    private isInitialized: boolean = false;
+    private rutaModelo: string = "./modelo-colaborativo";
 
-    constructor() {
-        this.model = null;
-        this.productEncoder = new Map();
-        this.userEncoder = new Map();
-        this.productDecoder = new Map();
-        this.userDecoder = new Map();
-        this.matrizOriginal = null;
-        this.isInitialized = false;
-        this.maxRating = 0;
-        this.minRating = 0;
-        this.meanRating = 0;
-        this.userBiases = new Map();
-        this.itemBiases = new Map();
+    constructor(rutaModelo?: string) {
+        if (rutaModelo) {
+            this.rutaModelo = rutaModelo;
+        }
     }
 
     // ==============================
-    // 🚀 PREPROCESAMIENTO DE DATOS
+    // 🚀 INICIALIZACIÓN Y CARGA DE DATOS
     // ==============================
-    preprocesarDatos(compras: Compra[]) {
-        console.log("📊 Procesando compras...");
+    public async inicializar(compras: Compra[]): Promise<void> {
+        console.log("📊 Inicializando sistema de filtrado colaborativo...");
 
-        const usuarios = Array.from(new Set(compras.map(c => c.usuario)));
-        const productos = Array.from(new Set(compras.map(c => c.producto)));
+        this.construirMatriz(compras);
+        await this.guardarModelo();
 
-        this.userEncoder = new Map(usuarios.map((u, i) => [u, i]));
-        this.userDecoder = new Map(usuarios.map((u, i) => [i, u]));
-        this.productEncoder = new Map(productos.map((p, i) => [p, i]));
-        this.productDecoder = new Map(productos.map((p, i) => [i, p]));
+        this.isInitialized = true;
+        console.log(`✅ Sistema inicializado con ${this.usuarios.size} usuarios y ${this.productos.size} productos`);
+    }
 
-        const numUsuarios = usuarios.length;
-        const numProductos = productos.length;
-        const matriz: number[][] = Array.from({ length: numUsuarios }, () =>
-            Array(numProductos).fill(0)
+    private construirMatriz(compras: Compra[]): void {
+        // Limpiar datos anteriores
+        this.matriz = {};
+        this.usuarios.clear();
+        this.productos.clear();
+
+        // Construir matriz usuario-producto
+        for (const compra of compras) {
+            const { usuario, producto, cantidad, rating } = compra;
+
+            // Inicializar usuario si no existe
+            if (!this.matriz[usuario]) {
+                this.matriz[usuario] = {};
+            }
+
+            // Usar rating si existe, sino usar cantidad normalizada
+            const valor = rating || Math.min(cantidad / 10, 5); // Normalizar cantidad a escala 1-5
+            this.matriz[usuario][producto] = valor;
+
+            this.usuarios.add(usuario);
+            this.productos.add(producto);
+        }
+    }
+
+    // ==============================
+    // 🚀 CÁLCULO DE SIMILITUDES
+    // ==============================
+    private calcularSimilitudCoseno(usuario1: string, usuario2: string): number {
+        const productos1 = this.matriz[usuario1];
+        const productos2 = this.matriz[usuario2];
+
+        if (!productos1 || !productos2) return 0;
+
+        // Encontrar productos en común
+        const productosComunes = Object.keys(productos1).filter(
+            producto => productos2.hasOwnProperty(producto)
         );
 
-        for (const compra of compras) {
-            const userIdx = this.userEncoder.get(compra.usuario)!;
-            const prodIdx = this.productEncoder.get(compra.producto)!;
-            const cantidad = compra.cantidad || 1;
-            matriz[userIdx][prodIdx] = cantidad > 0 ? 1 : 0;
+        if (productosComunes.length === 0) return 0;
+
+        // Calcular similitud de coseno
+        let dotProduct = 0;
+        let norma1 = 0;
+        let norma2 = 0;
+
+        for (const producto of productosComunes) {
+            const rating1 = productos1[producto];
+            const rating2 = productos2[producto];
+
+            dotProduct += rating1 * rating2;
+            norma1 += rating1 * rating1;
+            norma2 += rating2 * rating2;
         }
 
-        console.log(`✅ Datos preprocesados: ${numUsuarios} usuarios, ${numProductos} productos`);
-        return { matriz, numUsuarios, numProductos };
+        if (norma1 === 0 || norma2 === 0) return 0;
+
+        return dotProduct / (Math.sqrt(norma1) * Math.sqrt(norma2));
+    }
+
+    private calcularCorrelacionPearson(usuario1: string, usuario2: string): number {
+        const productos1 = this.matriz[usuario1];
+        const productos2 = this.matriz[usuario2];
+
+        if (!productos1 || !productos2) return 0;
+
+        // Encontrar productos en común
+        const productosComunes = Object.keys(productos1).filter(
+            producto => productos2.hasOwnProperty(producto)
+        );
+
+        if (productosComunes.length < 2) return 0;
+
+        // Calcular medias
+        const suma1 = productosComunes.reduce((sum, p) => sum + productos1[p], 0);
+        const suma2 = productosComunes.reduce((sum, p) => sum + productos2[p], 0);
+        const media1 = suma1 / productosComunes.length;
+        const media2 = suma2 / productosComunes.length;
+
+        // Calcular correlación de Pearson
+        let numerador = 0;
+        let denominador1 = 0;
+        let denominador2 = 0;
+
+        for (const producto of productosComunes) {
+            const diff1 = productos1[producto] - media1;
+            const diff2 = productos2[producto] - media2;
+
+            numerador += diff1 * diff2;
+            denominador1 += diff1 * diff1;
+            denominador2 += diff2 * diff2;
+        }
+
+        if (denominador1 === 0 || denominador2 === 0) return 0;
+
+        return numerador / Math.sqrt(denominador1 * denominador2);
     }
 
     // ==============================
-    // 🚀 CREAR MODELO MEJORADO
+    // 🚀 ENCONTRAR USUARIOS SIMILARES
     // ==============================
-    async crearModelo(numUsuarios: number, numProductos: number) {
-        if (numUsuarios <= 0 || numProductos <= 0) {
-            throw new Error("No hay usuarios o productos para crear embeddings");
+    private encontrarUsuariosSimilares(
+        usuario: string,
+        k: number = 10,
+        metodo: 'coseno' | 'pearson' = 'coseno'
+    ): SimilitudUsuario[] {
+        if (!this.matriz[usuario]) return [];
+
+        const similitudes: SimilitudUsuario[] = [];
+
+        for (const otroUsuario of this.usuarios) {
+            if (otroUsuario === usuario) continue;
+
+            const similitud = metodo === 'coseno'
+                ? this.calcularSimilitudCoseno(usuario, otroUsuario)
+                : this.calcularCorrelacionPearson(usuario, otroUsuario);
+
+            if (similitud > 0) {
+                similitudes.push({ usuario: otroUsuario, similitud });
+            }
         }
 
-        console.log("✅ Creando modelo de Matrix Factorization");
-
-        const embeddingDim = 64;
-        const userInput = input({ shape: [1], dtype: 'int32' });
-        const itemInput = input({ shape: [1], dtype: 'int32' });
-
-        const userEmbedding = layers.embedding({
-            inputDim: numUsuarios + 1,
-            outputDim: embeddingDim
-        }).apply(userInput) as SymbolicTensor;
-
-        const itemEmbedding = layers.embedding({
-            inputDim: numProductos + 1,
-            outputDim: embeddingDim
-        }).apply(itemInput) as SymbolicTensor;
-
-        const userVec = layers.flatten().apply(userEmbedding) as SymbolicTensor;
-        const itemVec = layers.flatten().apply(itemEmbedding) as SymbolicTensor;
-
-        const dotProduct = layers.dot({ axes: 1 }).apply([userVec, itemVec]) as SymbolicTensor;
-        const output = layers.activation({ activation: 'sigmoid' }).apply(dotProduct) as SymbolicTensor;
-
-        this.model = model({ inputs: [userInput, itemInput], outputs: output });
-
-        this.model.compile({
-            optimizer: train.adam(0.001),
-            loss: 'binaryCrossentropy',
-            metrics: ['accuracy']
-        });
-
-        console.log("✅ Modelo creado y compilado correctamente");
+        return similitudes
+            .sort((a, b) => b.similitud - a.similitud)
+            .slice(0, k);
     }
 
     // ==============================
-    // 🚀 PREPARAR DATOS DE ENTRENAMIENTO
+    // 🚀 GENERAR RECOMENDACIONES
     // ==============================
-    private prepararDatosEntrenamiento(matriz: number[][]): DatosEntrenamiento {
-        console.log('🔄 Preparando datos de entrenamiento...');
+    public async predecir(
+        usuario: string,
+        topK: number = 5,
+        metodo: 'coseno' | 'pearson' = 'coseno'
+    ): Promise<Prediccion[]> {
+        if (!this.isInitialized) {
+            throw new Error('Sistema no inicializado. Ejecute inicializar() primero.');
+        }
 
-        const userIds: number[] = [];
-        const itemIds: number[] = [];
-        const ratings: number[] = [];
+        if (!this.matriz[usuario]) {
+            console.log(`⚠️ Usuario ${usuario} no encontrado`);
+            return [];
+        }
 
-        for (let i = 0; i < matriz.length; i++) {
-            for (let j = 0; j < matriz[i].length; j++) {
-                if (matriz[i][j] > 0) {
-                    userIds.push(i);
-                    itemIds.push(j);
-                    ratings.push(1);
+        console.log(`🔍 Generando recomendaciones para ${usuario}...`);
+
+        // Encontrar usuarios similares
+        const usuariosSimilares = this.encontrarUsuariosSimilares(usuario, 20, metodo);
+
+        if (usuariosSimilares.length === 0) {
+            console.log('⚠️ No se encontraron usuarios similares');
+            return [];
+        }
+
+        // Obtener productos ya comprados por el usuario
+        const productosComprados = new Set(Object.keys(this.matriz[usuario]));
+
+        // Calcular scores para productos no comprados
+        const scoresProductos: Map<string, number> = new Map();
+        const sumaSimilitudes: Map<string, number> = new Map();
+
+        for (const { usuario: usuarioSimilar, similitud } of usuariosSimilares) {
+            const productosUsuarioSimilar = this.matriz[usuarioSimilar];
+
+            for (const [producto, rating] of Object.entries(productosUsuarioSimilar)) {
+                // Solo recomendar productos no comprados
+                if (productosComprados.has(producto)) continue;
+
+                const scoreActual = scoresProductos.get(producto) || 0;
+                const sumaSimActual = sumaSimilitudes.get(producto) || 0;
+
+                scoresProductos.set(producto, scoreActual + (similitud * rating));
+                sumaSimilitudes.set(producto, sumaSimActual + similitud);
+            }
+        }
+
+        // Normalizar scores y crear recomendaciones
+        const recomendaciones: Prediccion[] = [];
+
+        for (const [producto, scoreTotal] of scoresProductos.entries()) {
+            const sumaSim = sumaSimilitudes.get(producto) || 1;
+            const scoreNormalizado = scoreTotal / sumaSim;
+
+            recomendaciones.push({
+                producto,
+                score: scoreNormalizado,
+                razon: `Basado en ${usuariosSimilares.length} usuarios similares (${metodo})`
+            });
+        }
+
+        const resultado = recomendaciones
+            .sort((a, b) => b.score - a.score)
+            .slice(0, topK);
+
+        console.log(`✅ Generadas ${resultado.length} recomendaciones`);
+        return resultado;
+    }
+
+    // ==============================
+    // 🚀 RECOMENDACIONES POR PRODUCTO (Item-based)
+    // ==============================
+    public async recomendarPorProducto(
+        producto: string,
+        topK: number = 5
+    ): Promise<Prediccion[]> {
+        if (!this.isInitialized) {
+            throw new Error('Sistema no inicializado');
+        }
+
+        console.log(`🔍 Buscando productos similares a ${producto}...`);
+
+        const similitudesProducto: Map<string, number> = new Map();
+
+        // Obtener usuarios que compraron este producto
+        const usuariosProductoBase: string[] = [];
+        for (const [usuario, productos] of Object.entries(this.matriz)) {
+            if (productos[producto]) {
+                usuariosProductoBase.push(usuario);
+            }
+        }
+
+        if (usuariosProductoBase.length === 0) {
+            return [];
+        }
+
+        // Calcular similitud con otros productos
+        for (const otroProducto of this.productos) {
+            if (otroProducto === producto) continue;
+
+            let coincidencias = 0;
+            let totalUsuarios = 0;
+
+            for (const usuario of usuariosProductoBase) {
+                if (this.matriz[usuario][otroProducto]) {
+                    coincidencias++;
                 }
+                totalUsuarios++;
+            }
+
+            if (coincidencias > 0) {
+                const similitud = coincidencias / totalUsuarios;
+                similitudesProducto.set(otroProducto, similitud);
             }
         }
 
-        const numNegativeSamples = Math.floor(userIds.length * 0.1);
-        const usedPairs = new Set<string>();
+        const recomendaciones: Prediccion[] = Array.from(similitudesProducto.entries())
+            .map(([prod, sim]) => ({
+                producto: prod,
+                score: sim,
+                razon: `Producto similar (${Math.round(sim * 100)}% de usuarios en común)`
+            }))
+            .sort((a, b) => b.score - a.score)
+            .slice(0, topK);
 
-        for (let k = 0; k < numNegativeSamples; k++) {
-            let userIdx, itemIdx, attempts = 0;
-            do {
-                userIdx = Math.floor(Math.random() * matriz.length);
-                itemIdx = Math.floor(Math.random() * matriz[0].length);
-                attempts++;
-            } while (
-                matriz[userIdx][itemIdx] > 0 ||
-                usedPairs.has(`${userIdx}-${itemIdx}`) ||
-                attempts > 100
-            );
-
-            if (attempts <= 100) {
-                userIds.push(userIdx);
-                itemIds.push(itemIdx);
-                ratings.push(0);
-                usedPairs.add(`${userIdx}-${itemIdx}`);
-            }
-        }
-
-        console.log(`✅ Datos preparados: ${userIds.length} muestras (${ratings.filter(r => r === 1).length} positivas, ${ratings.filter(r => r === 0).length} negativas)`);
-
-        return {
-            userIds: tensor2d(userIds, [userIds.length, 1], 'int32'),
-            itemIds: tensor2d(itemIds, [itemIds.length, 1], 'int32'),
-            ratings: tensor2d(ratings, [ratings.length, 1], 'float32')
-        };
+        console.log(`✅ Encontrados ${recomendaciones.length} productos similares`);
+        return recomendaciones;
     }
 
     // ==============================
-    // 🚀 ENTRENAR MODELO
+    // 🚀 PERSISTENCIA
     // ==============================
-    async entrenar(compras: Compra[], epochs: number = 100): Promise<void> {
-        console.log('🚀 Iniciando entrenamiento...');
-
+    public async guardarModelo(): Promise<void> {
         try {
-            const { matriz, numUsuarios, numProductos } = this.preprocesarDatos(compras);
-            this.matrizOriginal = matriz.map(row => [...row]);
-
-            await this.crearModelo(numUsuarios, numProductos);
-            await this.guardarMeta();
-
-            const datos = this.prepararDatosEntrenamiento(matriz);
-            const epochsAjustados = Math.max(epochs, 50);
-            const batchSize = Math.min(64, Math.max(16, Math.floor(datos.userIds.shape[0] / 10)));
-
-            let bestLoss = Infinity;
-            let patience = 10;
-            let patienceCounter = 0;
-
-            if (this.model) {
-                await this.model.fit(
-                    [datos.userIds, datos.itemIds],
-                    datos.ratings,
-                    {
-                        epochs: epochsAjustados,
-                        batchSize,
-                        validationSplit: 0.1,
-                        shuffle: true,
-                        verbose: 1,
-                        callbacks: {
-                            onEpochEnd: (_epoch: number, logs?: Logs) => {
-                                if (!logs) return;
-                                const valLoss = logs.val_loss as number;
-                                if (valLoss < bestLoss) { bestLoss = valLoss; patienceCounter = 0; }
-                                else { patienceCounter++; }
-                                if (patienceCounter >= patience) console.log(`⏹️ Early stopping activado`);
-                            },
-                            onTrainEnd: () => console.log('🏁 Entrenamiento completado')
-                        }
-                    }
-                );
-                await this.guardarModelo();
-                await this.guardarMeta();
+            if (!fs.existsSync(this.rutaModelo)) {
+                fs.mkdirSync(this.rutaModelo, { recursive: true });
             }
 
-            datos.userIds.dispose();
-            datos.itemIds.dispose();
-            datos.ratings.dispose();
+            const datos = {
+                matriz: this.matriz,
+                usuarios: Array.from(this.usuarios),
+                productos: Array.from(this.productos),
+                fechaGuardado: new Date().toISOString()
+            };
 
+            const rutaArchivo = path.join(this.rutaModelo, 'modelo.json');
+            fs.writeFileSync(rutaArchivo, JSON.stringify(datos, null, 2));
+
+            console.log(`✅ Modelo guardado en ${rutaArchivo}`);
+        } catch (error) {
+            console.error('❌ Error guardando modelo:', error);
+            throw error;
+        }
+    }
+
+    public async cargarModelo(): Promise<void> {
+        try {
+            const rutaArchivo = path.join(this.rutaModelo, 'modelo.json');
+
+            if (!fs.existsSync(rutaArchivo)) {
+                throw new Error(`No se encontró el modelo en ${rutaArchivo}`);
+            }
+
+            const contenido = fs.readFileSync(rutaArchivo, 'utf-8');
+            const datos = JSON.parse(contenido);
+
+            this.matriz = datos.matriz;
+            this.usuarios = new Set(datos.usuarios);
+            this.productos = new Set(datos.productos);
             this.isInitialized = true;
 
-            await this.guardarModelo();
-            await this.guardarMeta();
-            console.log(`✅ Modelo entrenado exitosamente con ${epochsAjustados} épocas`);
-            console.log(`📈 Mejor pérdida de validación: ${bestLoss.toFixed(4)}`);
-        } catch (err) {
-            console.error('❌ Error en entrenamiento:', err);
-            throw new Error('Error en entrenamiento: ' + err);
+            console.log(`✅ Modelo cargado desde ${rutaArchivo}`);
+            console.log(`📊 ${this.usuarios.size} usuarios, ${this.productos.size} productos`);
+        } catch (error) {
+            console.error('❌ Error cargando modelo:', error);
+            throw error;
         }
     }
 
     // ==============================
-    // 🚀 GUARDAR MODELO
+    // 🚀 MÉTODOS DE UTILIDAD
     // ==============================
-    async guardarModelo(ruta: string = "./modelo-entrenado"): Promise<void> {
-        if (!this.model) throw new Error("No hay modelo entrenado para guardar");
+    public obtenerEstadisticas(): object {
+        const totalInteracciones = Object.values(this.matriz)
+            .reduce((total, productos) => total + Object.keys(productos).length, 0);
 
-        const saveHandler: io.IOHandler = {
-            async save(modelArtifacts) {
-                if (!fs.existsSync(ruta)) fs.mkdirSync(ruta, { recursive: true });
-
-                const { weightData, ...rest } = modelArtifacts;
-                fs.writeFileSync(`${ruta}/model.json`, JSON.stringify(rest));
-                if (weightData) fs.writeFileSync(`${ruta}/weights.bin`, Buffer.from(weightData as any));
-
-                return { modelArtifactsInfo: { dateSaved: new Date(), modelTopologyType: "JSON" } };
-            }
+        return {
+            usuarios: this.usuarios.size,
+            productos: this.productos.size,
+            interacciones: totalInteracciones,
+            densidad: (totalInteracciones / (this.usuarios.size * this.productos.size) * 100).toFixed(2) + '%',
+            inicializado: this.isInitialized
         };
-
-        await this.model.save(saveHandler);
-        console.log(`✅ Modelo guardado en ${ruta}`);
     }
 
-    async guardarMeta(ruta: string = "./modelo-entrenado/meta.json") {
-        if (!this.matrizOriginal) return;
-
-        const carpeta = ruta.substring(0, ruta.lastIndexOf("/"));
-        if (!fs.existsSync(carpeta)) fs.mkdirSync(carpeta, { recursive: true });
-
-        const meta = {
-            usuarios: Array.from(this.userEncoder.keys()),
-            productos: Array.from(this.productEncoder.keys()),
-            matrizOriginal: this.matrizOriginal
-        };
-
-        fs.writeFileSync(ruta, JSON.stringify(meta, null, 2), "utf-8");
-        console.log(`✅ Meta guardado en ${ruta}`);
-    }
-
-    async cargarModelo(ruta: string = "./modelo-entrenado/model.json") {
-        const loadHandler: io.IOHandler = {
-            async load() {
-                const modelJSON = JSON.parse(fs.readFileSync(ruta, "utf-8"));
-                const weightData = fs.readFileSync(ruta.replace("model.json", "weights.bin"));
-                return { ...modelJSON, weightData: new Uint8Array(weightData).buffer };
-            }
-        };
-
-        this.model = await loadLayersModel(loadHandler);
-        this.isInitialized = true;
-
-        const metaPath = ruta.replace("model.json", "meta.json");
-        if (fs.existsSync(metaPath)) {
-            const meta = JSON.parse(fs.readFileSync(metaPath, "utf-8"));
-            meta.usuarios.forEach((u: string, i: number) => {
-                this.userEncoder.set(u, i);
-                this.userDecoder.set(i, u);
-            });
-            meta.productos.forEach((p: string, i: number) => {
-                this.productEncoder.set(p, i);
-                this.productDecoder.set(i, p);
-            });
-            this.matrizOriginal = meta.matrizOriginal;
-        }
-    }
-
-    // ==============================
-    // 🚀 PREDICCIÓN (simplificada para ejemplo)
-    // ==============================
-    async predecir(usuario: string, topK: number = 5): Promise<Prediccion[]> {
-        if (!this.isInitialized || !this.model) throw new Error('Modelo no inicializado');
-
-        const userIdx = this.userEncoder.get(usuario);
-        if (userIdx === undefined) return [];
-
-        const candidatos = [...Array(this.productEncoder.size).keys()];
-        const userBatch = Array(candidatos.length).fill(userIdx);
-        const userTensor = tensor2d(userBatch.map(u => [u]), [candidatos.length, 1], 'int32');
-        const itemTensor = tensor2d(candidatos.map(i => [i]), [candidatos.length, 1], 'int32');
-
-        const prediccion = this.model.predict([userTensor, itemTensor]) as Tensor;
-        const scores = await prediccion.data();
-
-        const resultado: Prediccion[] = candidatos.map((prodIdx, i) => ({
-            producto: this.productDecoder.get(prodIdx) || "desconocido",
-            score: scores[i]
-        }));
-
-        userTensor.dispose();
-        itemTensor.dispose();
-        prediccion.dispose();
-
-        return resultado.sort((a, b) => b.score - a.score).slice(0, topK);
-    }
-
-    // ==============================
-    // 🚀 GETTERS
-    // ==============================
-    get numUsuarios(): number { return this.userEncoder.size; }
-    get numProductos(): number { return this.productEncoder.size; }
+    public get numUsuarios(): number { return this.usuarios.size; }
+    public get numProductos(): number { return this.productos.size; }
 }

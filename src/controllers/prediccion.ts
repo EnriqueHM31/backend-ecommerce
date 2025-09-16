@@ -1,9 +1,9 @@
 import { Request, Response } from 'express';
-import { guardarCompras } from '../utils/pagos/predicciones';
-import { SistemaRecomendacion } from '../class/Prediccion2';
-import type { RequestEntrenamiento, RequestPrediccion } from '../types/prediccion';
 import fs from 'fs';
+import { SistemaRecomendacion } from '../class/Prediccion2';
 import { DATA_FILE } from '../constants/prediccion';
+import type { RequestEntrenamiento, RequestPrediccion } from '../types/prediccion';
+import { guardarCompras } from '../utils/pagos/predicciones';
 import { trainingQueue } from '../utils/trainingQueue';
 
 interface Compra {
@@ -58,7 +58,7 @@ export const PrediccionController = {
     prediccion: async (req: RequestPrediccion, res: Response) => {
         console.log("PREDICCION");
         try {
-            const { usuario, compras, entrenar = false, topK = 5, conRecomendaciones = false } = req.body;
+            const { usuario, compras, entrenar = false, topK = 5 } = req.body;
 
             // 🔹 Guardar nuevas compras en persistencia
             if (Array.isArray(compras) && compras.length > 0) {
@@ -71,28 +71,16 @@ export const PrediccionController = {
 
             // 🔹 Opcional: reentrenar si se solicita
             if (entrenar) {
-                if (conRecomendaciones && usuario) {
-                    console.log(`🚀 Entrenando con recomendaciones para usuario: ${usuario}`);
-                    const { recomendaciones: recs } = await sistemaRecomendacion.entrenarConRecomendaciones(
-                        comprasPersistentes,
-                        usuario,
-                        topK,
-                        50
-                    );
-                    recomendaciones = recs;
-                    console.log("✅ Entrenamiento con recomendaciones completado");
-                } else {
-                    await sistemaRecomendacion.entrenar(comprasPersistentes)
-                        .then(() => console.log("✅ Entrenamiento completado"))
-                        .catch(err => console.error("❌ Error en entrenamiento:", err));
 
-                    // 🔹 Generar predicciones después del entrenamiento tradicional
-                    recomendaciones = await sistemaRecomendacion.predecir(usuario, topK);
-                }
-            } else {
-                // 🔹 Generar predicciones sin entrenar
+                await sistemaRecomendacion.entrenar(comprasPersistentes)
+                    .then(() => console.log("✅ Entrenamiento completado"))
+                    .catch(err => console.error("❌ Error en entrenamiento:", err));
+
+                // 🔹 Generar predicciones después del entrenamiento tradicional
                 recomendaciones = await sistemaRecomendacion.predecir(usuario, topK);
             }
+
+
 
             // 🔹 Si usuario nuevo, agregar info de que es fallback
             esUsuarioNuevo = sistemaRecomendacion.userEncoder.get(usuario) === undefined;
@@ -122,7 +110,6 @@ export const PrediccionController = {
         console.log("INFO");
 
         // Ejecutar diagnóstico
-        sistemaRecomendacion.diagnosticarModelo();
 
         res.json({
             modeloEntrenado: sistemaRecomendacion.isInitialized,
@@ -136,7 +123,7 @@ export const PrediccionController = {
     entrenar: async (req: RequestEntrenamiento, res: Response) => {
         console.log("ENTRENAAAAAAR");
         try {
-            const { compras, usuario, topK = 5, conRecomendaciones = false } = req.body;
+            const { compras } = req.body;
 
             if (!Array.isArray(compras) || compras.length === 0) {
                 res.status(400).json({ error: 'Los datos de "compras" son requeridos' });
@@ -154,25 +141,10 @@ export const PrediccionController = {
             };
 
             // 🔹 Entrenamiento con o sin recomendaciones
-            if (conRecomendaciones && usuario) {
-                console.log(`🚀 Entrenando con recomendaciones para usuario: ${usuario}`);
-                const { recomendaciones } = await sistemaRecomendacion.entrenarConRecomendaciones(
-                    comprasPersistentes,
-                    usuario,
-                    topK,
-                    100
-                );
-
-                resultado.recomendaciones = recomendaciones;
-                resultado.usuario = usuario;
-                resultado.timestamp = new Date().toISOString();
-                console.log("✅ Reentrenamiento con recomendaciones completado");
-            } else {
-                // 🔹 Entrenamiento tradicional
-                await sistemaRecomendacion.entrenar(comprasPersistentes, 100)
-                    .then(() => console.log("✅ Reentrenamiento manual completado"))
-                    .catch(err => console.error("❌ Error en reentrenamiento manual:", err));
-            }
+            // 🔹 Entrenamiento tradicional
+            await sistemaRecomendacion.entrenar(comprasPersistentes, 100)
+                .then(() => console.log("✅ Reentrenamiento manual completado"))
+                .catch(err => console.error("❌ Error en reentrenamiento manual:", err));
 
             res.json(resultado);
         } catch (error) {
@@ -294,14 +266,14 @@ export const PrediccionController = {
     populares: async (req: Request, res: Response) => {
         console.log("POPULARES");
         try {
-            const { topK = 4 } = req.body;
 
-            // 🔹 Generar recomendaciones
-            let recomendaciones = sistemaRecomendacion.obtenerTopPopulares(topK);
+            const { user_id, topK = 4 } = req.body;
+
+            const predicciones = await sistemaRecomendacion.predecir(user_id, topK);
 
 
             res.json({
-                recomendaciones,
+                predicciones,
                 timestamp: new Date().toISOString(),
                 mensaje: 'Recomendaciones generadas exitosamente'
             });

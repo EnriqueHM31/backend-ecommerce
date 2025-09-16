@@ -3,7 +3,7 @@ import express, { Request } from 'express';
 export interface Compra {
     usuario: string;
     producto: string;
-    cantidad?: number;
+    cantidad: number;
 }
 
 export interface Prediccion {
