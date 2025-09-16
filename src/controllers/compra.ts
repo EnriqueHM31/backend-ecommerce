@@ -1,7 +1,7 @@
 import { obtenerStripe } from "../constants/Stripe";
 import { ModeloCompra } from "../models/compra";
 import { CartItem } from "../types/producto";
-import { ModeloFactura } from "../utils/contacto/factura";
+//import { ModeloFactura } from "../utils/contacto/factura";
 import { getAllLineItems, getAllSessions } from "../utils/pagos/stripe";
 import { CartItemsValidation } from "../utils/validaciones/cartItems";
 import { StripeValidation } from "../utils/validaciones/sprite";
@@ -81,7 +81,7 @@ export class CompraController {
             }
 
             // 🚀 Generar y enviar factura PDF
-            await ModeloFactura.EnviarFacturaPDF({
+            /*await ModeloFactura.EnviarFacturaPDF({
                 nombre: session.customer_details?.name || "Cliente",
                 correo: session.customer_details?.email || "sin-correo@dominio.com",
                 monto: `$${(session.amount_total === null ? 0 : session.amount_total) / 100} MXN`,
@@ -101,7 +101,7 @@ export class CompraController {
                     total: `$${(item.amount_total / 100).toFixed(2)} MXN`,
                 })) || [],
             });
-
+*/
             // ✅ Marcar como enviada en metadata de Stripe
             await stripe.checkout.sessions.update(sessionId as string, {
                 metadata: { ...session.metadata, facturaEnviada: "true" },
