@@ -439,7 +439,6 @@ class SistemaRecomendacion {
     // ==============================
     predecir(usuario_1) {
         return __awaiter(this, arguments, void 0, function* (usuario, topK = 5, excluirComprados = true) {
-            var _a, _b, _c;
             if (!this.isInitialized || !this.model) {
                 throw new Error('El modelo no ha sido entrenado ni cargado');
             }
@@ -464,8 +463,8 @@ class SistemaRecomendacion {
             const candidatos = [];
             const numProductos = this.productEncoder.size;
             // Obtener el tamaño real del modelo para evitar índices fuera de rango
-            const modelInputShape = (_c = (_b = (_a = this.model) === null || _a === void 0 ? void 0 : _a.inputs) === null || _b === void 0 ? void 0 : _b[1]) === null || _c === void 0 ? void 0 : _c.shape;
-            const maxProductIndex = modelInputShape && modelInputShape[1] ? modelInputShape[1] - 1 : numProductos - 1;
+            // ✅ Lo correcto: el rango lo define el encoder, no el shape del input
+            const maxProductIndex = this.productEncoder.size - 1;
             console.log(`📊 Modelo acepta índices de productos: 0 a ${maxProductIndex}`);
             console.log(`📊 Encoder tiene ${numProductos} productos`);
             for (let prodIdx = 0; prodIdx < numProductos; prodIdx++) {
@@ -612,7 +611,6 @@ class SistemaRecomendacion {
     // ==============================
     evaluarModelo(compras_1) {
         return __awaiter(this, arguments, void 0, function* (compras, testSplit = 0.2) {
-            var _a, _b, _c, _d, _e, _f;
             if (!this.isInitialized || !this.model) {
                 throw new Error('El modelo no ha sido entrenado ni cargado');
             }
@@ -626,10 +624,9 @@ class SistemaRecomendacion {
             const testItemIds = [];
             const testRatings = [];
             // Obtener límites del modelo
-            const modelUserShape = (_c = (_b = (_a = this.model) === null || _a === void 0 ? void 0 : _a.inputs) === null || _b === void 0 ? void 0 : _b[0]) === null || _c === void 0 ? void 0 : _c.shape;
-            const modelItemShape = (_f = (_e = (_d = this.model) === null || _d === void 0 ? void 0 : _d.inputs) === null || _e === void 0 ? void 0 : _e[1]) === null || _f === void 0 ? void 0 : _f.shape;
-            const maxUserIndex = modelUserShape && modelUserShape[1] ? modelUserShape[1] - 1 : this.userEncoder.size - 1;
-            const maxItemIndex = modelItemShape && modelItemShape[1] ? modelItemShape[1] - 1 : this.productEncoder.size - 1;
+            // ✅ Los índices válidos son exactamente los de los encoders
+            const maxUserIndex = this.userEncoder.size - 1;
+            const maxItemIndex = this.productEncoder.size - 1;
             testData.forEach(compra => {
                 const userIdx = this.userEncoder.get(compra.usuario);
                 const prodIdx = this.productEncoder.get(compra.producto);

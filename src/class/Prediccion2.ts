@@ -532,8 +532,9 @@ export class SistemaRecomendacion {
         const numProductos = this.productEncoder.size;
 
         // Obtener el tamaño real del modelo para evitar índices fuera de rango
-        const modelInputShape = this.model?.inputs?.[1]?.shape;
-        const maxProductIndex = modelInputShape && modelInputShape[1] ? modelInputShape[1] - 1 : numProductos - 1;
+        // ✅ Lo correcto: el rango lo define el encoder, no el shape del input
+        const maxProductIndex = this.productEncoder.size - 1;
+
 
         console.log(`📊 Modelo acepta índices de productos: 0 a ${maxProductIndex}`);
         console.log(`📊 Encoder tiene ${numProductos} productos`);
@@ -718,10 +719,10 @@ export class SistemaRecomendacion {
         const testRatings: number[] = [];
 
         // Obtener límites del modelo
-        const modelUserShape = this.model?.inputs?.[0]?.shape;
-        const modelItemShape = this.model?.inputs?.[1]?.shape;
-        const maxUserIndex = modelUserShape && modelUserShape[1] ? modelUserShape[1] - 1 : this.userEncoder.size - 1;
-        const maxItemIndex = modelItemShape && modelItemShape[1] ? modelItemShape[1] - 1 : this.productEncoder.size - 1;
+        // ✅ Los índices válidos son exactamente los de los encoders
+        const maxUserIndex = this.userEncoder.size - 1;
+        const maxItemIndex = this.productEncoder.size - 1;
+
 
         testData.forEach(compra => {
             const userIdx = this.userEncoder.get(compra.usuario);
