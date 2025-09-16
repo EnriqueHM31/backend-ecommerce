@@ -1,9 +1,12 @@
 import type { CartItem, Customer } from "../types/producto";
 import { PedidosService } from "../class/Pedido";
 import { obtenerStripe } from "../constants/Stripe";
+import { SistemaRecomendacion } from "@/class/Prediccion";
 
 export class ModeloCompra {
+
     static async RealizarCompra(items: CartItem[], customer: Customer) {
+        const sistemaRecomendacion = new SistemaRecomendacion();
         const stripe = obtenerStripe();
         try {
             // Crear pedido en tu base de datos
@@ -46,10 +49,22 @@ export class ModeloCompra {
                 return { success: false, data: null, message: "Error al crear la sesión de Stripe" };
             }
 
-            // ⚡ Enviar recibo manualmente
+            const formattedArray = items.map((item: CartItem) => ({
+                usuario: customer.id,
+                producto: `${item.product.sku} - ${item.product.producto}`,
+                cantidad: item.quantity
+            }));
 
 
-            return { success: true, data: session.url, message: "Compra realizada correctamente" };
+            await sistemaRecomendacion.entrenar(formattedArray, 50)
+            console.log("Entrenamiento completado COMPRASSSSSS");
+
+            const predicciones = await sistemaRecomendacion.predecir(customer.id, 5);
+            console.log("Predicciones COMPRASSSSSS", predicciones);
+
+
+
+            return { success: true, data: session.url, recomendaciones: predicciones, message: "Compra realizada con éxito" };
         } catch (error) {
             console.error("Error al crear la compra:", error);
             return { success: false, data: null, message: error || "Error al crear la compra" };

@@ -18,12 +18,16 @@ export interface RequestPrediccion extends Request {
         compras?: Compra[];
         entrenar?: boolean;
         topK?: number;
+        conRecomendaciones?: boolean;
     };
 }
 
 export interface RequestEntrenamiento extends Request {
     body: {
         compras: Compra[];
+        usuario?: string;
+        topK?: number;
+        conRecomendaciones?: boolean;
     };
 }
 
