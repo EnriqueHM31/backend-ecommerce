@@ -24,9 +24,22 @@ export interface MatrizUsuarioProducto {
     };
 }
 
+
+
 // sistema/FiltradoColaborativo.ts
 import fs from "fs";
 import path from "path";
+import { DATA_FILE } from "../constants/prediccion";
+const cargarCompras = (): Compra[] => {
+    if (!fs.existsSync(DATA_FILE)) return [];
+    try {
+        return JSON.parse(fs.readFileSync(DATA_FILE, 'utf8')) as Compra[];
+    } catch (e) {
+        console.error("Error al leer compras persistidas:", e);
+        return [] as Compra[];
+    }
+};
+
 
 export class FiltradoColaborativo {
     private matriz: MatrizUsuarioProducto = {};
@@ -311,10 +324,56 @@ export class FiltradoColaborativo {
         return recomendaciones;
     }
 
+
+
+    public async cargarModelo(): Promise<void> {
+        try {
+            if (this.isInitialized) {
+                console.log("⚠️ El modelo ya está inicializado, no se recargará.");
+                return;
+            }
+
+            const rutaArchivo = path.join(this.rutaModelo, "modelo.json");
+
+            if (fs.existsSync(rutaArchivo)) {
+                try {
+                    const contenido = fs.readFileSync(rutaArchivo, "utf8");
+                    const datos = JSON.parse(contenido);
+
+                    this.matriz = datos.matriz || {};
+                    this.usuarios = new Set(datos.usuarios || []);
+                    this.productos = new Set(datos.productos || []);
+                    this.isInitialized = true;
+
+                    console.log(`✅ Modelo cargado desde ${rutaArchivo}`);
+                    console.log(`📊 ${this.usuarios.size} usuarios, ${this.productos.size} productos`);
+                    return;
+                } catch (e) {
+                    console.error("❌ Error parseando modelo.json, se intentará inicializar desde compras:", e);
+                    // si falla el parseo, seguimos a la inicialización por compras
+                }
+            }
+
+            // Si no hay modelo.json o hay error, usar compras persistentes (DATA_FILE)
+            const comprasPersistentes = cargarCompras();
+
+            if (!comprasPersistentes || comprasPersistentes.length === 0) {
+                console.warn("⚠️ No hay compras persistentes ni modelo para cargar. No se inicializó el sistema.");
+                return;
+            }
+
+            await this.inicializar(comprasPersistentes);
+            console.log(`📊 Inicializado con ${comprasPersistentes.length} compras persistentes`);
+        } catch (error) {
+            console.error("❌ Error cargando modelo:", error);
+            throw error;
+        }
+    }
+
     // ==============================
     // 🚀 PERSISTENCIA
     // ==============================
-    public async guardarModelo(): Promise<void> {
+    public async guardarModelo(newUsuario: boolean = false): Promise<void> {
         try {
             if (!fs.existsSync(this.rutaModelo)) {
                 fs.mkdirSync(this.rutaModelo, { recursive: true });
@@ -324,42 +383,99 @@ export class FiltradoColaborativo {
                 matriz: this.matriz,
                 usuarios: Array.from(this.usuarios),
                 productos: Array.from(this.productos),
-                fechaGuardado: new Date().toISOString()
+                fechaGuardado: new Date().toISOString(),
+                incremental: newUsuario
             };
 
-            const rutaArchivo = path.join(this.rutaModelo, 'modelo.json');
-            fs.writeFileSync(rutaArchivo, JSON.stringify(datos, null, 2));
+            const rutaArchivo = path.join(this.rutaModelo, "modelo.json");
+            const tmp = rutaArchivo + ".tmp";
 
-            console.log(`✅ Modelo guardado en ${rutaArchivo}`);
+            // Escritura atómica: escribir a tmp y renombrar
+            fs.writeFileSync(tmp, JSON.stringify(datos, null, 2), "utf8");
+            fs.renameSync(tmp, rutaArchivo);
+
+            console.log(
+                `✅ Modelo sobrescrito en ${rutaArchivo} ${newUsuario ? "(actualización incremental)" : "(entrenamiento completo)"}`
+            );
         } catch (error) {
-            console.error('❌ Error guardando modelo:', error);
+            console.error("❌ Error guardando modelo:", error);
             throw error;
         }
     }
 
-    public async cargarModelo(): Promise<void> {
+    private async guardarComprasPersistentes(nuevasCompras: Compra[]): Promise<void> {
         try {
-            const rutaArchivo = path.join(this.rutaModelo, 'modelo.json');
+            let existentes: Compra[] = [];
 
-            if (!fs.existsSync(rutaArchivo)) {
-                throw new Error(`No se encontró el modelo en ${rutaArchivo}`);
+            if (fs.existsSync(DATA_FILE)) {
+                const raw = fs.readFileSync(DATA_FILE, 'utf8') || '[]';
+                existentes = JSON.parse(raw) as Compra[];
             }
 
-            const contenido = fs.readFileSync(rutaArchivo, 'utf-8');
-            const datos = JSON.parse(contenido);
+            // Evitar duplicados por usuario+producto
+            const claves = new Set(existentes.map(c => `${c.usuario}::${c.producto}`));
+            for (const c of nuevasCompras) {
+                const clave = `${c.usuario}::${c.producto}`;
+                if (!claves.has(clave)) {
+                    existentes.push(c);
+                    claves.add(clave);
+                }
+            }
 
-            this.matriz = datos.matriz;
-            this.usuarios = new Set(datos.usuarios);
-            this.productos = new Set(datos.productos);
-            this.isInitialized = true;
-
-            console.log(`✅ Modelo cargado desde ${rutaArchivo}`);
-            console.log(`📊 ${this.usuarios.size} usuarios, ${this.productos.size} productos`);
-        } catch (error) {
-            console.error('❌ Error cargando modelo:', error);
-            throw error;
+            fs.writeFileSync(DATA_FILE, JSON.stringify(existentes, null, 2), 'utf8');
+            console.log(`✅ Compras persistentes guardadas en ${DATA_FILE}`);
+        } catch (err) {
+            console.error("❌ Error guardando compras persistentes:", err);
+            throw err;
         }
     }
+
+
+    public async agregarUsuario(compras: Compra[]) {
+        if (!compras || compras.length === 0) {
+            const populares = this.obtenerProductosPopulares();
+            return { prediccionesall: null, populares };
+        }
+
+        const nuevoUsuario = compras[0].usuario;
+        console.log(`👤 Agregando/actualizando usuario: ${nuevoUsuario} con ${compras.length} compras`);
+
+        // Asegurar que la estructura exista
+        if (!this.matriz[nuevoUsuario]) {
+            this.matriz[nuevoUsuario] = {};
+        }
+
+        // Insertar compras en la matriz existente (normalización como antes)
+        for (const compra of compras) {
+            const { usuario, producto, cantidad, rating } = compra;
+            const valor = rating || Math.min(cantidad / 10, 5);
+            // Si prefieres binario: const valor = 1;
+            this.matriz[usuario] = this.matriz[usuario] || {};
+            this.matriz[usuario][producto] = valor;
+
+            this.usuarios.add(usuario);
+            this.productos.add(producto);
+        }
+
+        // Persistir compras en DATA_FILE para que sobrevivieran reinicios (opcional pero recomendable)
+        try {
+            await this.guardarComprasPersistentes(compras);
+        } catch (err) {
+            console.warn("⚠️ No se pudieron guardar las compras persistentes:", err);
+        }
+
+        // Guardar y sobreescribir modelo.json (escritura atómica implementada)
+        await this.guardarModelo(true);
+
+        // Marcar inicializado y devolver predicciones
+        this.isInitialized = true;
+
+        // Devolver predicciones para el nuevo usuario
+        const predicciones = await this.predecir(nuevoUsuario);
+        const populares = this.obtenerProductosPopulares();
+        return { prediccionesall: predicciones, populares };
+    }
+
 
     // ==============================
     // 🚀 MÉTODOS DE UTILIDAD
@@ -375,6 +491,33 @@ export class FiltradoColaborativo {
             densidad: (totalInteracciones / (this.usuarios.size * this.productos.size) * 100).toFixed(2) + '%',
             inicializado: this.isInitialized
         };
+    }
+
+    public obtenerProductosPopulares(topK: number = 5): Prediccion[] {
+        if (!this.isInitialized) {
+            throw new Error('Sistema no inicializado. Ejecuta inicializar() primero.');
+        }
+
+        const conteoProductos: Map<string, number> = new Map();
+
+        for (const productosUsuario of Object.values(this.matriz)) {
+            for (const [producto] of Object.entries(productosUsuario)) {
+                const actual = conteoProductos.get(producto) || 0;
+                conteoProductos.set(producto, actual + 1); // contar usuarios que compraron
+            }
+        }
+
+        const populares: Prediccion[] = Array.from(conteoProductos.entries())
+            .map(([producto, count]) => ({
+                producto,
+                score: count, // score = cantidad de usuarios que compraron
+                razon: `Comprado por ${count} usuario(s)`
+            }))
+            .sort((a, b) => b.score - a.score)
+            .slice(0, topK);
+
+        console.log(`✅ Top ${populares.length} productos populares generados`);
+        return populares;
     }
 
     public get numUsuarios(): number { return this.usuarios.size; }

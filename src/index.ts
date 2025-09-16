@@ -8,7 +8,7 @@ import { CompraRouter } from './routes/pagos.routes';
 import { UsuarioRouter } from './routes/usuario.routes';
 //import { PrediccionRouter } from './routes/prediccion.routes';
 import { PORT } from './config';
-import { PrediccionRouter } from './routes/prediccion.routes';
+import RouterPrediccion from './routes/prediccion.routes';
 
 
 const app = express();
@@ -35,7 +35,7 @@ app.use('/api', ComentariosRouter);
 app.use('/api/productos', ProductosRouter);
 app.use('/api/compra', CompraRouter);
 app.use('/api/usuario', UsuarioRouter);
-app.use('/api', PrediccionRouter);
+app.use('/api', RouterPrediccion);
 
 app.use("/", (_req, res) => {
     res.send("Ecommerce API");

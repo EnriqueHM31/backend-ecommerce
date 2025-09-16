@@ -1,9 +1,32 @@
 import { Router, Request, Response } from 'express';
 import { FiltradoColaborativo } from '../class/Prediccion2';
 import { Compra } from '../types/prediccion';
+import { guardarCompras } from '@/utils/pagos/predicciones';
+import fs from 'fs';
+import { DATA_FILE } from '@/constants/prediccion';
 
-const router = Router();
+const RouterPrediccion = Router();
 const sistemaRecomendacion = new FiltradoColaborativo();
+
+const cargarCompras = (): Compra[] => {
+    if (!fs.existsSync(DATA_FILE)) return [];
+    try {
+        return JSON.parse(fs.readFileSync(DATA_FILE, 'utf8')) as Compra[];
+    } catch (e) {
+        console.error("Error al leer compras persistidas:", e);
+        return [] as Compra[];
+    }
+};
+
+
+(async () => {
+    try {
+        await sistemaRecomendacion.cargarModelo();
+        console.log('✅ Modelo cargado automáticamente');
+    } catch (error) {
+        console.warn('⚠️ No se encontró modelo previo, inicializando vacío');
+    }
+})();
 
 // ==============================
 // 🚀 MIDDLEWARE DE VALIDACIÓN
@@ -38,7 +61,7 @@ const validarProducto = (req: Request, res: Response, next: Function) => {
  * POST /api/recomendaciones/inicializar
  * Inicializa el sistema con datos de compras
  */
-router.post('/inicializar', async (req: Request, res: Response) => {
+RouterPrediccion.post('/inicializar', async (req: Request, res: Response) => {
     try {
         const { compras }: { compras: Compra[] } = req.body;
 
@@ -48,6 +71,10 @@ router.post('/inicializar', async (req: Request, res: Response) => {
                 error: 'Se requiere un array de compras válido'
             });
         }
+
+        let comprasPersistentes: Compra[] = cargarCompras();
+        comprasPersistentes.push(...compras);
+        guardarCompras({ comprasPersistentes });
 
         // Validar estructura de compras
         for (const compra of compras) {
@@ -81,7 +108,7 @@ router.post('/inicializar', async (req: Request, res: Response) => {
  * POST /api/recomendaciones/cargar
  * Carga un modelo previamente guardado
  */
-router.post('/cargar', async (_req: Request, res: Response) => {
+RouterPrediccion.post('/cargar', async (_req: Request, res: Response) => {
     try {
         await sistemaRecomendacion.cargarModelo();
         const estadisticas = sistemaRecomendacion.obtenerEstadisticas();
@@ -109,12 +136,12 @@ router.post('/cargar', async (_req: Request, res: Response) => {
  * GET /api/recomendaciones/usuario/:usuario
  * Obtiene recomendaciones para un usuario específico
  */
-router.get('/usuario/:usuario', validarUsuario, async (req: Request, res: Response) => {
+RouterPrediccion.get('/usuario/:usuario', validarUsuario, async (req: Request, res: Response) => {
     try {
         const { usuario } = req.params;
         const {
             limite = '5',
-            metodo = 'coseno'
+            metodo = 'coseno',
         } = req.query;
 
         const topK = parseInt(limite as string);
@@ -161,7 +188,7 @@ router.get('/usuario/:usuario', validarUsuario, async (req: Request, res: Respon
  * GET /api/recomendaciones/producto/:producto
  * Obtiene productos similares a uno dado
  */
-router.get('/producto/:producto', validarProducto, async (req: Request, res: Response) => {
+RouterPrediccion.get('/producto/:producto', validarProducto, async (req: Request, res: Response) => {
     try {
         const { producto } = req.params;
         const { limite = '5' } = req.query;
@@ -204,7 +231,7 @@ router.get('/producto/:producto', validarProducto, async (req: Request, res: Res
  * GET /api/recomendaciones/estadisticas
  * Obtiene estadísticas del sistema
  */
-router.get('/estadisticas', (_req: Request, res: Response) => {
+RouterPrediccion.get('/estadisticas', (_req: Request, res: Response) => {
     try {
         const estadisticas = sistemaRecomendacion.obtenerEstadisticas();
 
@@ -226,7 +253,7 @@ router.get('/estadisticas', (_req: Request, res: Response) => {
  * GET /api/recomendaciones/salud
  * Verifica el estado del sistema
  */
-router.get('/salud', (_req: Request, res: Response) => {
+RouterPrediccion.get('/salud', (_req: Request, res: Response) => {
     const estadisticas = sistemaRecomendacion.obtenerEstadisticas();
 
     res.json({
@@ -238,4 +265,28 @@ router.get('/salud', (_req: Request, res: Response) => {
     });
 });
 
-export default router;
+
+RouterPrediccion.post("/usuario/recomendar", async (req: Request, res: Response) => {
+    try {
+        const compras: Compra[] = req.body.compras;
+
+        if (!compras || compras.length === 0) {
+            const { populares } = await sistemaRecomendacion.agregarUsuario(compras);
+
+            res.json({
+                mensaje: "✅ Usuario agregado y modelo actualizado",
+                populares
+            });
+        }
+
+        const { prediccionesall, populares } = await sistemaRecomendacion.agregarUsuario(compras);
+        res.json({
+            mensaje: "✅ Usuario agregado y modelo actualizado",
+            recomendaciones: prediccionesall,
+            populares
+        });
+    } catch (error: any) {
+        res.status(500).json({ error: error.message });
+    }
+});
+export default RouterPrediccion;
