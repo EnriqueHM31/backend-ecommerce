@@ -1,7 +1,7 @@
 import type { CartItem, Customer } from "../types/producto";
 import { PedidosService } from "../class/Pedido";
 import { obtenerStripe } from "../constants/Stripe";
-import { SistemaRecomendacion } from "@/class/Prediccion2";
+import { SistemaRecomendacion } from "../class/Prediccion2";
 
 export class ModeloCompra {
 
