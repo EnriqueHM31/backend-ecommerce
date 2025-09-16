@@ -5,7 +5,7 @@ import type { Compra, DatosEntrenamiento, DatosPreprocessed, Prediccion } from '
 export class SistemaRecomendacion {
     private model: LayersModel | null;
     private productEncoder: Map<string, number>;
-    private userEncoder: Map<string, number>;
+    public userEncoder: Map<string, number>;
     private productDecoder: Map<number, string>;
     private userDecoder: Map<number, string>;
     private matrizOriginal: number[][] | null;
@@ -38,8 +38,9 @@ export class SistemaRecomendacion {
             this.productDecoder.set(idx, producto);
         });
 
-        const numUsuarios = usuarios.length;
-        const numProductos = productos.length;
+        const numUsuarios = Math.max(...Array.from(this.userEncoder.values())) + 1;
+        const numProductos = Math.max(...Array.from(this.productEncoder.values())) + 1;
+
         const matriz: number[][] = Array(numUsuarios).fill(null).map(() => Array(numProductos).fill(0));
 
         compras.forEach(compra => {
@@ -57,10 +58,7 @@ export class SistemaRecomendacion {
     // 🚀 CREAR MODELO
     // ==============================
     async crearModelo(numUsuarios: number, numProductos: number, embedding_dim: number = 50): Promise<LayersModel> {
-        if (this.model) {
-            console.log("⚠️ El modelo ya existe, no se recrea.");
-            return this.model;
-        }
+        this.model = null
 
         const userInput = input({ shape: [1], name: 'user_input' });
         const userEmbedding = layers.embedding({
@@ -137,22 +135,15 @@ export class SistemaRecomendacion {
     async entrenar(compras: Compra[], epochs: number = 50, ruta: string = "./modelo-entrenado/model.json"): Promise<void> {
         console.log('Iniciando entrenamiento...');
 
-        if (this.isInitialized && this.model) {
-            console.log("⚠️ El modelo ya está inicializado, no se vuelve a entrenar.");
-            return;
-        }
-
-        if (fs.existsSync(ruta)) {
-            console.log("📂 Se encontró modelo guardado, cargando...");
-            await this.cargarModelo(ruta);
-            return;
-        }
+        console.log(ruta);
 
         try {
             const { matriz, numUsuarios, numProductos } = this.preprocesarDatos(compras);
             this.matrizOriginal = matriz.map(row => [...row]);
 
+
             await this.crearModelo(numUsuarios, numProductos);
+            await this.guardarMeta();
 
             const datos = this.prepararDatosEntrenamiento(matriz);
             const epochsAjustados = Math.max(epochs, 50);
@@ -218,20 +209,52 @@ export class SistemaRecomendacion {
         console.log(`✅ Modelo guardado en ${ruta}`);
     }
 
-    async cargarModelo(ruta: string = "./modelo-entrenado/model.json"): Promise<void> {
+    async guardarMeta(ruta: string = "./modelo-entrenado/meta.json") {
+        if (!this.matrizOriginal) return;
+
+        const carpeta = ruta.substring(0, ruta.lastIndexOf("/"));
+        if (!fs.existsSync(carpeta)) fs.mkdirSync(carpeta, { recursive: true });
+
+        const meta = {
+            usuarios: Array.from(this.userEncoder.keys()),
+            productos: Array.from(this.productEncoder.keys()),
+            matrizOriginal: this.matrizOriginal
+        };
+
+        fs.writeFileSync(ruta, JSON.stringify(meta, null, 2), "utf-8");
+        console.log(`✅ Meta guardado en ${ruta}`);
+    }
+
+    async cargarModelo(ruta: string = "./modelo-entrenado/model.json") {
         const loadHandler: io.IOHandler = {
             async load() {
                 const modelJSON = JSON.parse(fs.readFileSync(ruta, "utf-8"));
                 const weightData = fs.readFileSync(ruta.replace("model.json", "weights.bin"));
-
                 return { ...modelJSON, weightData: new Uint8Array(weightData).buffer };
             }
         };
 
         this.model = await loadLayersModel(loadHandler);
         this.isInitialized = true;
-        console.log(`✅ Modelo cargado desde ${ruta}`);
+
+        // 🔹 Reconstruir encoders desde meta.json
+        const metaPath = ruta.replace("model.json", "meta.json");
+        if (fs.existsSync(metaPath)) {
+            const meta = JSON.parse(fs.readFileSync(metaPath, "utf-8"));
+            meta.usuarios.forEach((u: string, i: number) => {
+                this.userEncoder.set(u, i);
+                this.userDecoder.set(i, u);
+            });
+            meta.productos.forEach((p: string, i: number) => {
+                this.productEncoder.set(p, i);
+                this.productDecoder.set(i, p);
+            });
+            this.matrizOriginal = meta.matrizOriginal;
+        } else {
+            console.warn("⚠️ No se encontró archivo meta.json, los encoders estarán vacíos");
+        }
     }
+
 
     // ==============================
     // 🚀 Fallback de populares
@@ -270,14 +293,16 @@ export class SistemaRecomendacion {
             throw new Error('El modelo no ha sido entrenado ni cargado');
         }
 
-        const normalizedUser = usuario.trim().toLowerCase();
-        const userIdx = this.userEncoder.get(normalizedUser);
+        // ⚠️ Usa el usuario tal cual como fue entrenado, sin forzar toLowerCase()
+        const userIdx = this.userEncoder.get(usuario);
 
+        // 🟢 Caso 1: Usuario nuevo (no existe en userEncoder)
         if (userIdx === undefined) {
-            console.warn(`⚠️ Usuario ${normalizedUser} no encontrado en el modelo, devolviendo populares`);
+            console.warn(`⚠️ Usuario "${usuario}" no encontrado en el modelo, devolviendo populares`);
             return this.obtenerPopulares(topK);
         }
 
+        // 🟢 Caso 2: Usuario conocido → predicciones personalizadas
         const productosComprados = new Set<string>();
         if (excluirComprados && this.matrizOriginal) {
             for (let prodIdx = 0; prodIdx < this.productEncoder.size; prodIdx++) {
@@ -307,7 +332,7 @@ export class SistemaRecomendacion {
             prediccion.dispose();
         }
 
-        const predFiltradas = this.aplicarFiltrosEcosistema(predicciones, normalizedUser);
+        const predFiltradas = this.aplicarFiltrosEcosistema(predicciones, usuario);
 
         return predFiltradas
             .sort((a, b) => b.score - a.score)
@@ -353,6 +378,30 @@ export class SistemaRecomendacion {
         });
     }
 
+    // ==============================
+    // 🚀 OBTENER LOS 4 PRODUCTOS MÁS POPULARES
+    // ==============================
+    public obtenerTopPopulares(topK: number = 4): Prediccion[] {
+        if (!this.matrizOriginal) return [];
+
+        const conteoProductos: Map<number, number> = new Map();
+
+        for (let i = 0; i < this.matrizOriginal.length; i++) {
+            for (let j = 0; j < this.matrizOriginal[i].length; j++) {
+                if (this.matrizOriginal[i][j] > 0) {
+                    conteoProductos.set(j, (conteoProductos.get(j) || 0) + this.matrizOriginal[i][j]);
+                }
+            }
+        }
+
+        return [...conteoProductos.entries()]
+            .sort((a, b) => b[1] - a[1])   // Orden descendente por cantidad
+            .slice(0, topK)
+            .map(([prodIdx, score]) => ({
+                producto: this.productDecoder.get(prodIdx) || "desconocido",
+                score
+            }));
+    }
     // ==============================
     // 🚀 GETTERS
     // ==============================
