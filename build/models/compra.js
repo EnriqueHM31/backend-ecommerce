@@ -12,15 +12,19 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.ModeloCompra = void 0;
 const Pedido_1 = require("../class/Pedido");
 const Stripe_1 = require("../constants/Stripe");
+const Prediccion2_1 = require("@/class/Prediccion2");
 class ModeloCompra {
     static RealizarCompra(items, customer) {
         return __awaiter(this, void 0, void 0, function* () {
+            const sistemaRecomendacion = new Prediccion2_1.SistemaRecomendacion();
             const stripe = (0, Stripe_1.obtenerStripe)();
             try {
+                // Crear pedido en tu base de datos
                 const pedido = yield Pedido_1.PedidosService.crearPedido(customer.id, items);
                 if (!pedido.success) {
                     throw new Error("Error al crear el pedido");
                 }
+                // Crear sesión de Checkout
                 const session = yield stripe.checkout.sessions.create({
                     payment_method_types: ["card"],
                     mode: "payment",
@@ -29,37 +33,17 @@ class ModeloCompra {
                     shipping_address_collection: {
                         allowed_countries: ["MX", "US"],
                     },
-                    invoice_creation: {
-                        enabled: true,
-                        invoice_data: {
-                            description: "Compra realizada con el ecommerce",
-                            metadata: {
-                                customer_name: customer.name,
-                                customer_email: customer.email,
-                                tipo_envio: 'Fedex', // ⚠️ Sin comillas simples en la key
-                            },
-                            // Agregar campos adicionales importantes
-                            footer: "Gracias por tu compra",
-                            custom_fields: [
-                                {
-                                    name: "Tipo de Envío",
-                                    value: "Fedex",
-                                },
-                            ],
-                        },
-                    },
                     metadata: {
                         customer_name: customer.name,
-                        customer_email: customer.email, // Agregar email en metadata también
+                        customer_email: customer.email,
                     },
                     line_items: items.map((item) => ({
                         price_data: {
                             currency: "MXN",
                             product_data: {
                                 name: item.product.producto,
-                                // Agregar descripción para que aparezca en la factura
-                                description: item.product.descripcion || "Producto del ecommerce", // Agregar descripción para que aparezca en la factura
-                                images: [item.product.imagen_url], // 👈 tiene que ser un array
+                                description: item.product.descripcion || "Producto del ecommerce",
+                                images: [item.product.imagen_url],
                             },
                             unit_amount: Math.round(item.product.precio_base * 100),
                         },
@@ -67,18 +51,21 @@ class ModeloCompra {
                     })),
                     success_url: "http://localhost:5173/success?session_id={CHECKOUT_SESSION_ID}",
                     cancel_url: "http://localhost:5173/cancel",
-                    payment_method_options: {
-                        card: {
-                            request_three_d_secure: "any",
-                        },
-                    },
-                    // ✅ Agregar para asegurar que el customer se cree
                     customer_creation: "always",
                 });
                 if (!session) {
                     return { success: false, data: null, message: "Error al crear la sesión de Stripe" };
                 }
-                return { success: true, data: session.url, message: "Compra realizada correctamente" };
+                const formattedArray = items.map((item) => ({
+                    usuario: customer.id,
+                    producto: `${item.product.sku} - ${item.product.producto}`,
+                    cantidad: item.quantity
+                }));
+                yield sistemaRecomendacion.entrenar(formattedArray, 50);
+                console.log("Entrenamiento completado COMPRASSSSSS");
+                const predicciones = yield sistemaRecomendacion.predecir(customer.id, 5);
+                console.log("Predicciones COMPRASSSSSS", predicciones);
+                return { success: true, data: session.url, recomendaciones: predicciones, message: "Compra realizada con éxito" };
             }
             catch (error) {
                 console.error("Error al crear la compra:", error);

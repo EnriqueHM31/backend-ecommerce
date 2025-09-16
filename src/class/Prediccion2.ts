@@ -224,6 +224,7 @@ export class SistemaRecomendacion {
         console.log(`📊 Embedding dimension: ${embedding_dim}`);
         console.log(`👥 Usuarios: ${numUsuarios}, 🛍️ Productos: ${numProductos}`);
 
+        await this.guardarModelo();
         return this.model;
     }
 

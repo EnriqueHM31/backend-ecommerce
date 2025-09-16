@@ -7,7 +7,7 @@
  * sin bloquear el servidor principal.
  */
 
-import { SistemaRecomendacion } from '../class/Prediccion';
+import { SistemaRecomendacion } from '../class/Prediccion2';
 import fs from 'fs';
 import * as path from 'path';
 import type { Compra } from '../types/prediccion';

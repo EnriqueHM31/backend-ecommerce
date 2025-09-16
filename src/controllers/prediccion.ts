@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import { guardarCompras } from '../utils/pagos/predicciones';
-import { SistemaRecomendacion } from '../class/Prediccion';
+import { SistemaRecomendacion } from '../class/Prediccion2';
 import type { RequestEntrenamiento, RequestPrediccion } from '../types/prediccion';
 import fs from 'fs';
 import { DATA_FILE } from '../constants/prediccion';
@@ -39,7 +39,7 @@ const sistemaRecomendacion = new SistemaRecomendacion();
     const modelPath = './modelo-entrenado/model.json';
 
     if (fs.existsSync(modelPath)) {
-        await sistemaRecomendacion.cargarModelo(modelPath);
+        await sistemaRecomendacion.cargarModelo();
         console.log("✅ Modelo cargado desde archivo");
     } else {
         console.warn("⚠️ No se encontró modelo guardado, entrenando con datos persistentes...");

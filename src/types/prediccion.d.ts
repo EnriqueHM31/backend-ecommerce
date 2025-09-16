@@ -4,7 +4,6 @@ export interface Compra {
     usuario: string;
     producto: string;
     cantidad?: number;
-    rating?: number;
 }
 
 export interface Prediccion {
