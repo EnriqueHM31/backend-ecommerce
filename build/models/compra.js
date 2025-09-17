@@ -12,11 +12,9 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.ModeloCompra = void 0;
 const Pedido_1 = require("../class/Pedido");
 const Stripe_1 = require("../constants/Stripe");
-const Prediccion2_1 = require("../class/Prediccion2");
 class ModeloCompra {
     static RealizarCompra(items, customer) {
         return __awaiter(this, void 0, void 0, function* () {
-            const sistemaRecomendacion = new Prediccion2_1.SistemaRecomendacion();
             const stripe = (0, Stripe_1.obtenerStripe)();
             try {
                 // Crear pedido en tu base de datos
@@ -56,16 +54,8 @@ class ModeloCompra {
                 if (!session) {
                     return { success: false, data: null, message: "Error al crear la sesión de Stripe" };
                 }
-                const formattedArray = items.map((item) => ({
-                    usuario: customer.id,
-                    producto: `${item.product.sku} - ${item.product.producto}`,
-                    cantidad: item.quantity
-                }));
-                yield sistemaRecomendacion.entrenar(formattedArray, 50);
-                console.log("Entrenamiento completado COMPRASSSSSS");
-                const predicciones = yield sistemaRecomendacion.predecir(customer.id, 5);
-                console.log("Predicciones COMPRASSSSSS", predicciones);
-                return { success: true, data: session.url, recomendaciones: predicciones, message: "Compra realizada con éxito" };
+                console.log("SESSION", session);
+                return { success: true, data: session.url, message: "Compra realizada con éxito" };
             }
             catch (error) {
                 console.error("Error al crear la compra:", error);

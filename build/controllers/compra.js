@@ -12,7 +12,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.CompraController = void 0;
 const Stripe_1 = require("../constants/Stripe");
 const compra_1 = require("../models/compra");
-const factura_1 = require("../utils/contacto/factura");
+//import { ModeloFactura } from "../utils/contacto/factura";
 const stripe_1 = require("../utils/pagos/stripe");
 const cartItems_1 = require("../utils/validaciones/cartItems");
 const sprite_1 = require("../utils/validaciones/sprite");
@@ -47,7 +47,7 @@ class CompraController {
     }
     static ObtenerCompraIdSession(req, res) {
         return __awaiter(this, void 0, void 0, function* () {
-            var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l, _m, _o, _p, _q, _r;
+            var _a;
             const stripe = (0, Stripe_1.obtenerStripe)();
             try {
                 const { sessionId } = req.query;
@@ -73,24 +73,27 @@ class CompraController {
                     return;
                 }
                 // 🚀 Generar y enviar factura PDF
-                yield factura_1.ModeloFactura.EnviarFacturaPDF({
-                    nombre: ((_b = session.customer_details) === null || _b === void 0 ? void 0 : _b.name) || "Cliente",
-                    correo: ((_c = session.customer_details) === null || _c === void 0 ? void 0 : _c.email) || "sin-correo@dominio.com",
+                /*await ModeloFactura.EnviarFacturaPDF({
+                    nombre: session.customer_details?.name || "Cliente",
+                    correo: session.customer_details?.email || "sin-correo@dominio.com",
                     monto: `$${(session.amount_total === null ? 0 : session.amount_total) / 100} MXN`,
                     fecha: new Date().toLocaleString("es-MX", { timeZone: "America/Mexico_City" }),
-                    direccion1: ((_e = (_d = session.customer_details) === null || _d === void 0 ? void 0 : _d.address) === null || _e === void 0 ? void 0 : _e.line1) || "",
-                    direccion2: ((_g = (_f = session.customer_details) === null || _f === void 0 ? void 0 : _f.address) === null || _g === void 0 ? void 0 : _g.line2) || "",
-                    ciudad: ((_j = (_h = session.customer_details) === null || _h === void 0 ? void 0 : _h.address) === null || _j === void 0 ? void 0 : _j.city) || "",
-                    estado: ((_l = (_k = session.customer_details) === null || _k === void 0 ? void 0 : _k.address) === null || _l === void 0 ? void 0 : _l.state) || "",
-                    cp: ((_o = (_m = session.customer_details) === null || _m === void 0 ? void 0 : _m.address) === null || _o === void 0 ? void 0 : _o.postal_code) || "",
-                    pais: ((_q = (_p = session.customer_details) === null || _p === void 0 ? void 0 : _p.address) === null || _q === void 0 ? void 0 : _q.country) || "",
-                    items: ((_r = session.line_items) === null || _r === void 0 ? void 0 : _r.data.map((item) => ({
+    
+                    direccion1: session.customer_details?.address?.line1 || "",
+                    direccion2: session.customer_details?.address?.line2 || "",
+                    ciudad: session.customer_details?.address?.city || "",
+                    estado: session.customer_details?.address?.state || "",
+                    cp: session.customer_details?.address?.postal_code || "",
+                    pais: session.customer_details?.address?.country || "",
+    
+                    items: session.line_items?.data.map((item: any) => ({
                         producto: item.description,
                         cantidad: item.quantity,
                         precio: `$${(item.price.unit_amount / 100).toFixed(2)} MXN`,
                         total: `$${(item.amount_total / 100).toFixed(2)} MXN`,
-                    }))) || [],
+                    })) || [],
                 });
+    */
                 // ✅ Marcar como enviada en metadata de Stripe
                 yield stripe.checkout.sessions.update(sessionId, {
                     metadata: Object.assign(Object.assign({}, session.metadata), { facturaEnviada: "true" }),

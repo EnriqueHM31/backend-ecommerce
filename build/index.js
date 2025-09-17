@@ -13,7 +13,7 @@ const pagos_routes_1 = require("./routes/pagos.routes");
 const usuario_routes_1 = require("./routes/usuario.routes");
 //import { PrediccionRouter } from './routes/prediccion.routes';
 const config_1 = require("./config");
-const prediccion_routes_1 = require("./routes/prediccion.routes");
+const prediccion_routes_1 = __importDefault(require("./routes/prediccion.routes"));
 const app = (0, express_1.default)();
 app.use(express_1.default.json());
 const allowedOrigins = ['http://localhost:3000', 'http://localhost:3001', 'http://localhost:5173',
@@ -33,7 +33,7 @@ app.use('/api', comentarios_routes_1.ComentariosRouter);
 app.use('/api/productos', productos_routes_1.ProductosRouter);
 app.use('/api/compra', pagos_routes_1.CompraRouter);
 app.use('/api/usuario', usuario_routes_1.UsuarioRouter);
-app.use('/api', prediccion_routes_1.PrediccionRouter);
+app.use('/api', prediccion_routes_1.default);
 app.use("/", (_req, res) => {
     res.send("Ecommerce API");
 });

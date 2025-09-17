@@ -1,10 +1,10 @@
 import { Router, Request, Response } from 'express';
 import { FiltradoColaborativo } from '../class/Prediccion2';
 import { Compra } from '../types/prediccion';
-import { guardarCompras } from '@/utils/pagos/predicciones';
+import { guardarCompras } from '../utils/pagos/predicciones';
 import fs from 'fs';
-import { DATA_FILE } from '@/constants/prediccion';
-import { db } from '@/database/db';
+import { DATA_FILE } from '../constants/prediccion';
+import { db } from '../database/db';
 import { RowDataPacket } from 'mysql2';
 
 const RouterPrediccion = Router();

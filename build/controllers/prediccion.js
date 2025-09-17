@@ -13,10 +13,10 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.PrediccionController = void 0;
-const predicciones_1 = require("../utils/pagos/predicciones");
-const Prediccion2_1 = require("../class/Prediccion2");
 const fs_1 = __importDefault(require("fs"));
+const Prediccion2_1 = require("../class/Prediccion2");
 const prediccion_1 = require("../constants/prediccion");
+const predicciones_1 = require("../utils/pagos/predicciones");
 const trainingQueue_1 = require("../utils/trainingQueue");
 // ===============================
 // 🚀 Persistencia en disco
@@ -61,7 +61,7 @@ exports.PrediccionController = {
     prediccion: (req, res) => __awaiter(void 0, void 0, void 0, function* () {
         console.log("PREDICCION");
         try {
-            const { usuario, compras, entrenar = false, topK = 5, conRecomendaciones = false } = req.body;
+            const { usuario, compras, entrenar = false, topK = 5 } = req.body;
             // 🔹 Guardar nuevas compras en persistencia
             if (Array.isArray(compras) && compras.length > 0) {
                 comprasPersistentes.push(...compras);
@@ -71,22 +71,10 @@ exports.PrediccionController = {
             let esUsuarioNuevo = false;
             // 🔹 Opcional: reentrenar si se solicita
             if (entrenar) {
-                if (conRecomendaciones && usuario) {
-                    console.log(`🚀 Entrenando con recomendaciones para usuario: ${usuario}`);
-                    const { recomendaciones: recs } = yield sistemaRecomendacion.entrenarConRecomendaciones(comprasPersistentes, usuario, topK, 50);
-                    recomendaciones = recs;
-                    console.log("✅ Entrenamiento con recomendaciones completado");
-                }
-                else {
-                    yield sistemaRecomendacion.entrenar(comprasPersistentes)
-                        .then(() => console.log("✅ Entrenamiento completado"))
-                        .catch(err => console.error("❌ Error en entrenamiento:", err));
-                    // 🔹 Generar predicciones después del entrenamiento tradicional
-                    recomendaciones = yield sistemaRecomendacion.predecir(usuario, topK);
-                }
-            }
-            else {
-                // 🔹 Generar predicciones sin entrenar
+                yield sistemaRecomendacion.entrenar(comprasPersistentes)
+                    .then(() => console.log("✅ Entrenamiento completado"))
+                    .catch(err => console.error("❌ Error en entrenamiento:", err));
+                // 🔹 Generar predicciones después del entrenamiento tradicional
                 recomendaciones = yield sistemaRecomendacion.predecir(usuario, topK);
             }
             // 🔹 Si usuario nuevo, agregar info de que es fallback
@@ -114,7 +102,6 @@ exports.PrediccionController = {
     info: (_req, res) => {
         console.log("INFO");
         // Ejecutar diagnóstico
-        sistemaRecomendacion.diagnosticarModelo();
         res.json({
             modeloEntrenado: sistemaRecomendacion.isInitialized,
             numUsuarios: sistemaRecomendacion.numUsuarios,
@@ -126,7 +113,7 @@ exports.PrediccionController = {
     entrenar: (req, res) => __awaiter(void 0, void 0, void 0, function* () {
         console.log("ENTRENAAAAAAR");
         try {
-            const { compras, usuario, topK = 5, conRecomendaciones = false } = req.body;
+            const { compras } = req.body;
             if (!Array.isArray(compras) || compras.length === 0) {
                 res.status(400).json({ error: 'Los datos de "compras" son requeridos' });
                 return;
@@ -140,20 +127,10 @@ exports.PrediccionController = {
                 numProductos: sistemaRecomendacion.numProductos
             };
             // 🔹 Entrenamiento con o sin recomendaciones
-            if (conRecomendaciones && usuario) {
-                console.log(`🚀 Entrenando con recomendaciones para usuario: ${usuario}`);
-                const { recomendaciones } = yield sistemaRecomendacion.entrenarConRecomendaciones(comprasPersistentes, usuario, topK, 100);
-                resultado.recomendaciones = recomendaciones;
-                resultado.usuario = usuario;
-                resultado.timestamp = new Date().toISOString();
-                console.log("✅ Reentrenamiento con recomendaciones completado");
-            }
-            else {
-                // 🔹 Entrenamiento tradicional
-                yield sistemaRecomendacion.entrenar(comprasPersistentes, 100)
-                    .then(() => console.log("✅ Reentrenamiento manual completado"))
-                    .catch(err => console.error("❌ Error en reentrenamiento manual:", err));
-            }
+            // 🔹 Entrenamiento tradicional
+            yield sistemaRecomendacion.entrenar(comprasPersistentes, 100)
+                .then(() => console.log("✅ Reentrenamiento manual completado"))
+                .catch(err => console.error("❌ Error en reentrenamiento manual:", err));
             res.json(resultado);
         }
         catch (error) {
@@ -262,11 +239,10 @@ exports.PrediccionController = {
     populares: (req, res) => __awaiter(void 0, void 0, void 0, function* () {
         console.log("POPULARES");
         try {
-            const { topK = 4 } = req.body;
-            // 🔹 Generar recomendaciones
-            let recomendaciones = sistemaRecomendacion.obtenerTopPopulares(topK);
+            const { user_id, topK = 4 } = req.body;
+            const predicciones = yield sistemaRecomendacion.predecir(user_id, topK);
             res.json({
-                recomendaciones,
+                predicciones,
                 timestamp: new Date().toISOString(),
                 mensaje: 'Recomendaciones generadas exitosamente'
             });
