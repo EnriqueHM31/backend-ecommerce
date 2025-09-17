@@ -319,32 +319,32 @@ class FiltradoColaborativo {
             }
         });
     }
-    guardarComprasPersistentes(nuevasCompras) {
-        return __awaiter(this, void 0, void 0, function* () {
-            try {
-                let existentes = [];
-                if (fs_1.default.existsSync(prediccion_1.DATA_FILE)) {
-                    const raw = fs_1.default.readFileSync(prediccion_1.DATA_FILE, 'utf8') || '[]';
-                    existentes = JSON.parse(raw);
-                }
-                // Evitar duplicados por usuario+producto
-                const claves = new Set(existentes.map(c => `${c.usuario}::${c.producto}`));
-                for (const c of nuevasCompras) {
-                    const clave = `${c.usuario}::${c.producto}`;
-                    if (!claves.has(clave)) {
-                        existentes.push(c);
-                        claves.add(clave);
-                    }
-                }
-                fs_1.default.writeFileSync(prediccion_1.DATA_FILE, JSON.stringify(existentes, null, 2), 'utf8');
-                console.log(`✅ Compras persistentes guardadas en ${prediccion_1.DATA_FILE}`);
+    /*private async guardarComprasPersistentes(nuevasCompras: Compra[]): Promise<void> {
+        try {
+            let existentes: Compra[] = [];
+
+            if (fs.existsSync(DATA_FILE)) {
+                const raw = fs.readFileSync(DATA_FILE, 'utf8') || '[]';
+                existentes = JSON.parse(raw) as Compra[];
             }
-            catch (err) {
-                console.error("❌ Error guardando compras persistentes:", err);
-                throw err;
+
+            // Evitar duplicados por usuario+producto
+            const claves = new Set(existentes.map(c => `${c.usuario}::${c.producto}`));
+            for (const c of nuevasCompras) {
+                const clave = `${c.usuario}::${c.producto}`;
+                if (!claves.has(clave)) {
+                    existentes.push(c);
+                    claves.add(clave);
+                }
             }
-        });
-    }
+
+            fs.writeFileSync(DATA_FILE, JSON.stringify(existentes, null, 2), 'utf8');
+            console.log(`✅ Compras persistentes guardadas en ${DATA_FILE}`);
+        } catch (err) {
+            console.error("❌ Error guardando compras persistentes:", err);
+            throw err;
+        }
+    }*/
     agregarUsuario(compras) {
         return __awaiter(this, void 0, void 0, function* () {
             if (!compras || compras.length === 0) {
@@ -368,16 +368,17 @@ class FiltradoColaborativo {
                 this.productos.add(producto);
             }
             // Persistir compras en DATA_FILE para que sobrevivieran reinicios (opcional pero recomendable)
-            try {
-                yield this.guardarComprasPersistentes(compras);
-            }
-            catch (err) {
-                console.warn("⚠️ No se pudieron guardar las compras persistentes:", err);
-            }
-            // Guardar y sobreescribir modelo.json (escritura atómica implementada)
-            yield this.guardarModelo(true);
-            // Marcar inicializado y devolver predicciones
-            this.isInitialized = true;
+            /*   try {
+                   await this.guardarComprasPersistentes(compras);
+               } catch (err) {
+                   console.warn("⚠️ No se pudieron guardar las compras persistentes:", err);
+               }
+       
+               // Guardar y sobreescribir modelo.json (escritura atómica implementada)
+               await this.guardarModelo(true);
+       
+               // Marcar inicializado y devolver predicciones
+               this.isInitialized = true;*/
             // Devolver predicciones para el nuevo usuario
             const predicciones = yield this.predecir(nuevoUsuario);
             const populares = this.obtenerProductosPopulares();

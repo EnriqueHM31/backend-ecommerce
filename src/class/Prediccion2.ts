@@ -403,7 +403,7 @@ export class FiltradoColaborativo {
         }
     }
 
-    private async guardarComprasPersistentes(nuevasCompras: Compra[]): Promise<void> {
+    /*private async guardarComprasPersistentes(nuevasCompras: Compra[]): Promise<void> {
         try {
             let existentes: Compra[] = [];
 
@@ -428,7 +428,7 @@ export class FiltradoColaborativo {
             console.error("❌ Error guardando compras persistentes:", err);
             throw err;
         }
-    }
+    }*/
 
 
     public async agregarUsuario(compras: Compra[]) {
@@ -458,17 +458,17 @@ export class FiltradoColaborativo {
         }
 
         // Persistir compras en DATA_FILE para que sobrevivieran reinicios (opcional pero recomendable)
-        try {
-            await this.guardarComprasPersistentes(compras);
-        } catch (err) {
-            console.warn("⚠️ No se pudieron guardar las compras persistentes:", err);
-        }
-
-        // Guardar y sobreescribir modelo.json (escritura atómica implementada)
-        await this.guardarModelo(true);
-
-        // Marcar inicializado y devolver predicciones
-        this.isInitialized = true;
+        /*   try {
+               await this.guardarComprasPersistentes(compras);
+           } catch (err) {
+               console.warn("⚠️ No se pudieron guardar las compras persistentes:", err);
+           }
+   
+           // Guardar y sobreescribir modelo.json (escritura atómica implementada)
+           await this.guardarModelo(true);
+   
+           // Marcar inicializado y devolver predicciones
+           this.isInitialized = true;*/
 
         // Devolver predicciones para el nuevo usuario
         const predicciones = await this.predecir(nuevoUsuario);
