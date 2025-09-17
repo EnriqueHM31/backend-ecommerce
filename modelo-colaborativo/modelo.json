@@ -254,7 +254,7 @@
       "GTS9U-512-NEG-12 - Galaxy Tab S9 Ultra": 0.1,
       "XPS14-U7-1TB-NEG-32 - XPS 14": 0.1
     },
-    "user_32UP0CLHAvGRfPmV6blK1OUiRWA": {
+    "user_32UP0CLHAvGRfPmV6blK1OUiRW1": {
       "GS24U-256-NEG-12 - Galaxy S24 Ultra": 0.1,
       "GTS9U-512-NEG-12 - Galaxy Tab S9 Ultra": 0.1,
       "GTS9U-1TB-PL-12 - Galaxy Tab S9 Ultra": 0.1,
@@ -303,7 +303,40 @@
       "AIRPMAX-AZU - AirPods Max": 0.1
     },
     "user_4xP8mN5qL7vK3jB1111424422": {
-      "AIRPMAX-AZU - AirPods Max": 0.1
+      "AIRPMAX-AZU - AirPods Max": 0.4
+    },
+    "user_4xP8mN5qL7vK3jBsdsdsdsdssd": {
+      "AIRPMAX-AZU - AirPods Max": 0.4
+    },
+    "user_4xP8mN5qL7vK3jBsdsdsdsd111": {
+      "SP11-256-NEG-16 - Surface Pro 11": 0.4,
+      "GS24-128-MOR-8 - Galaxy S24": 0.4,
+      "IP15P-256-ROS-6 - iPhone 15 Plus": 0.1
+    },
+    "user_4xP8mN5qL7vK3jBsdsdsdsd112": {
+      "GTS9U-512-PL-12 - Galaxy Tab S9 Ultra": 0.4
+    },
+    "user_4xP8mN5qL7vK3jBsdsdsdsd113": {
+      "GTS9U-512-PL-12 - Galaxy Tab S9 Ultra": 0.4,
+      "IP15P-256-ROS-6 - iPhone 15 Plus": 0.1
+    },
+    "user_4xP8mN5qL7vK3jBsdsdsdsd114": {
+      "GTS9U-512-PL-12 - Galaxy Tab S9 Ultra": 0.4,
+      "IP15P-256-ROS-6 - iPhone 15 Plus": 0.1
+    },
+    "user_4xP8mN5qL7vK3jBsdsdsdsd115": {
+      "GS24-128-MOR-8 - Galaxy S24": 0.4,
+      "IP15P-256-ROS-6 - iPhone 15 Plus": 0.1
+    },
+    "user_32UP0CLHAvGRfPmV6blK1OUiRWA": {
+      "GS24-128-MOR-8 - Galaxy S24": 0.5,
+      "GS24U-256-NEG-12 - Galaxy S24 Ultra": 0.4,
+      "XPS13-U7-1TB-NEG-16 - XPS 13": 0.3,
+      "XPS14-U7-1TB-NEG-32 - XPS 14": 0.3,
+      "XPS16-U9-1TB-NEG-32 - XPS 16": 0.2,
+      "AIRPMAX-AZU - AirPods Max": 0.3,
+      "AIRPP2-BLA - AirPods Pro (2ª Gen)": 0.1,
+      "AIRP2-BLA - AirPods (2ª Gen)": 0.2
     },
     "user_001": {
       "IP15PRO-256-AZUT-8 - iPhone 15 Pro": 0.1,
@@ -447,29 +480,6 @@
     },
     "user_036": {
       "SG3-128-NEG-8 - Surface Go 3": 0.1
-    },
-    "user_4xP8mN5qL7vK3jBsdsdsdsdssd": {
-      "AIRPMAX-AZU - AirPods Max": 0.1
-    },
-    "user_4xP8mN5qL7vK3jBsdsdsdsd111": {
-      "SP11-256-NEG-16 - Surface Pro 11": 0.1,
-      "GS24-128-MOR-8 - Galaxy S24": 0.4,
-      "IP15P-256-ROS-6 - iPhone 15 Plus": 0.1
-    },
-    "user_4xP8mN5qL7vK3jBsdsdsdsd112": {
-      "GTS9U-512-PL-12 - Galaxy Tab S9 Ultra": 0.1
-    },
-    "user_4xP8mN5qL7vK3jBsdsdsdsd113": {
-      "GTS9U-512-PL-12 - Galaxy Tab S9 Ultra": 0.4,
-      "IP15P-256-ROS-6 - iPhone 15 Plus": 0.1
-    },
-    "user_4xP8mN5qL7vK3jBsdsdsdsd114": {
-      "GTS9U-512-PL-12 - Galaxy Tab S9 Ultra": 0.4,
-      "IP15P-256-ROS-6 - iPhone 15 Plus": 0.1
-    },
-    "user_4xP8mN5qL7vK3jBsdsdsdsd115": {
-      "GS24-128-MOR-8 - Galaxy S24": 0.4,
-      "IP15P-256-ROS-6 - iPhone 15 Plus": 0.1
     }
   },
   "usuarios": [
@@ -525,7 +535,7 @@
     "user_7qK9nM3pL5vX8jR4wB6cs888",
     "user_1mK7nQ4pL9vX3jB8wR5cs888",
     "user_4xP8mN5qL7vK3jB11111111",
-    "user_32UP0CLHAvGRfPmV6blK1OUiRWA",
+    "user_32UP0CLHAvGRfPmV6blK1OUiRW1",
     "user_4xP8mN5qL7vK3jB2222222",
     "user_4xP8mN5qL7vK3jB433333333",
     "user_4xP8mN5qL7vK3jB4444444444",
@@ -537,6 +547,13 @@
     "user_32UP0CLHAvGRfPmV6blK1OUi222",
     "user_4xP8mN5qL7vK3jB1111122",
     "user_4xP8mN5qL7vK3jB1111424422",
+    "user_4xP8mN5qL7vK3jBsdsdsdsdssd",
+    "user_4xP8mN5qL7vK3jBsdsdsdsd111",
+    "user_4xP8mN5qL7vK3jBsdsdsdsd112",
+    "user_4xP8mN5qL7vK3jBsdsdsdsd113",
+    "user_4xP8mN5qL7vK3jBsdsdsdsd114",
+    "user_4xP8mN5qL7vK3jBsdsdsdsd115",
+    "user_32UP0CLHAvGRfPmV6blK1OUiRWA",
     "user_001",
     "user_002",
     "user_003",
@@ -572,13 +589,7 @@
     "user_033",
     "user_034",
     "user_035",
-    "user_036",
-    "user_4xP8mN5qL7vK3jBsdsdsdsdssd",
-    "user_4xP8mN5qL7vK3jBsdsdsdsd111",
-    "user_4xP8mN5qL7vK3jBsdsdsdsd112",
-    "user_4xP8mN5qL7vK3jBsdsdsdsd113",
-    "user_4xP8mN5qL7vK3jBsdsdsdsd114",
-    "user_4xP8mN5qL7vK3jBsdsdsdsd115"
+    "user_036"
   ],
   "productos": [
     "IP15-128-AZU-6 - iPhone 15",
@@ -702,6 +713,6 @@
     "AIRPP2-NEG - AirPods Pro (2ª Gen)",
     "AIRPP2-PLA - AirPods Pro (2ª Gen)"
   ],
-  "fechaGuardado": "2025-09-17T01:39:38.070Z",
+  "fechaGuardado": "2025-09-17T19:35:57.698Z",
   "incremental": true
 }

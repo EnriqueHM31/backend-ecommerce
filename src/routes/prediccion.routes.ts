@@ -142,9 +142,20 @@ RouterPrediccion.get('/usuario/:usuario', validarUsuario, async (req: Request, r
     try {
         const { usuario } = req.params;
         const {
-            limite = '5',
+            limite = '4',
             metodo = 'coseno',
         } = req.query;
+
+        if (!usuario) {
+            const populares = sistemaRecomendacion.obtenerProductosPopulares();
+            res.json({
+                success: true,
+                usuario,
+                recomendaciones: null,
+                populares,
+                total: populares?.length
+            });
+        }
 
         const topK = parseInt(limite as string);
         const algoritmo = metodo as 'coseno' | 'pearson';
@@ -163,7 +174,7 @@ RouterPrediccion.get('/usuario/:usuario', validarUsuario, async (req: Request, r
             });
         }
 
-        const recomendaciones = await sistemaRecomendacion.predecir(
+        const { recomendaciones, populares } = await sistemaRecomendacion.predecir(
             usuario,
             topK,
             algoritmo
@@ -174,7 +185,8 @@ RouterPrediccion.get('/usuario/:usuario', validarUsuario, async (req: Request, r
             usuario,
             metodo: algoritmo,
             recomendaciones,
-            total: recomendaciones.length
+            populares,
+            total: recomendaciones?.length || populares?.length
         });
 
     } catch (error) {

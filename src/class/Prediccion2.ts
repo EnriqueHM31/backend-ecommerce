@@ -25,9 +25,16 @@ export interface MatrizUsuarioProducto {
 }
 
 
+interface comprasUsuario extends RowDataPacket {
+    cantidad: number;
+    sku: string;
+    nombre_variante: string;
+}
 
 // sistema/FiltradoColaborativo.ts
+import { db } from "@/database/db";
 import fs from "fs";
+import { RowDataPacket } from "mysql2";
 import path from "path";
 import { DATA_FILE } from "../constants/prediccion";
 const cargarCompras = (): Compra[] => {
@@ -199,25 +206,108 @@ export class FiltradoColaborativo {
     public async predecir(
         usuario: string,
         topK: number = 4,
-        metodo: 'coseno' | 'pearson' = 'coseno'
-    ): Promise<Prediccion[]> {
+        metodo: 'coseno' | 'pearson' = 'coseno',
+    ): Promise<{ recomendaciones: Prediccion[] | null; populares: Prediccion[] | null; }> {
         if (!this.isInitialized) {
             throw new Error('Sistema no inicializado. Ejecute inicializar() primero.');
         }
 
         if (!this.matriz[usuario]) {
-            console.log(`⚠️ Usuario ${usuario} no encontrado`);
-            return [];
+            const connection = await db.getConnection();
+            const [resultItems] = await connection.query<comprasUsuario[]>(
+                `SELECT 
+    pi.cantidad,
+    ps.sku,
+    pb.nombre_variante
+FROM 
+    pedido_items pi
+JOIN 
+    pedidos p ON p.id = pi.pedido_id
+JOIN 
+    productos_sku ps ON ps.id = pi.producto_id
+JOIN
+    variantes pb ON ps.variante_id = pb.id
+WHERE 
+    p.usuario_id = ?;
+`,
+                [usuario]
+            );
+
+            console.log({ resultItems: "ENTRO AQUI" });
+            if (!resultItems || resultItems.length === 0) {
+                const populares = this.obtenerProductosPopulares();
+                return { recomendaciones: null, populares };
+            }
+
+            const transformados = resultItems.map((item: { cantidad: number; sku: string; nombre_variante: string; }) => ({
+                usuario: usuario,
+                producto: `${item.sku} - ${item.nombre_variante}`,
+                cantidad: item.cantidad
+            }));
+
+            console.log({ transformados });
+
+            const { prediccionesall, populares }: { prediccionesall: any, populares: any; } = await this.agregarUsuario(transformados);
+            console.log(`🔍 Generando recomendaciones para ${usuario}...`);
+            return { recomendaciones: prediccionesall, populares };
         }
 
-        console.log(`🔍 Generando recomendaciones para ${usuario}...`);
+
+        if (this.matriz[usuario]) {
+            const connection = await db.getConnection();
+            const [resultItems] = await connection.query<comprasUsuario[]>(
+                `SELECT 
+    pi.cantidad,
+    ps.sku,
+    pb.nombre_variante
+FROM 
+    pedido_items pi
+JOIN 
+    pedidos p ON p.id = pi.pedido_id
+JOIN 
+    productos_sku ps ON ps.id = pi.producto_id
+JOIN
+    variantes pb ON ps.variante_id = pb.id
+WHERE 
+    p.usuario_id = ?;
+`,
+                [usuario]
+            );
+
+            console.log({ resultItems: "ENTRO AQUI" });
+            if (!resultItems || resultItems.length === 0) {
+                const populares = this.obtenerProductosPopulares();
+                return { recomendaciones: null, populares };
+            }
+
+            const transformados = resultItems.map((item: { cantidad: number; sku: string; nombre_variante: string; }) => ({
+                usuario: usuario,
+                producto: `${item.sku} - ${item.nombre_variante}`,
+                cantidad: item.cantidad
+            }));
+            for (const compra of transformados) {
+                const { usuario, producto, cantidad } = compra;
+                const valor = Math.min(cantidad / 10, 5);
+                // Si prefieres binario: const valor = 1;
+                this.matriz[usuario] = this.matriz[usuario] || {};
+                this.matriz[usuario][producto] = valor;
+
+                this.usuarios.add(usuario);
+                this.productos.add(producto);
+            }
+
+            await this.guardarModelo(true);
+            const { prediccionesall, populares }: { prediccionesall: any, populares: any; } = await this.agregarUsuario(transformados);
+            console.log(`🔍 Generando recomendaciones para ${usuario}...`);
+            return { recomendaciones: prediccionesall, populares };
+        }
 
         // Encontrar usuarios similares
-        const usuariosSimilares = this.encontrarUsuariosSimilares(usuario, 20, metodo);
+        const usuariosSimilares = this.encontrarUsuariosSimilares(usuario, 50, metodo);
 
         if (usuariosSimilares.length === 0) {
-            console.log('⚠️ No se encontraron usuarios similares');
-            return [];
+            const populares = await this.obtenerProductosPopulares();
+            return { recomendaciones: null, populares };
         }
 
         // Obtener productos ya comprados por el usuario
@@ -242,6 +332,17 @@ export class FiltradoColaborativo {
             }
         }
 
+        // COMPRASSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSS
+
+
+
+
+
+
+
+
+
+
         // Normalizar scores y crear recomendaciones
         const recomendaciones: Prediccion[] = [];
 
@@ -261,7 +362,7 @@ export class FiltradoColaborativo {
             .slice(0, topK);
 
         console.log(`✅ Generadas ${resultado.length} recomendaciones`);
-        return resultado;
+        return { recomendaciones: resultado, populares: null };
     }
 
     // ==============================
@@ -402,33 +503,33 @@ export class FiltradoColaborativo {
             throw error;
         }
     }
-
-    /*private async guardarComprasPersistentes(nuevasCompras: Compra[]): Promise<void> {
-        try {
-            let existentes: Compra[] = [];
-
-            if (fs.existsSync(DATA_FILE)) {
-                const raw = fs.readFileSync(DATA_FILE, 'utf8') || '[]';
-                existentes = JSON.parse(raw) as Compra[];
-            }
-
-            // Evitar duplicados por usuario+producto
-            const claves = new Set(existentes.map(c => `${c.usuario}::${c.producto}`));
-            for (const c of nuevasCompras) {
-                const clave = `${c.usuario}::${c.producto}`;
-                if (!claves.has(clave)) {
-                    existentes.push(c);
-                    claves.add(clave);
+    /*
+        private async guardarComprasPersistentes(nuevasCompras: Compra[]): Promise<void> {
+            try {
+                let existentes: Compra[] = [];
+    
+                if (fs.existsSync(DATA_FILE)) {
+                    const raw = fs.readFileSync(DATA_FILE, 'utf8') || '[]';
+                    existentes = JSON.parse(raw) as Compra[];
                 }
+    
+                // Evitar duplicados por usuario+producto
+                const claves = new Set(existentes.map(c => `${c.usuario}::${c.producto}`));
+                for (const c of nuevasCompras) {
+                    const clave = `${c.usuario}::${c.producto}`;
+                    if (!claves.has(clave)) {
+                        existentes.push(c);
+                        claves.add(clave);
+                    }
+                }
+    
+                fs.writeFileSync(DATA_FILE, JSON.stringify(existentes, null, 2), 'utf8');
+                console.log(`✅ Compras persistentes guardadas en ${DATA_FILE}`);
+            } catch (err) {
+                console.error("❌ Error guardando compras persistentes:", err);
+                throw err;
             }
-
-            fs.writeFileSync(DATA_FILE, JSON.stringify(existentes, null, 2), 'utf8');
-            console.log(`✅ Compras persistentes guardadas en ${DATA_FILE}`);
-        } catch (err) {
-            console.error("❌ Error guardando compras persistentes:", err);
-            throw err;
-        }
-    }*/
+        }*/
 
 
     public async agregarUsuario(compras: Compra[]) {
@@ -457,22 +558,24 @@ export class FiltradoColaborativo {
             this.productos.add(producto);
         }
 
-        // Persistir compras en DATA_FILE para que sobrevivieran reinicios (opcional pero recomendable)
-        /*   try {
-               await this.guardarComprasPersistentes(compras);
-           } catch (err) {
-               console.warn("⚠️ No se pudieron guardar las compras persistentes:", err);
-           }
-   
-           // Guardar y sobreescribir modelo.json (escritura atómica implementada)
-           await this.guardarModelo(true);
-   
-           // Marcar inicializado y devolver predicciones
-           this.isInitialized = true;*/
+        /* // Persistir compras en DATA_FILE para que sobrevivieran reinicios (opcional pero recomendable)
+         try {
+             await this.guardarComprasPersistentes(compras);
+         } catch (err) {
+             console.warn("⚠️ No se pudieron guardar las compras persistentes:", err);
+         }*/
+
+        // Guardar y sobreescribir modelo.json (escritura atómica implementada)
+        await this.guardarModelo(true);
+
+        // Marcar inicializado y devolver predicciones
+        this.isInitialized = true;
 
         // Devolver predicciones para el nuevo usuario
         const predicciones = await this.predecir(nuevoUsuario);
         const populares = this.obtenerProductosPopulares();
+        console.log("🚀 INICIALIZACIÓN FINALIZADA");
+        console.log({ prediccionesall: predicciones, populares });
         return { prediccionesall: predicciones, populares };
     }
 
