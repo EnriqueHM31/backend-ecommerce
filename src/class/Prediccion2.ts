@@ -198,7 +198,7 @@ export class FiltradoColaborativo {
     // ==============================
     public async predecir(
         usuario: string,
-        topK: number = 5,
+        topK: number = 4,
         metodo: 'coseno' | 'pearson' = 'coseno'
     ): Promise<Prediccion[]> {
         if (!this.isInitialized) {
@@ -493,7 +493,7 @@ export class FiltradoColaborativo {
         };
     }
 
-    public obtenerProductosPopulares(topK: number = 5): Prediccion[] {
+    public obtenerProductosPopulares(topK: number = 4): Prediccion[] {
         if (!this.isInitialized) {
             throw new Error('Sistema no inicializado. Ejecuta inicializar() primero.');
         }

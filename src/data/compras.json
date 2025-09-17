@@ -16679,5 +16679,55 @@
     "usuario": "user_4xP8mN5qL7vK3jBsdsdsdsd111",
     "producto": "IP15P-256-ROS-6 - iPhone 15 Plus",
     "cantidad": 1
+  },
+  {
+    "usuario": "user_32laoQA1727pWnscz9FYMLIgWcI",
+    "producto": "IP15-256-NEG-6 - iPhone 15",
+    "cantidad": 3
+  },
+  {
+    "usuario": "user_32laoQA1727pWnscz9FYMLIgWcI",
+    "producto": "IP15-128-NEG-6 - iPhone 15",
+    "cantidad": 3
+  },
+  {
+    "usuario": "user_32UP0CLHAvGRfPmV6blK1OUiRWA",
+    "producto": "PX8-128-AZU-8 - Pixel 8",
+    "cantidad": 1
+  },
+  {
+    "usuario": "user_32UP0CLHAvGRfPmV6blK1OUiRWA",
+    "producto": "XPS16-U9-1TB-NEG-32 - XPS 16",
+    "cantidad": 1
+  },
+  {
+    "usuario": "user_32UP0CLHAvGRfPmV6blK1OUiRWA",
+    "producto": "XPS14-U7-1TB-NEG-32 - XPS 14",
+    "cantidad": 2
+  },
+  {
+    "usuario": "user_32UP0CLHAvGRfPmV6blK1OUiRWA",
+    "producto": "X1C-U7-1TB-NEG-16 - ThinkPad X1 Carbon",
+    "cantidad": 4
+  },
+  {
+    "usuario": "user_32UP0CLHAvGRfPmV6blK1OUiRWA",
+    "producto": "T14-R7-1TB-NEG-16 - ThinkPad T14",
+    "cantidad": 4
+  },
+  {
+    "usuario": "user_32UP0CLHAvGRfPmV6blK1OUiRWA",
+    "producto": "IP15-256-NEG-6 - iPhone 15",
+    "cantidad": 1
+  },
+  {
+    "usuario": "user_32UP0CLHAvGRfPmV6blK1OUiRWA",
+    "producto": "IP15-128-NEG-6 - iPhone 15",
+    "cantidad": 3
+  },
+  {
+    "usuario": "user_32UP0CLHAvGRfPmV6blK1OUiRWA",
+    "producto": "IPADPRO11-512-GR-16 - iPad Pro 11\"",
+    "cantidad": 2
   }
 ]
