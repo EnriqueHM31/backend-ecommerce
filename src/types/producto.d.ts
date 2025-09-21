@@ -1,5 +1,4 @@
 
-import type { RowDataPacket } from 'mysql2';
 export interface Producto {
     activo: number;
     almacenamiento: string;
@@ -43,29 +42,7 @@ export interface Customer {
 
 
 
-interface ProductoExtendido extends Producto, RowDataPacket { }
-
-interface Pedido {
-    id: number;
-    usuario_id: number;
-    fecha_pedido: string;
-    estado: string;
-    total: number;
-    direccion_envio: string;
-    referencias: string;
-}
-
-interface PedidoExtendido extends Pedido, RowDataPacket { }
-
-
-
-export interface ProductoConsulta extends RowDataPacket, Producto { }
-
-export type ProductoPartial = Partial<Producto>;
-
-export interface ProductoExtendido extends Producto, RowDataPacket { }
-
-export interface Pedido extends RowDataPacket {
+export interface Pedido {
     id: number;
     usuario_id: number;
     fecha_pedido: string;
@@ -79,12 +56,12 @@ export interface Pedido extends RowDataPacket {
 
 export type PedidoPartial = Partial<Pedido>;
 
-export interface PedidoExtendido extends Pedido, RowDataPacket { }
-
-export interface PedidoItem extends RowDataPacket {
+export interface PedidoItem {
     id: number;
     cantidad: number;
     precio_unitario: number;
     subtotal: number;
     nombre_producto: string;
 }
+
+export type ProductoPartial = Partial<Producto>;

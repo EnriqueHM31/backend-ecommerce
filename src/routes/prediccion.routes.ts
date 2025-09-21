@@ -4,8 +4,7 @@ import { Compra } from '../types/prediccion';
 import { guardarCompras } from '../utils/pagos/predicciones';
 import fs from 'fs';
 import { DATA_FILE } from '../constants/prediccion';
-import { db } from '../database/db';
-import { RowDataPacket } from 'mysql2';
+import { supabase } from '../database/db';
 
 const RouterPrediccion = Router();
 const sistemaRecomendacion = new FiltradoColaborativo();
@@ -279,47 +278,34 @@ RouterPrediccion.get('/salud', (_req: Request, res: Response) => {
     });
 });
 
-interface comprasUsuario extends RowDataPacket {
-    cantidad: number;
-    sku: string;
-    nombre_variante: string;
-}
 
 
 RouterPrediccion.post("/usuario/recomendar", async (req: Request, res: Response) => {
     try {
         const compras: Compra[] = req.body.compras;
         const { id_usuario } = req.body;
-        const connection = await db.getConnection();
         if (!compras || compras.length === 0) {
-            const [resultItems] = await connection.query<comprasUsuario[]>(
-                `SELECT 
-    pi.cantidad,
-    ps.sku,
-    pb.nombre_variante
-FROM 
-    pedido_items pi
-JOIN 
-    pedidos p ON p.id = pi.pedido_id
-JOIN 
-    productos_sku ps ON ps.id = pi.producto_id
-JOIN
-    variantes pb ON ps.variante_id = pb.id
-WHERE 
-    p.usuario_id = ?;
-`,
-                [id_usuario]
-            );
+            const { data: resultItems, error } = await supabase.rpc('get_user_purchases', {
+                user_id_param: id_usuario
+            });
 
-            if (!resultItems) {
+            if (error) {
+                console.error('Error fetching user purchases:', error);
+                res.status(500).json({ error: 'Error al obtener compras del usuario' });
+                return;
+            }
+
+            if (!resultItems || resultItems.length === 0) {
                 const { populares } = await sistemaRecomendacion.agregarUsuario(compras);
                 res.json({
                     mensaje: "✅ Usuario agregado y modelo actualizado",
                     recomendaciones: null,
                     populares
                 });
+                return;
             }
-            const transformados = resultItems.map((item: { cantidad: number; sku: string; nombre_variante: string; }) => ({
+
+            const transformados = resultItems.map((item: any) => ({
                 usuario: id_usuario,
                 producto: `${item.sku} - ${item.nombre_variante}`,
                 cantidad: item.cantidad
@@ -335,7 +321,6 @@ WHERE
             });
             console.log(prediccionesall);
             return;
-
         }
 
         const { prediccionesall, populares } = await sistemaRecomendacion.agregarUsuario(compras);

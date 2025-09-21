@@ -3,4 +3,4 @@
 .node_modules
 .dist
 .build
-.modelo-entrenado
+.modelo-colaborativo

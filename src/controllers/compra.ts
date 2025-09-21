@@ -27,7 +27,7 @@ export class CompraController {
                 return
             }
 
-            const resultadoValidarUsuario = UsuarioValidation.RevisarUsuario({ usuario_id: customer.id, nombre: customer.name, correo: customer.email, });
+            const resultadoValidarUsuario = UsuarioValidation.RevisarUsuario({ id: customer.id, nombre: customer.name, correo: customer.email });
 
             console.log({ resultadoValidarUsuario });
 

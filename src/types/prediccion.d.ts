@@ -1,4 +1,5 @@
 import express, { Request } from 'express';
+import * as tf from '@tensorflow/tfjs';
 // Tipos TypeScript
 export interface Compra {
     usuario: string;

@@ -25,18 +25,12 @@ export interface MatrizUsuarioProducto {
 }
 
 
-interface comprasUsuario extends RowDataPacket {
-    cantidad: number;
-    sku: string;
-    nombre_variante: string;
-}
 
 // sistema/FiltradoColaborativo.ts
-import { db } from "@/database/db";
 import fs from "fs";
-import { RowDataPacket } from "mysql2";
 import path from "path";
 import { DATA_FILE } from "../constants/prediccion";
+import { supabase } from "../database/db";
 const cargarCompras = (): Compra[] => {
     if (!fs.existsSync(DATA_FILE)) return [];
     try {
@@ -203,6 +197,27 @@ export class FiltradoColaborativo {
     // ==============================
     // 🚀 GENERAR RECOMENDACIONES
     // ==============================
+    public async getComprasUsuario(usuarioId: string) {
+        const { data, error } = await supabase
+            .from('pedido_items')
+            .select(`
+            cantidad,
+            productos_sku (
+                sku,
+                variantes (
+                nombre_variante
+                )
+            )
+            `)
+            .eq('pedidos.usuario_id', usuarioId)  // si está definida la FK en pedido_items → pedidos
+
+        if (error) {
+            console.error('Error al obtener compras:', error)
+            throw error
+        }
+
+        return data
+    }
     public async predecir(
         usuario: string,
         topK: number = 4,
@@ -213,35 +228,15 @@ export class FiltradoColaborativo {
         }
 
         if (!this.matriz[usuario]) {
-            const connection = await db.getConnection();
-            const [resultItems] = await connection.query<comprasUsuario[]>(
-                `SELECT 
-    pi.cantidad,
-    ps.sku,
-    pb.nombre_variante
-FROM 
-    pedido_items pi
-JOIN 
-    pedidos p ON p.id = pi.pedido_id
-JOIN 
-    productos_sku ps ON ps.id = pi.producto_id
-JOIN
-    variantes pb ON ps.variante_id = pb.id
-WHERE 
-    p.usuario_id = ?;
-`,
-                [usuario]
-            );
-
-            console.log({ resultItems: "ENTRO AQUI" });
+            const resultItems = await this.getComprasUsuario(usuario);
             if (!resultItems || resultItems.length === 0) {
                 const populares = this.obtenerProductosPopulares();
                 return { recomendaciones: null, populares };
             }
 
-            const transformados = resultItems.map((item: { cantidad: number; sku: string; nombre_variante: string; }) => ({
+            const transformados = resultItems.map((item: any) => ({
                 usuario: usuario,
-                producto: `${item.sku} - ${item.nombre_variante}`,
+                producto: `${item.productos_sku.sku} - ${item.productos_sku.variantes.nombre_variante}`,
                 cantidad: item.cantidad
             }));
 
@@ -254,25 +249,14 @@ WHERE
 
 
         if (this.matriz[usuario]) {
-            const connection = await db.getConnection();
-            const [resultItems] = await connection.query<comprasUsuario[]>(
-                `SELECT 
-    pi.cantidad,
-    ps.sku,
-    pb.nombre_variante
-FROM 
-    pedido_items pi
-JOIN 
-    pedidos p ON p.id = pi.pedido_id
-JOIN 
-    productos_sku ps ON ps.id = pi.producto_id
-JOIN
-    variantes pb ON ps.variante_id = pb.id
-WHERE 
-    p.usuario_id = ?;
-`,
-                [usuario]
-            );
+            const { data: resultItems, error } = await supabase.rpc('get_user_purchases', {
+                user_id_param: usuario
+            });
+
+            if (error) {
+                console.error('Error fetching user purchases:', error);
+                throw error;
+            }
 
             console.log({ resultItems: "ENTRO AQUI" });
             if (!resultItems || resultItems.length === 0) {
@@ -280,7 +264,7 @@ WHERE
                 return { recomendaciones: null, populares };
             }
 
-            const transformados = resultItems.map((item: { cantidad: number; sku: string; nombre_variante: string; }) => ({
+            const transformados = resultItems.map((item: any) => ({
                 usuario: usuario,
                 producto: `${item.sku} - ${item.nombre_variante}`,
                 cantidad: item.cantidad

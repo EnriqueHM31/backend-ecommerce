@@ -1,83 +1,104 @@
-import { CheckearCompra, CheckearProducto, CrearCompra, disminuirStock, InsertarItems, ModificarEstado, obtenerCompras, restaurarStock } from '../utils/consultas/compras';
-import { CheckearUsuario } from '../utils/consultas/Usuario';
-import { CartItemsValidation } from '../utils/validaciones/cartItems';
+import { supabase } from '@/database/db';
 import { Request, Response } from 'express';
-import { db } from '../database/db';
-import { UsuarioValidation } from '../utils/validaciones/usuario';
+import { disminuirStock, obtenerCompras, restaurarStock } from '../utils/consultas/compras';
 
 export class pedidosController {
+
+
     static async crearPedido(req: Request, res: Response) {
-        const { user_id, cart_items, direccion_envio = '', referencias = '' } = req.body;
-
-        const resultadoValidarCartItems = CartItemsValidation.RevisarItems(cart_items);
-
-        if (!resultadoValidarCartItems.success) {
-            res.status(400).json({ success: false, error: resultadoValidarCartItems.error.message });
-            return
-        }
-
-        const resultadoValidarUsuario = UsuarioValidation.RevisarUsuario(user_id);
-
-        if (!resultadoValidarUsuario.success) {
-            res.status(400).json({ success: false, error: resultadoValidarUsuario.error.message });
-            return
-        }
-
-        const connection = await db.getConnection();
+        const { user_id, cart_items, direccion_envio, referencias } = req.body
 
         try {
-            await connection.beginTransaction();
+            // 1. Verificar usuario
+            const { data: usuario, error: errorUsuario } = await supabase
+                .from('usuarios')
+                .select('*')
+                .eq('id', user_id)
+                .single()
 
-            // 1. Verificar que el usuario existe
-            await CheckearUsuario(user_id);
+            if (errorUsuario || !usuario) {
+                res.status(400).json({ success: false, message: 'Usuario no encontrado' })
+            }
 
             // 2. Validar productos y calcular total
-            let total = 0;
-            const items_procesados = [];
+            let total = 0
+            const itemsProcesados = []
 
             for (const item of cart_items) {
+                const { data: producto_db, error: errorProducto } = await supabase
+                    .from('productos_base')
+                    .select('id, nombre, precio_base')
+                    .eq('id', item.product.id)
+                    .single()
 
-                const product = item.product;
-                const quantity = parseInt(item.quantity);
+                if (errorProducto || !producto_db) {
+                    res.status(400).json({ success: false, message: 'Producto no válido' })
+                }
 
-                // Verificar que el producto existe y obtener datos actuales
-                const { producto_db } = await CheckearProducto(product, quantity);
+                const quantity = parseInt(item.quantity)
+                const precio_unitario = parseFloat(Number(producto_db?.precio_base).toFixed(2))
+                const subtotal = precio_unitario * quantity
+                total += subtotal
 
-                const precio_unitario = parseFloat(Number(producto_db.precio_base).toFixed(2));
-                const subtotal = precio_unitario * quantity;
-                total += subtotal;
-
-                items_procesados.push({
-                    producto_id: product.id,
+                itemsProcesados.push({
+                    producto_id: producto_db?.id,
                     cantidad: quantity,
-                    precio_unitario: precio_unitario,
-                    subtotal: subtotal,
-                    nombre_producto: producto_db.producto
-                });
+                    precio_unitario,
+                    subtotal,
+                    nombre_producto: producto_db?.nombre
+                })
             }
 
             // 3. Crear el pedido principal
-            const { pedido_id } = await CrearCompra(user_id, total, direccion_envio, referencias);
+            const { data: pedido, error: errorPedido } = await supabase
+                .from('pedidos')
+                .insert([
+                    {
+                        usuario_id: user_id,
+                        total,
+                        direccion_envio,
+                        referencias,
+                        estado: 'pendiente'
+                    }
+                ])
+                .select('id')
+                .single()
 
-            // 4. Insertar items del pedido
-            for (const item of items_procesados) {
-                await InsertarItems(pedido_id, item);
-            }
+            if (errorPedido) throw errorPedido
 
-            await connection.commit();
+            const pedido_id = pedido.id
 
-            const data = { pedido_id: pedido_id, total: total.toFixed(2), items_count: items_procesados.length, estado: 'pendiente' }
+            // 4. Insertar items
+            const { error: errorItems } = await supabase.from('pedido_items').insert(
+                itemsProcesados.map(item => ({
+                    pedido_id,
+                    producto_id: item.producto_id,
+                    cantidad: item.cantidad,
+                    precio_unitario: item.precio_unitario,
+                    subtotal: item.subtotal
+                }))
+            )
 
-            // Respuesta exitosa
-            res.status(201).json({ success: true, message: 'Pedido creado exitosamente', data: data })
+            if (errorItems) throw errorItems
 
+            // 5. Respuesta
+            res.status(201).json({
+                success: true,
+                message: 'Pedido creado exitosamente',
+                data: {
+                    pedido_id,
+                    total: total.toFixed(2),
+                    items_count: itemsProcesados.length,
+                    estado: 'pendiente'
+                }
+            })
         } catch (error) {
-            await connection.rollback();
-            console.error('Error al crear pedido:', error);
-
-            res.status(500).json({ success: false, error: error });
+            console.error('Error al crear pedido:', error)
+            res.status(500).json({ success: false, error })
         }
     }
+
+
 
     static async obtenerPedidosPorId(req: Request, res: Response) {
         const user_id = req.params.user_id;
@@ -93,50 +114,68 @@ export class pedidosController {
         }
     }
 
+
     static async actualizarCompraEstado(req: Request, res: Response) {
-        const pedido_id = req.params.id;
-        const { nuevo_estado } = req.body;
+        const pedido_id = parseInt(req.params.id)
+        const { nuevo_estado } = req.body
 
-        const estados_validos = ['pendiente', 'confirmado', 'enviado', 'entregado', 'cancelado'];
-        const connection = await db.getConnection();
+        const estados_validos = ['pendiente', 'confirmado', 'enviado', 'entregado', 'cancelado']
+
         try {
-
+            // Validación de estado
             if (!nuevo_estado || !estados_validos.includes(nuevo_estado)) {
-                res.status(400).json({
+                return res.status(400).json({
                     success: false,
                     error: 'Estado no válido',
                     estados_validos
-                });
+                })
             }
 
-            await connection.beginTransaction();
+            // 1. Obtener estado actual del pedido
+            const { data: pedido, error: errorPedido } = await supabase
+                .from('pedidos')
+                .select('estado')
+                .eq('id', pedido_id)
+                .single()
 
-            // Verificar que el pedido existe y obtener estado actual
-            const { estado_actual } = await CheckearCompra(parseInt(pedido_id));
-            // Si se confirma el pedido, reducir stock
+            if (errorPedido || !pedido) {
+                return res.status(404).json({ success: false, error: 'Pedido no encontrado' })
+            }
+
+            const estado_actual = pedido.estado
+
+            // 2. Si pasa de pendiente → confirmado, reducir stock
             if (estado_actual === 'pendiente' && nuevo_estado === 'confirmado') {
-                await disminuirStock(parseInt(pedido_id));
+                await disminuirStock(pedido_id)
             }
 
-            // Si se cancela un pedido confirmado, restaurar stock
+            // 3. Si pasa de confirmado → cancelado, restaurar stock
             if (estado_actual === 'confirmado' && nuevo_estado === 'cancelado') {
-                await restaurarStock(parseInt(pedido_id));
-
+                await restaurarStock(pedido_id)
             }
 
-            // Actualizar estado del pedido
-            await ModificarEstado(parseInt(pedido_id), nuevo_estado);
+            // 4. Actualizar estado del pedido
+            const { error: errorUpdate } = await supabase
+                .from('pedidos')
+                .update({ estado: nuevo_estado })
+                .eq('id', pedido_id)
 
-            const data = { pedido_id: parseInt(pedido_id), estado_anterior: estado_actual, estado_nuevo: nuevo_estado }
+            if (errorUpdate) throw errorUpdate
 
-            await connection.commit();
+            const data = {
+                pedido_id,
+                estado_anterior: estado_actual,
+                estado_nuevo: nuevo_estado
+            }
 
-            res.json({ success: true, message: `Estado del pedido actualizado a: ${nuevo_estado}`, data: data });
-
+            return res.json({
+                success: true,
+                message: `Estado del pedido actualizado a: ${nuevo_estado}`,
+                data
+            })
         } catch (error) {
-            await connection.rollback();
-            console.error('Error al actualizar estado:', error);
-            res.status(500).json({ success: false, error: error });
+            console.error('Error al actualizar estado:', error)
+            return res.status(500).json({ success: false, error })
         }
     }
 }

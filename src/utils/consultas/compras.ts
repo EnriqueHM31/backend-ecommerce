@@ -1,18 +1,19 @@
-import { PedidoExtendido, Producto, ProductoExtendido } from "../../types/producto";
-import { db } from "../../database/db";
+import { Pedido, Producto } from "../../types/producto";
+import { supabase } from "../../database/db";
 
 export async function CheckearProducto(product: Producto, quantity: number) {
-    const [productCheck] = await db.execute<ProductoExtendido[]>(`
-        SELECT id, producto, precio_base, stock, activo 
-        FROM productos_sku 
-        WHERE id = ? AND activo = 1
-    `, [product.id]);
+    const { data: productCheck, error } = await supabase
+        .from('productos_sku')
+        .select('id, producto, precio_base, stock, activo')
+        .eq('id', product.id)
+        .eq('activo', 1)
+        .single();
 
-    if (productCheck) {
+    if (error || !productCheck) {
         throw new Error(`Producto no encontrado o inactivo: ${product.producto}`);
     }
 
-    const producto_db: Producto = productCheck[0];
+    const producto_db: Producto = productCheck as Producto;
 
     // Verificar stock disponible
     if (producto_db.stock < quantity) {
@@ -23,88 +24,140 @@ export async function CheckearProducto(product: Producto, quantity: number) {
 }
 
 export async function CrearCompra(user_id: string, total: number, direccion_envio = '', referencias = '') {
-    const [pedidoResult] = await db.execute<PedidoExtendido[]>(`
-        INSERT INTO pedidos (usuario_id, total, direccion_envio, referencias)
-        VALUES (?, ?, ?, ?)
-    `, [user_id, total.toFixed(2), direccion_envio, referencias]);
+    const { data: pedidoResult, error } = await supabase
+        .from('pedidos')
+        .insert({
+            usuario_id: user_id,
+            total: total.toFixed(2),
+            direccion_envio: direccion_envio,
+            referencias: referencias
+        })
+        .select('id')
+        .single();
 
-    const pedido_id = pedidoResult[0].insertId;
+    if (error) {
+        throw new Error(`Error al crear pedido: ${error.message}`);
+    }
+
+    const pedido_id = pedidoResult.id;
 
     return { pedido_id }
 }
 
 export async function InsertarItems(pedido_id: number, item: { producto_id: number, cantidad: number, precio_unitario: number, subtotal: number }) {
-    const [itemsResult] = await db.execute(`
-        INSERT INTO pedido_items (pedido_id, producto_id, cantidad, precio_unitario, subtotal)
-        VALUES (?, ?, ?, ?, ?)
-    `, [pedido_id, item.producto_id, item.cantidad, item.precio_unitario, item.subtotal
-    ]);
+    const { data: itemsResult, error } = await supabase
+        .from('pedido_items')
+        .insert({
+            pedido_id: pedido_id,
+            producto_id: item.producto_id,
+            cantidad: item.cantidad,
+            precio_unitario: item.precio_unitario,
+            subtotal: item.subtotal
+        });
 
-    if (!itemsResult) throw new Error("Error al crear el pedido");
-
-
+    if (error) throw new Error(`Error al crear el pedido: ${error.message}`);
 }
 
 export async function obtenerCompras(user_id: string) {
-    const [pedidos] = await db.execute(`
-        SELECT 
-            p.id,
-            p.fecha_pedido,
-            p.estado,
-            p.total,
-            COUNT(pi.id) as total_items
-        FROM pedidos p
-        LEFT JOIN pedido_items pi ON p.id = pi.pedido_id
-        WHERE p.usuario_id = ?
-        GROUP BY p.id
-        ORDER BY p.fecha_pedido DESC
-    `, [user_id]);
+    const { data: pedidos, error } = await supabase
+        .from('pedidos')
+        .select(`
+            id,
+            fecha_pedido,
+            estado,
+            total,
+            pedido_items(count)
+        `)
+        .eq('usuario_id', user_id)
+        .order('fecha_pedido', { ascending: false });
+
+    if (error) {
+        throw new Error(`Error al obtener compras: ${error.message}`);
+    }
 
     return { pedidos }
-
 }
 
 export async function CheckearCompra(pedido_id: number) {
-    const [pedidoCheck] = await db.execute<PedidoExtendido[]>(
-        'SELECT * FROM pedidos WHERE id = ?',
-        [pedido_id]
-    );
+    const { data: pedidoCheck, error } = await supabase
+        .from('pedidos')
+        .select('*')
+        .eq('id', pedido_id)
+        .single();
 
-    const estado_actual = pedidoCheck[0].estado;
-
-    if (!pedidoCheck[0]) {
+    if (error || !pedidoCheck) {
         throw new Error('Pedido no encontrado');
     }
+
+    const estado_actual = pedidoCheck.estado;
 
     return { estado_actual }
 }
 
 
 export async function disminuirStock(pedido_id: number) {
-    const [itemsResult] = await db.execute(`
-    UPDATE productos_sku ps
-    JOIN pedido_items pi ON ps.id = pi.producto_id
-    SET ps.stock = ps.stock - pi.cantidad
-    WHERE pi.pedido_id = ?
-`, [pedido_id]);
+    // First get the items for this order
+    const { data: items, error: itemsError } = await supabase
+        .from('pedido_items')
+        .select('producto_id, cantidad')
+        .eq('pedido_id', pedido_id);
 
-    if (!itemsResult) throw new Error("Error al crear el pedido");
+    if (itemsError) {
+        throw new Error(`Error al obtener items del pedido: ${itemsError.message}`);
+    }
+
+    if (!items || items.length === 0) {
+        throw new Error("No se encontraron items para el pedido");
+    }
+
+    // Update stock for each item
+    for (const item of items) {
+        const { error: updateError } = await supabase.rpc('decrease_stock', {
+            product_id: item.producto_id,
+            quantity: item.cantidad
+        });
+
+        if (updateError) {
+            throw new Error(`Error al disminuir stock: ${updateError.message}`);
+        }
+    }
 }
 
 export async function restaurarStock(pedido_id: number) {
-    const [itemsResult] = await db.execute(`
-        UPDATE productos_sku ps
-        JOIN pedido_items pi ON ps.id = pi.producto_id
-        SET ps.stock = ps.stock + pi.cantidad
-        WHERE pi.pedido_id = ?
-    `, [pedido_id]);
-    if (!itemsResult) throw new Error("Error al crear el pedido");
+    // First get the items for this order
+    const { data: items, error: itemsError } = await supabase
+        .from('pedido_items')
+        .select('producto_id, cantidad')
+        .eq('pedido_id', pedido_id);
+
+    if (itemsError) {
+        throw new Error(`Error al obtener items del pedido: ${itemsError.message}`);
+    }
+
+    if (!items || items.length === 0) {
+        throw new Error("No se encontraron items para el pedido");
+    }
+
+    // Restore stock for each item
+    for (const item of items) {
+        const { error: updateError } = await supabase.rpc('increase_stock', {
+            product_id: item.producto_id,
+            quantity: item.cantidad
+        });
+
+        if (updateError) {
+            throw new Error(`Error al restaurar stock: ${updateError.message}`);
+        }
+    }
 }
 
 export async function ModificarEstado(pedido_id: number, nuevo_estado: string) {
-    const [result] = await db.execute(
-        'UPDATE pedidos SET estado = ? WHERE id = ?',
-        [nuevo_estado, pedido_id]
-    );
-    if (!result) throw new Error("Error al actualizar estado");
+    const { error } = await supabase
+        .from('pedidos')
+        .update({ estado: nuevo_estado })
+        .eq('id', pedido_id);
+
+    if (error) {
+        throw new Error(`Error al actualizar estado: ${error.message}`);
+    }
 }

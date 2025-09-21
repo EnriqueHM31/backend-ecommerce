@@ -1,24 +1,49 @@
-import { db } from "../../database/db";
-import type { Usuario } from "../../types/usuario";
-import { RowDataPacket } from "mysql2";
+import { supabase } from "../../database/db";
 
-interface UsuarioExtendido extends Usuario, RowDataPacket { }
-
-export async function CheckearUsuario(user_id: string) {
-    const [userCheck] = await db.execute<UsuarioExtendido[]>(
-        'SELECT id FROM customer WHERE id = ?',
-        [user_id]
-    );
-    if (userCheck.length !== 0) return { existe: true }
-
-    return { existe: false }
+export interface UsuarioInsertado {
+    id: string;
+    nombre: string;
+    correo: string;
+    avatar: string;
 }
 
+export async function CheckearUsuario(user_id: string): Promise<{ existe: boolean }> {
+    try {
+        // maybeSingle devuelve Usuario | null
+        const { data: userCheck, error } = await supabase
+            .from("customer")
+            .select("id")
+            .eq("id", user_id)
+            .maybeSingle();
 
-export async function InsertarUsuario(usuario_id: string, nombre: string, correo: string, avatar: string) {
-    const connection = await db.getConnection();
+        if (error) throw error;
 
-    const [resultInsert] = await connection.query("INSERT INTO customer (id, nombre, correo, avatar) VALUES (?, ?, ?, ?)", [usuario_id, nombre, correo, avatar]);
+        return { existe: !!userCheck };
+    } catch (err) {
+        console.error("Error verificando usuario:", err);
+        throw err;
+    }
+}
 
-    if (!resultInsert) throw new Error("Error al insertar usuario");
+export async function InsertarUsuario(
+    usuario_id: string,
+    nombre: string,
+    correo: string,
+    avatar: string
+): Promise<UsuarioInsertado> {
+    try {
+        const { data, error } = await supabase
+            .from("customer")
+            .insert([{ id: usuario_id, nombre, correo, avatar }])
+            .select("id, nombre, correo, avatar")
+            .maybeSingle();
+
+        if (error) throw new Error(`Error al insertar usuario: ${error.message}`);
+        if (!data) throw new Error("Error al insertar usuario: resultado vacío");
+
+        return data as UsuarioInsertado;
+    } catch (err) {
+        console.error("Error insertando usuario:", err);
+        throw err;
+    }
 }

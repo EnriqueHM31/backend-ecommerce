@@ -8,7 +8,7 @@ export class AutenticacionController {
             const { usuario_id, nombre, correo, avatar } = req.body;
 
             // Validación con Zod
-            const resultadoValidarUsuario = UsuarioValidation.RevisarUsuario({ usuario_id, nombre, correo, avatar });
+            const resultadoValidarUsuario = UsuarioValidation.RevisarUsuario({ id: usuario_id, nombre, correo, avatar });
 
             if (!resultadoValidarUsuario.success) {
                 res.status(400).json({

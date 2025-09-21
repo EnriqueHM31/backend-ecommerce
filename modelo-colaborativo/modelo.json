@@ -254,7 +254,7 @@
       "GTS9U-512-NEG-12 - Galaxy Tab S9 Ultra": 0.1,
       "XPS14-U7-1TB-NEG-32 - XPS 14": 0.1
     },
-    "user_32UP0CLHAvGRfPmV6blK1OUiRW1": {
+    "user_32UP0CLHAvGRfPmV6blK1OUiRWA": {
       "GS24U-256-NEG-12 - Galaxy S24 Ultra": 0.1,
       "GTS9U-512-NEG-12 - Galaxy Tab S9 Ultra": 0.1,
       "GTS9U-1TB-PL-12 - Galaxy Tab S9 Ultra": 0.1,
@@ -265,7 +265,9 @@
       "T14-R7-1TB-NEG-16 - ThinkPad T14": 0.4,
       "IP15-256-NEG-6 - iPhone 15": 0.1,
       "IP15-128-NEG-6 - iPhone 15": 0.3,
-      "IPADPRO11-512-GR-16 - iPad Pro 11\"": 0.2
+      "IPADPRO11-512-GR-16 - iPad Pro 11\"": 0.2,
+      "GS24-128-MOR-8 - Galaxy S24": 0.5,
+      "XPS13-U7-1TB-NEG-16 - XPS 13": 0.3
     },
     "user_4xP8mN5qL7vK3jB2222222": {
       "IP15PRO-256-AZUT-8 - iPhone 15 Pro": 0.1
@@ -327,159 +329,6 @@
     "user_4xP8mN5qL7vK3jBsdsdsdsd115": {
       "GS24-128-MOR-8 - Galaxy S24": 0.4,
       "IP15P-256-ROS-6 - iPhone 15 Plus": 0.1
-    },
-    "user_32UP0CLHAvGRfPmV6blK1OUiRWA": {
-      "GS24-128-MOR-8 - Galaxy S24": 0.5,
-      "GS24U-256-NEG-12 - Galaxy S24 Ultra": 0.4,
-      "XPS13-U7-1TB-NEG-16 - XPS 13": 0.3,
-      "XPS14-U7-1TB-NEG-32 - XPS 14": 0.3,
-      "XPS16-U9-1TB-NEG-32 - XPS 16": 0.2,
-      "AIRPMAX-AZU - AirPods Max": 0.3,
-      "AIRPP2-BLA - AirPods Pro (2ª Gen)": 0.1,
-      "AIRP2-BLA - AirPods (2ª Gen)": 0.2
-    },
-    "user_001": {
-      "IP15PRO-256-AZUT-8 - iPhone 15 Pro": 0.1,
-      "MBA-M3-512-GR-16 - MacBook Air M3": 0.1
-    },
-    "user_002": {
-      "AIRPMAX-AZU - AirPods Max": 0.1,
-      "IPADPRO11-256-GR-16 - iPad Pro 11\"": 0.1
-    },
-    "user_003": {
-      "AIRPP2-BLA - AirPods Pro (2ª Gen)": 0.1,
-      "IP15P-256-NEG-6 - iPhone 15 Plus": 0.1
-    },
-    "user_004": {
-      "GS24U-256-NEG-12 - Galaxy S24 Ultra": 0.1,
-      "GTS9U-512-NEG-12 - Galaxy Tab S9 Ultra": 0.1
-    },
-    "user_005": {
-      "XPS14-U7-1TB-NEG-32 - XPS 14": 0.1,
-      "GS24P-512-NEG-8 - Galaxy S24+": 0.1
-    },
-    "user_006": {
-      "GTS9P-256-PL-8 - Galaxy Tab S9+": 0.1,
-      "PX8P-256-NEG-12 - Pixel 8 Pro": 0.1
-    },
-    "user_007": {
-      "PX8A-128-NEG-8 - Pixel 8a": 0.1,
-      "SP11-256-NEG-16 - Surface Pro 11": 0.1
-    },
-    "user_008": {
-      "PX8-256-AZU-8 - Pixel 8": 0.1,
-      "SG4-256-NEG-8 - Surface Go 4": 0.1
-    },
-    "user_009": {
-      "MBP14-M3P-1TB-GR-32 - MacBook Pro 14\"": 0.1,
-      "P1-U9-2TB-NEG-32 - ThinkPad P1": 0.1
-    },
-    "user_010": {
-      "XPS16-U9-2TB-NEG-32 - XPS 16": 0.1,
-      "IPADPRO11-512-GR-16 - iPad Pro 11\"": 0.1
-    },
-    "user_011": {
-      "X1C-U7-1TB-NEG-16 - ThinkPad X1 Carbon": 0.1,
-      "T14-R7-1TB-NEG-16 - ThinkPad T14": 0.1
-    },
-    "user_012": {
-      "IP15-128-AZU-6 - iPhone 15": 0.1,
-      "MBA-M2-256-GR-16 - MacBook Air M2": 0.1
-    },
-    "user_013": {
-      "AIRP2-BLA - AirPods (2ª Gen)": 0.1,
-      "IPAD10-64-AZU-6 - iPad 10ª Gen": 0.1
-    },
-    "user_014": {
-      "IPADAIR-128-MOR-8 - iPad Air (M2)": 0.1,
-      "GS24-256-NEG-8 - Galaxy S24": 0.1
-    },
-    "user_015": {
-      "GTS9-128-NEG-8 - Galaxy Tab S9": 0.1,
-      "XPS13-U7-512-NEG-16 - XPS 13": 0.1
-    },
-    "user_016": {
-      "GS24U-512-PLA-12 - Galaxy S24 Ultra": 0.1,
-      "GTS9P-512-PL-8 - Galaxy Tab S9+": 0.1
-    },
-    "user_017": {
-      "MBP14-M3P-1TB-PL-32 - MacBook Pro 14\"": 0.1,
-      "IPADPRO11-512-PL-16 - iPad Pro 11\"": 0.1
-    },
-    "user_018": {
-      "AIRPMAX-PLA - AirPods Max": 0.1,
-      "IP15PRO-512-TITN-8 - iPhone 15 Pro": 0.1
-    },
-    "user_019": {
-      "MBA-M3-256-GR-16 - MacBook Air M3": 0.1,
-      "IP15-256-NEG-6 - iPhone 15": 0.1
-    },
-    "user_020": {
-      "IPADAIR-256-PL-8 - iPad Air (M2)": 0.1,
-      "P1-U9-2TB-PL-32 - ThinkPad P1": 0.1
-    },
-    "user_021": {
-      "GS24U-512-NEG-12 - Galaxy S24 Ultra": 0.1,
-      "IP15PRO-512-AZUT-8 - iPhone 15 Pro": 0.1
-    },
-    "user_022": {
-      "PX8P-512-NEG-12 - Pixel 8 Pro": 0.1,
-      "IPAD10-64-PL-6 - iPad 10ª Gen": 0.1
-    },
-    "user_023": {
-      "MBA-M2-256-PL-16 - MacBook Air M2": 0.1,
-      "MBP14-M3P-512-GR-32 - MacBook Pro 14\"": 0.1
-    },
-    "user_024": {
-      "IPADPRO11-256-PL-16 - iPad Pro 11\"": 0.1,
-      "IP15PRO-256-TITN-8 - iPhone 15 Pro": 0.1
-    },
-    "user_025": {
-      "X1C-U7-1TB-PL-16 - ThinkPad X1 Carbon": 0.1,
-      "T14-R7-1TB-PL-16 - ThinkPad T14": 0.1
-    },
-    "user_026": {
-      "IP15-128-NEG-6 - iPhone 15": 0.1,
-      "IPAD10-256-AZU-6 - iPad 10ª Gen": 0.1
-    },
-    "user_027": {
-      "AIRP2-NEG - AirPods (2ª Gen)": 0.1,
-      "AIRPMAX-NEG - AirPods Max": 0.1
-    },
-    "user_028": {
-      "AIRPP2-GR - AirPods Pro (2ª Gen)": 0.1,
-      "PX8A-256-VER-8 - Pixel 8a": 0.1
-    },
-    "user_029": {
-      "SG3-256-NEG-8 - Surface Go 3": 0.1,
-      "T14-R7-512-PL-16 - ThinkPad T14": 0.1
-    },
-    "user_030": {
-      "GTS9U-1TB-PL-12 - Galaxy Tab S9 Ultra": 0.1,
-      "SP11-512-PL-16 - Surface Pro 11": 0.1
-    },
-    "user_031": {
-      "MBA-M3-512-PL-16 - MacBook Air M3": 0.1,
-      "AIRPMAX-ROJ - AirPods Max": 0.1
-    },
-    "user_032": {
-      "XPS14-U7-1TB-PL-32 - XPS 14": 0.1,
-      "PX8P-256-PLA-12 - Pixel 8 Pro": 0.1
-    },
-    "user_033": {
-      "XPS13-U7-1TB-PL-16 - XPS 13": 0.1,
-      "IP15P-256-ROS-6 - iPhone 15 Plus": 0.1
-    },
-    "user_034": {
-      "GS24P-512-MOR-8 - Galaxy S24+": 0.1,
-      "PX8-256-NEG-8 - Pixel 8": 0.1
-    },
-    "user_035": {
-      "SP11-512-NEG-16 - Surface Pro 11": 0.1,
-      "SG4-128-PL-8 - Surface Go 4": 0.1
-    },
-    "user_036": {
-      "SG3-128-NEG-8 - Surface Go 3": 0.1
     }
   },
   "usuarios": [
@@ -535,7 +384,7 @@
     "user_7qK9nM3pL5vX8jR4wB6cs888",
     "user_1mK7nQ4pL9vX3jB8wR5cs888",
     "user_4xP8mN5qL7vK3jB11111111",
-    "user_32UP0CLHAvGRfPmV6blK1OUiRW1",
+    "user_32UP0CLHAvGRfPmV6blK1OUiRWA",
     "user_4xP8mN5qL7vK3jB2222222",
     "user_4xP8mN5qL7vK3jB433333333",
     "user_4xP8mN5qL7vK3jB4444444444",
@@ -552,167 +401,91 @@
     "user_4xP8mN5qL7vK3jBsdsdsdsd112",
     "user_4xP8mN5qL7vK3jBsdsdsdsd113",
     "user_4xP8mN5qL7vK3jBsdsdsdsd114",
-    "user_4xP8mN5qL7vK3jBsdsdsdsd115",
-    "user_32UP0CLHAvGRfPmV6blK1OUiRWA",
-    "user_001",
-    "user_002",
-    "user_003",
-    "user_004",
-    "user_005",
-    "user_006",
-    "user_007",
-    "user_008",
-    "user_009",
-    "user_010",
-    "user_011",
-    "user_012",
-    "user_013",
-    "user_014",
-    "user_015",
-    "user_016",
-    "user_017",
-    "user_018",
-    "user_019",
-    "user_020",
-    "user_021",
-    "user_022",
-    "user_023",
-    "user_024",
-    "user_025",
-    "user_026",
-    "user_027",
-    "user_028",
-    "user_029",
-    "user_030",
-    "user_031",
-    "user_032",
-    "user_033",
-    "user_034",
-    "user_035",
-    "user_036"
+    "user_4xP8mN5qL7vK3jBsdsdsdsd115"
   ],
   "productos": [
-    "IP15-128-AZU-6 - iPhone 15",
-    "IP15-256-AZU-6 - iPhone 15",
-    "IP15-128-NEG-6 - iPhone 15",
-    "IP15-256-NEG-6 - iPhone 15",
-    "IP15P-128-NEG-6 - iPhone 15 Plus",
-    "IP15P-256-NEG-6 - iPhone 15 Plus",
-    "IP15P-128-ROS-6 - iPhone 15 Plus",
-    "IP15P-256-ROS-6 - iPhone 15 Plus",
     "IP15PRO-256-AZUT-8 - iPhone 15 Pro",
-    "IP15PRO-512-AZUT-8 - iPhone 15 Pro",
-    "IP15PRO-256-TITN-8 - iPhone 15 Pro",
-    "IP15PRO-512-TITN-8 - iPhone 15 Pro",
-    "GS24-128-MOR-8 - Galaxy S24",
-    "GS24-256-MOR-8 - Galaxy S24",
-    "GS24-128-NEG-8 - Galaxy S24",
-    "GS24-256-NEG-8 - Galaxy S24",
-    "GS24U-256-NEG-12 - Galaxy S24 Ultra",
-    "GS24U-512-NEG-12 - Galaxy S24 Ultra",
-    "GS24U-256-PLA-12 - Galaxy S24 Ultra",
-    "GS24U-512-PLA-12 - Galaxy S24 Ultra",
-    "GS24P-256-MOR-8 - Galaxy S24+",
-    "GS24P-512-MOR-8 - Galaxy S24+",
-    "GS24P-256-NEG-8 - Galaxy S24+",
-    "GS24P-512-NEG-8 - Galaxy S24+",
-    "PX8-128-AZU-8 - Pixel 8",
-    "PX8-256-AZU-8 - Pixel 8",
-    "PX8-128-NEG-8 - Pixel 8",
-    "PX8-256-NEG-8 - Pixel 8",
-    "PX8P-256-NEG-12 - Pixel 8 Pro",
-    "PX8P-512-NEG-12 - Pixel 8 Pro",
-    "PX8P-256-PLA-12 - Pixel 8 Pro",
-    "PX8P-512-PLA-12 - Pixel 8 Pro",
-    "PX8A-128-NEG-8 - Pixel 8a",
-    "PX8A-256-NEG-8 - Pixel 8a",
-    "PX8A-128-VER-8 - Pixel 8a",
-    "PX8A-256-VER-8 - Pixel 8a",
-    "MBA-M2-256-GR-16 - MacBook Air M2",
-    "MBA-M2-512-GR-16 - MacBook Air M2",
-    "MBA-M2-256-PL-16 - MacBook Air M2",
-    "MBA-M2-512-PL-16 - MacBook Air M2",
-    "MBA-M3-256-GR-16 - MacBook Air M3",
     "MBA-M3-512-GR-16 - MacBook Air M3",
-    "MBA-M3-256-PL-16 - MacBook Air M3",
-    "MBA-M3-512-PL-16 - MacBook Air M3",
-    "MBP14-M3P-1TB-GR-32 - MacBook Pro 14\"",
-    "MBP14-M3P-512-GR-32 - MacBook Pro 14\"",
-    "MBP14-M3P-1TB-PL-32 - MacBook Pro 14\"",
-    "MBP14-M3P-512-PL-32 - MacBook Pro 14\"",
-    "XPS13-U7-1TB-NEG-16 - XPS 13",
-    "XPS13-U7-512-NEG-16 - XPS 13",
-    "XPS13-U7-1TB-PL-16 - XPS 13",
-    "XPS13-U7-512-PL-16 - XPS 13",
-    "XPS14-U7-1TB-NEG-32 - XPS 14",
-    "XPS14-U7-512-NEG-32 - XPS 14",
-    "XPS14-U7-1TB-PL-32 - XPS 14",
-    "XPS14-U7-512-PL-32 - XPS 14",
-    "XPS16-U9-1TB-NEG-32 - XPS 16",
-    "XPS16-U9-2TB-NEG-32 - XPS 16",
-    "XPS16-U9-1TB-PL-32 - XPS 16",
-    "XPS16-U9-2TB-PL-32 - XPS 16",
-    "P1-U9-1TB-NEG-32 - ThinkPad P1",
-    "P1-U9-2TB-NEG-32 - ThinkPad P1",
-    "P1-U9-1TB-PL-32 - ThinkPad P1",
-    "P1-U9-2TB-PL-32 - ThinkPad P1",
-    "T14-R7-1TB-NEG-16 - ThinkPad T14",
-    "T14-R7-512-NEG-16 - ThinkPad T14",
-    "T14-R7-1TB-PL-16 - ThinkPad T14",
-    "T14-R7-512-PL-16 - ThinkPad T14",
-    "X1C-U7-1TB-NEG-16 - ThinkPad X1 Carbon",
-    "X1C-U7-512-NEG-16 - ThinkPad X1 Carbon",
-    "X1C-U7-1TB-PL-16 - ThinkPad X1 Carbon",
-    "X1C-U7-512-PL-16 - ThinkPad X1 Carbon",
-    "IPAD10-64-AZU-6 - iPad 10ª Gen",
-    "IPAD10-256-AZU-6 - iPad 10ª Gen",
-    "IPAD10-64-PL-6 - iPad 10ª Gen",
-    "IPAD10-256-PL-6 - iPad 10ª Gen",
-    "IPADAIR-128-MOR-8 - iPad Air (M2)",
-    "IPADAIR-256-MOR-8 - iPad Air (M2)",
-    "IPADAIR-128-PL-8 - iPad Air (M2)",
-    "IPADAIR-256-PL-8 - iPad Air (M2)",
-    "IPADPRO11-256-GR-16 - iPad Pro 11\"",
-    "IPADPRO11-512-GR-16 - iPad Pro 11\"",
-    "IPADPRO11-256-PL-16 - iPad Pro 11\"",
-    "IPADPRO11-512-PL-16 - iPad Pro 11\"",
-    "GTS9-128-NEG-8 - Galaxy Tab S9",
-    "GTS9-256-NEG-8 - Galaxy Tab S9",
-    "GTS9-128-PL-8 - Galaxy Tab S9",
-    "GTS9-256-PL-8 - Galaxy Tab S9",
-    "GTS9U-1TB-NEG-12 - Galaxy Tab S9 Ultra",
-    "GTS9U-512-NEG-12 - Galaxy Tab S9 Ultra",
-    "GTS9U-1TB-PL-12 - Galaxy Tab S9 Ultra",
-    "GTS9U-512-PL-12 - Galaxy Tab S9 Ultra",
-    "GTS9P-256-NEG-8 - Galaxy Tab S9+",
-    "GTS9P-512-NEG-8 - Galaxy Tab S9+",
-    "GTS9P-256-PL-8 - Galaxy Tab S9+",
-    "GTS9P-512-PL-8 - Galaxy Tab S9+",
-    "SG3-128-NEG-8 - Surface Go 3",
-    "SG3-256-NEG-8 - Surface Go 3",
-    "SG3-128-PL-8 - Surface Go 3",
-    "SG3-256-PL-8 - Surface Go 3",
-    "SG4-128-NEG-8 - Surface Go 4",
-    "SG4-256-NEG-8 - Surface Go 4",
-    "SG4-128-PL-8 - Surface Go 4",
-    "SG4-256-PL-8 - Surface Go 4",
-    "SP11-256-NEG-16 - Surface Pro 11",
-    "SP11-512-NEG-16 - Surface Pro 11",
-    "SP11-256-PL-16 - Surface Pro 11",
-    "SP11-512-PL-16 - Surface Pro 11",
-    "AIRP2-BLA - AirPods (2ª Gen)",
-    "AIRP2-GR - AirPods (2ª Gen)",
-    "AIRP2-NEG - AirPods (2ª Gen)",
-    "AIRP2-PLA - AirPods (2ª Gen)",
     "AIRPMAX-AZU - AirPods Max",
-    "AIRPMAX-NEG - AirPods Max",
-    "AIRPMAX-PL - AirPods Max",
-    "AIRPMAX-ROJ - AirPods Max",
+    "IPADPRO11-256-GR-16 - iPad Pro 11\"",
     "AIRPP2-BLA - AirPods Pro (2ª Gen)",
+    "IP15P-256-NEG-6 - iPhone 15 Plus",
+    "GS24U-256-NEG-12 - Galaxy S24 Ultra",
+    "GTS9U-512-NEG-12 - Galaxy Tab S9 Ultra",
+    "XPS14-U7-1TB-NEG-32 - XPS 14",
+    "GS24P-512-NEG-8 - Galaxy S24+",
+    "GTS9P-256-PL-8 - Galaxy Tab S9+",
+    "PX8P-256-NEG-12 - Pixel 8 Pro",
+    "PX8A-128-NEG-8 - Pixel 8a",
+    "SP11-256-NEG-16 - Surface Pro 11",
+    "PX8-256-AZU-8 - Pixel 8",
+    "SG4-256-NEG-8 - Surface Go 4",
+    "MBP14-M3P-1TB-GR-32 - MacBook Pro 14\"",
+    "P1-U9-2TB-NEG-32 - ThinkPad P1",
+    "XPS16-U9-2TB-NEG-32 - XPS 16",
+    "IPADPRO11-512-GR-16 - iPad Pro 11\"",
+    "X1C-U7-1TB-NEG-16 - ThinkPad X1 Carbon",
+    "T14-R7-1TB-NEG-16 - ThinkPad T14",
+    "IP15-128-AZU-6 - iPhone 15",
+    "MBA-M2-256-GR-16 - MacBook Air M2",
+    "AIRP2-BLA - AirPods (2ª Gen)",
+    "IPAD10-64-AZU-6 - iPad 10ª Gen",
+    "IPADAIR-128-MOR-8 - iPad Air (M2)",
+    "GS24-256-NEG-8 - Galaxy S24",
+    "GTS9-128-NEG-8 - Galaxy Tab S9",
+    "XPS13-U7-512-NEG-16 - XPS 13",
+    "GS24U-512-PLA-12 - Galaxy S24 Ultra",
+    "GTS9P-512-PL-8 - Galaxy Tab S9+",
+    "MBP14-M3P-1TB-PL-32 - MacBook Pro 14\"",
+    "IPADPRO11-512-PL-16 - iPad Pro 11\"",
+    "AIRPMAX-PLA - AirPods Max",
+    "IP15PRO-512-TITN-8 - iPhone 15 Pro",
+    "MBP14-M3P-512-PL-32 - MacBook Pro 14\"",
+    "AIRPP2-PLA - AirPods Pro (2ª Gen)",
+    "T14-R7-512-NEG-16 - ThinkPad T14",
+    "X1C-U7-512-NEG-16 - ThinkPad X1 Carbon",
+    "P1-U9-1TB-NEG-32 - ThinkPad P1",
+    "MBA-M3-256-GR-16 - MacBook Air M3",
+    "IP15-256-NEG-6 - iPhone 15",
+    "IPADAIR-256-PL-8 - iPad Air (M2)",
+    "P1-U9-2TB-PL-32 - ThinkPad P1",
+    "GS24U-512-NEG-12 - Galaxy S24 Ultra",
+    "IP15PRO-512-AZUT-8 - iPhone 15 Pro",
+    "PX8P-512-NEG-12 - Pixel 8 Pro",
+    "IPAD10-64-PL-6 - iPad 10ª Gen",
+    "MBA-M2-256-PL-16 - MacBook Air M2",
+    "MBP14-M3P-512-GR-32 - MacBook Pro 14\"",
+    "IPADPRO11-256-PL-16 - iPad Pro 11\"",
+    "IP15PRO-256-TITN-8 - iPhone 15 Pro",
+    "X1C-U7-1TB-PL-16 - ThinkPad X1 Carbon",
+    "T14-R7-1TB-PL-16 - ThinkPad T14",
+    "IP15-128-NEG-6 - iPhone 15",
+    "IPAD10-256-AZU-6 - iPad 10ª Gen",
+    "AIRP2-NEG - AirPods (2ª Gen)",
+    "AIRPMAX-NEG - AirPods Max",
     "AIRPP2-GR - AirPods Pro (2ª Gen)",
-    "AIRPP2-NEG - AirPods Pro (2ª Gen)",
-    "AIRPP2-PLA - AirPods Pro (2ª Gen)"
+    "PX8A-256-VER-8 - Pixel 8a",
+    "SG3-256-NEG-8 - Surface Go 3",
+    "T14-R7-512-PL-16 - ThinkPad T14",
+    "GTS9U-1TB-PL-12 - Galaxy Tab S9 Ultra",
+    "SP11-512-PL-16 - Surface Pro 11",
+    "MBA-M3-512-PL-16 - MacBook Air M3",
+    "AIRPMAX-ROJ - AirPods Max",
+    "XPS14-U7-1TB-PL-32 - XPS 14",
+    "PX8P-256-PLA-12 - Pixel 8 Pro",
+    "XPS13-U7-1TB-PL-16 - XPS 13",
+    "IP15P-256-ROS-6 - iPhone 15 Plus",
+    "GS24P-512-MOR-8 - Galaxy S24+",
+    "PX8-256-NEG-8 - Pixel 8",
+    "SP11-512-NEG-16 - Surface Pro 11",
+    "SG4-128-PL-8 - Surface Go 4",
+    "SG3-128-NEG-8 - Surface Go 3",
+    "GTS9U-512-PL-12 - Galaxy Tab S9 Ultra",
+    "GS24-128-MOR-8 - Galaxy S24",
+    "PX8-128-AZU-8 - Pixel 8",
+    "XPS16-U9-1TB-NEG-32 - XPS 16",
+    "XPS13-U7-1TB-NEG-16 - XPS 13"
   ],
-  "fechaGuardado": "2025-09-17T19:35:57.698Z",
-  "incremental": true
+  "fechaGuardado": "2025-09-21T23:21:40.560Z",
+  "incremental": false
 }
