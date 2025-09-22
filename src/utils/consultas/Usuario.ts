@@ -11,7 +11,7 @@ export async function CheckearUsuario(user_id: string): Promise<{ existe: boolea
     try {
         // maybeSingle devuelve Usuario | null
         const { data: userCheck, error } = await supabase
-            .from("customer")
+            .from("usuarios")
             .select("id")
             .eq("id", user_id)
             .maybeSingle();
@@ -33,7 +33,7 @@ export async function InsertarUsuario(
 ): Promise<UsuarioInsertado> {
     try {
         const { data, error } = await supabase
-            .from("customer")
+            .from("usuarios")
             .insert([{ id: usuario_id, nombre, correo, avatar }])
             .select("id, nombre, correo, avatar")
             .maybeSingle();

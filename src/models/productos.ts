@@ -8,47 +8,47 @@ export class ModeloProductos {
             const { data: productos, error } = await supabase
                 .from('productos_sku')
                 .select(`
-          id,
-          sku,
-          precio_base,
-          stock,
-          imagen_url,
-          activo,
-          created_at,
-          productos_base (
-            id,
-            nombre,
-            descripcion,
-            marca,
-            activo,
-            categorias (
-              nombre
-            )
-          ),
-          variantes (
-            id,
-            nombre_variante,
-            procesador,
-            display,
-            camara,
-            bateria,
-            conectividad,
-            sistema_operativo,
-            recomendado,
-            activa
-          ),
-          colores (
-            nombre
-          ),
-          almacenamientos (
-            capacidad
-          ),
-          especificaciones_ram (
-            capacidad
-          )
-        `)
+              id,
+              sku,
+              precio_base,
+              stock,
+              imagen_url,
+              activo,
+              created_at,
+              productos_base (
+                id,
+                nombre,
+                descripcion,
+                marca,
+                activo,
+                categorias (
+                  nombre
+                )
+              ),
+              variantes (
+                id,
+                nombre_variante,
+                procesador,
+                display,
+                camara,
+                bateria,
+                conectividad,
+                sistema_operativo,
+                recomendado,
+                activa
+              ),
+              colores (
+                nombre
+              ),
+              almacenamientos (
+                capacidad
+              ),
+              especificaciones_ram (
+                capacidad
+              )
+            `)
                 .eq('activo', true)
-                .order('id', { ascending: true })
+
 
             if (error) throw error
 

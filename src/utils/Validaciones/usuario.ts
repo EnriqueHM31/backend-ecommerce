@@ -2,7 +2,7 @@ import { z } from "zod";
 import type { Usuario } from "../../types/usuario";
 // Schema del producto
 export const UsuarioSchema = z.object({
-    usuario_id: z.string(),
+    id: z.string(),
     nombre: z.string(),
     correo: z.string(),
     avatar: z.string().url().optional(),
