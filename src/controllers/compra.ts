@@ -20,12 +20,14 @@ export class CompraController {
         try {
             const { items, customer }: { items: CartItem[], customer: Customer } = req.body;
 
+            console.log("ENTRO AL CONTROLADOR DE COMPRA");
             const resultadoValidarItems = CartItemsValidation.RevisarItems(items);
 
             if (!resultadoValidarItems.success) {
                 res.status(400).json({ success: false, error: JSON.stringify(resultadoValidarItems.error) });
                 return
             }
+            console.log("ENTRO AL validar usuario DE COMPRA");
 
             const resultadoValidarUsuario = UsuarioValidation.RevisarUsuario({ id: customer.id, nombre: customer.name, correo: customer.email });
 
@@ -35,7 +37,9 @@ export class CompraController {
                 res.status(400).json({ success: false, error: JSON.stringify(resultadoValidarUsuario.error) });
                 return
             }
-            const { success, data, message } = await ModeloCompra.RealizarCompra(items, customer);
+
+            console.log("ENTRO AL MODELO DE COMPRA");
+            const { success, data, message } = await ModeloCompra.crearSesion(items, customer);
 
             if (!success) {
                 res.status(400).json({ success: false, message: message, data: [] });

@@ -1,21 +1,11 @@
-import { PedidosService } from "../class/Pedido";
 import { obtenerStripe } from "../constants/Stripe";
 import type { CartItem, Customer } from "../types/producto";
 
-
-
-
 export class ModeloCompra {
-
-    static async RealizarCompra(items: CartItem[], customer: Customer) {
+    static async crearSesion(items: CartItem[], customer: Customer) {
         const stripe = obtenerStripe();
-        try {
-            // Crear pedido en tu base de datos
-            const pedido = await PedidosService.crearPedido(customer.id, items);
-            if (!pedido.success) {
-                throw new Error("Error al crear el pedido");
-            }
 
+        try {
             // Crear sesión de Checkout
             const session = await stripe.checkout.sessions.create({
                 payment_method_types: ["card"],
@@ -26,39 +16,41 @@ export class ModeloCompra {
                     allowed_countries: ["MX", "US"],
                 },
                 metadata: {
-                    customer_name: customer.name,
-                    customer_email: customer.email,
+                    customer_id: customer.id, // importante para identificar al usuario luego
+                    carrito: JSON.stringify(
+                        items.map((i) => ({
+                            producto_id: i.product.id,
+                            cantidad: i.quantity,
+                        }))
+                    ),
                 },
                 line_items: items.map((item: CartItem) => ({
                     price_data: {
                         currency: "MXN",
                         product_data: {
+
                             name: item.product.producto,
                             description: item.product.descripcion || "Producto del ecommerce",
                             images: [item.product.imagen_url],
+                            metadata: {
+                                producto_id: item.product.id, // aquí puedes pasar tu ID interno
+                            }
                         },
                         unit_amount: Math.round(item.product.precio_base * 100),
                     },
                     quantity: item.quantity,
                 })),
-                success_url: "http://localhost:5173/success?session_id={CHECKOUT_SESSION_ID}",
+                success_url:
+                    "http://localhost:5173/success?session_id={CHECKOUT_SESSION_ID}",
                 cancel_url: "http://localhost:5173/cancel",
-                customer_creation: "always",
             });
 
-            if (!session) {
-                return { success: false, data: null, message: "Error al crear la sesión de Stripe" };
-            }
+            console.log({ session });
 
-
-
-            console.log("SESSION", session);
-
-
-            return { success: true, data: session.url, message: "Compra realizada con éxito" };
+            return { success: true, data: session.url };
         } catch (error) {
-            console.error("Error al crear la compra:", error);
-            return { success: false, data: null, message: error || "Error al crear la compra" };
+            console.error("Error al crear sesión de Stripe:", error);
+            return { success: false, message: error || "Error al crear la sesión" };
         }
     }
 }

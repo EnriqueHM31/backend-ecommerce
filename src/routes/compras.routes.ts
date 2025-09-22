@@ -10,5 +10,4 @@ RouterCompras.post('/crear-pedido', pedidosController.crearPedido);
 RouterCompras.get('/usuario/:user_id', pedidosController.obtenerPedidosPorId);
 
 // PUT /api/compras/pedido/:id/estado - Actualizar estado del pedido
-RouterCompras.put('/pedido/:id/estado', pedidosController.actualizarCompraEstado);
 

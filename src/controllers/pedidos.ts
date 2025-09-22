@@ -6,50 +6,69 @@ export class pedidosController {
 
 
     static async crearPedido(req: Request, res: Response) {
-        const { user_id, cart_items, direccion_envio, referencias } = req.body
+        const { user_id, cart_items, direccion_envio, referencias, checkout_session_id } = req.body;
 
         try {
-            // 1. Verificar usuario
-            const { data: usuario, error: errorUsuario } = await supabase
-                .from('usuarios')
-                .select('*')
-                .eq('id', user_id)
-                .single()
-
-            if (errorUsuario || !usuario) {
-                res.status(400).json({ success: false, message: 'Usuario no encontrado' })
+            // 0. Validar que venga el checkout_session_id
+            if (!checkout_session_id) {
+                res.status(400).json({ success: false, message: 'Falta checkout_session_id' });
             }
 
-            // 2. Validar productos y calcular total
-            let total = 0
-            const itemsProcesados = []
+            // 1. Verificar si ya existe pedido para esa sesión
+            const { data: pedidoExistente, error: errorBuscar } = await supabase
+                .from('pedidos')
+                .select('id')
+                .eq('checkout_session_id', checkout_session_id)
+                .single();
+
+            if (pedidoExistente && !errorBuscar) {
+                res.status(200).json({
+                    success: true,
+                    message: 'Pedido ya existía, no se duplicó',
+                    data: { pedido_id: pedidoExistente.id }
+                });
+            }
+
+            // 2. Verificar usuario
+            const { data: usuario, error: errorUsuario } = await supabase
+                .from('usuarios')
+                .select('id')
+                .eq('id', user_id)
+                .single();
+
+            if (errorUsuario || !usuario) {
+                res.status(400).json({ success: false, message: 'Usuario no encontrado' });
+            }
+
+            // 3. Validar productos y calcular total
+            let total = 0;
+            const itemsProcesados = [];
 
             for (const item of cart_items) {
                 const { data: producto_db, error: errorProducto } = await supabase
-                    .from('productos_base')
-                    .select('id, nombre, precio_base')
-                    .eq('id', item.product.id)
-                    .single()
+                    .from('productos_sku')
+                    .select('id, sku, precio_base')
+                    .eq('id', item.id)
+                    .single();
 
                 if (errorProducto || !producto_db) {
-                    res.status(400).json({ success: false, message: 'Producto no válido' })
+                    res.status(400).json({ success: false, message: 'Producto no válido' });
                 }
 
-                const quantity = parseInt(item.quantity)
-                const precio_unitario = parseFloat(Number(producto_db?.precio_base).toFixed(2))
-                const subtotal = precio_unitario * quantity
-                total += subtotal
+                const quantity = parseInt(item.quantity);
+                const precio_unitario = parseFloat(Number(producto_db?.precio_base).toFixed(2));
+                const subtotal = precio_unitario * quantity;
+                total += subtotal;
 
                 itemsProcesados.push({
                     producto_id: producto_db?.id,
                     cantidad: quantity,
                     precio_unitario,
                     subtotal,
-                    nombre_producto: producto_db?.nombre
-                })
+                });
             }
 
-            // 3. Crear el pedido principal
+            // 4. Crear el pedido principal
             const { data: pedido, error: errorPedido } = await supabase
                 .from('pedidos')
                 .insert([
@@ -58,17 +77,18 @@ export class pedidosController {
                         total,
                         direccion_envio,
                         referencias,
-                        estado: 'pendiente'
+                        estado: 'pendiente',
+                        checkout_session_id // 👈 guardamos la sesión Stripe
                     }
                 ])
                 .select('id')
-                .single()
+                .single();
 
-            if (errorPedido) throw errorPedido
+            if (errorPedido) throw errorPedido;
 
-            const pedido_id = pedido.id
+            const pedido_id = pedido.id;
 
-            // 4. Insertar items
+            // 5. Insertar items
             const { error: errorItems } = await supabase.from('pedido_items').insert(
                 itemsProcesados.map(item => ({
                     pedido_id,
@@ -77,11 +97,11 @@ export class pedidosController {
                     precio_unitario: item.precio_unitario,
                     subtotal: item.subtotal
                 }))
-            )
+            );
 
-            if (errorItems) throw errorItems
+            if (errorItems) throw errorItems;
 
-            // 5. Respuesta
+            // 6. Respuesta
             res.status(201).json({
                 success: true,
                 message: 'Pedido creado exitosamente',
@@ -91,10 +111,10 @@ export class pedidosController {
                     items_count: itemsProcesados.length,
                     estado: 'pendiente'
                 }
-            })
+            });
         } catch (error) {
-            console.error('Error al crear pedido:', error)
-            res.status(500).json({ success: false, error })
+            console.error('Error al crear pedido:', error);
+            res.status(500).json({ success: false, error });
         }
     }
 
@@ -124,7 +144,7 @@ export class pedidosController {
         try {
             // Validación de estado
             if (!nuevo_estado || !estados_validos.includes(nuevo_estado)) {
-                return res.status(400).json({
+                res.status(400).json({
                     success: false,
                     error: 'Estado no válido',
                     estados_validos
@@ -139,10 +159,10 @@ export class pedidosController {
                 .single()
 
             if (errorPedido || !pedido) {
-                return res.status(404).json({ success: false, error: 'Pedido no encontrado' })
+                res.status(404).json({ success: false, error: 'Pedido no encontrado' })
             }
 
-            const estado_actual = pedido.estado
+            const estado_actual = pedido?.estado
 
             // 2. Si pasa de pendiente → confirmado, reducir stock
             if (estado_actual === 'pendiente' && nuevo_estado === 'confirmado') {
@@ -168,14 +188,14 @@ export class pedidosController {
                 estado_nuevo: nuevo_estado
             }
 
-            return res.json({
+            res.json({
                 success: true,
                 message: `Estado del pedido actualizado a: ${nuevo_estado}`,
                 data
             })
         } catch (error) {
             console.error('Error al actualizar estado:', error)
-            return res.status(500).json({ success: false, error })
+            res.status(500).json({ success: false, error })
         }
     }
 }

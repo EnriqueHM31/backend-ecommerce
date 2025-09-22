@@ -1,13 +1,13 @@
 import { supabase } from '../database/db'
 
 export class ModeloProductos {
-    static async ListarProductos() {
-        console.log('Listar productos')
+  static async ListarProductos() {
+    console.log('Listar productos')
 
-        try {
-            const { data: productos, error } = await supabase
-                .from('productos_sku')
-                .select(`
+    try {
+      const { data: productos, error } = await supabase
+        .from('productos_sku')
+        .select(`
               id,
               sku,
               precio_base,
@@ -34,7 +34,6 @@ export class ModeloProductos {
                 bateria,
                 conectividad,
                 sistema_operativo,
-                recomendado,
                 activa
               ),
               colores (
@@ -47,23 +46,23 @@ export class ModeloProductos {
                 capacidad
               )
             `)
-                .eq('activo', true)
+        .eq('activo', true)
 
 
-            if (error) throw error
+      if (error) throw error
 
-            return {
-                success: true,
-                message: 'Productos obtenidos correctamente',
-                data: productos
-            }
-        } catch (error: any) {
-            console.error('Error al obtener productos:', error)
-            return {
-                success: false,
-                message: error.message || 'Error al obtener los productos',
-                data: []
-            }
-        }
+      return {
+        success: true,
+        message: 'Productos obtenidos correctamente',
+        data: productos
+      }
+    } catch (error: any) {
+      console.error('Error al obtener productos:', error)
+      return {
+        success: false,
+        message: error.message || 'Error al obtener los productos',
+        data: []
+      }
     }
+  }
 }

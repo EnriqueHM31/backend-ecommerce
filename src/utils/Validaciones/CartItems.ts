@@ -15,14 +15,14 @@ export const ProductoSchema = z.object({
     id: z.number(),
     imagen_url: z.string().url(), // asumo que es url
     marca: z.string(),
-    precio_base: z.string(),
+    precio_base: z.number(),
     procesador: z.string(),
     producto: z.string(),
     producto_id: z.number(),
     ram_especificacion: z.string(),
     ram_variante: z.string(),
     recomendado: z.number(),
-    sistema_operativo: z.string(),
+    sistema_operativo: z.string().nullable(),
     sku: z.string(),
     stock: z.number(),
 });

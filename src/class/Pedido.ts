@@ -7,6 +7,8 @@ export class PedidosService {
         if (!user_id || !cart_items) throw new Error('Faltan datos requeridos: user_id, cart_items');
         if (!Array.isArray(cart_items) || cart_items.length === 0) throw new Error('El carrito está vacío o no es válido');
 
+        console.log("ENTRO A CREAR PEDIDO");
+
         try {
             // 1. Verificar usuario
             const { data: userCheck, error: userError } = await supabase

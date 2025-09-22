@@ -2,13 +2,13 @@
 import { CompraController } from "../controllers/compra";
 import { Router } from "express";
 
-export const CompraRouter = Router();
+export const PagosRouter = Router();
 
 
-CompraRouter.post("/checkout-session", CompraController.RealizarCompra);
+PagosRouter.post("/checkout-session", CompraController.RealizarCompra);
 
-CompraRouter.get("/checkout-session", CompraController.ObtenerCompraIdSession);
+PagosRouter.get("/checkout-session", CompraController.ObtenerCompraIdSession);
 
-CompraRouter.get("/pedidos/:email", CompraController.ObtenerComprasPorEmail);
+PagosRouter.get("/pedidos/:email", CompraController.ObtenerComprasPorEmail);
 
 

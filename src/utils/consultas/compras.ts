@@ -1,4 +1,4 @@
-import { Pedido, Producto } from "../../types/producto";
+import { Producto } from "../../types/producto";
 import { supabase } from "../../database/db";
 
 export async function CheckearProducto(product: Producto, quantity: number) {
@@ -56,6 +56,8 @@ export async function InsertarItems(pedido_id: number, item: { producto_id: numb
         });
 
     if (error) throw new Error(`Error al crear el pedido: ${error.message}`);
+
+    console.log({ itemsResult });
 }
 
 export async function obtenerCompras(user_id: string) {
