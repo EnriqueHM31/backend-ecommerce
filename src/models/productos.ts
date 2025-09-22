@@ -43,7 +43,8 @@ export class ModeloProductos {
                 capacidad
               ),
               especificaciones_ram (
-                capacidad
+                capacidad,
+                tipo
               )
             `)
         .eq('activo', true)

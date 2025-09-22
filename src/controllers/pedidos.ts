@@ -18,7 +18,7 @@ export class pedidosController {
             const { data: pedidoExistente, error: errorBuscar } = await supabase
                 .from('pedidos')
                 .select('id')
-                .eq('checkout_session_id', checkout_session_id)
+                .eq('id', checkout_session_id)
                 .single();
 
             if (pedidoExistente && !errorBuscar) {
@@ -73,12 +73,12 @@ export class pedidosController {
                 .from('pedidos')
                 .insert([
                     {
+                        id: checkout_session_id, // 👈 guardamos la sesión Stripe
                         usuario_id: user_id,
                         total,
                         direccion_envio,
                         referencias,
                         estado: 'pendiente',
-                        checkout_session_id // 👈 guardamos la sesión Stripe
                     }
                 ])
                 .select('id')
