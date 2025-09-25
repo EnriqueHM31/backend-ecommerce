@@ -1,15 +1,14 @@
+import cors from 'cors';
 import dotenv from 'dotenv';
 dotenv.config();
 import express from 'express';
-import cors from 'cors';
 import { ComentariosRouter } from './routes/comentarios.routes';
-import { ProductosRouter } from './routes/productos.routes';
-import { PagosRouter } from './routes/pagos.routes';
-import { UsuarioRouter } from './routes/usuario.routes';
 import { RouterCompras } from './routes/compras.routes';
+import { PagosRouter } from './routes/pagos.routes';
+import { ProductosRouter } from './routes/productos.routes';
+import { UsuarioRouter } from './routes/usuario.routes';
 //import { PrediccionRouter } from './routes/prediccion.routes';
 import { PORT } from './config';
-import RouterPrediccion from './routes/prediccion.routes';
 
 
 const app = express();
@@ -36,7 +35,7 @@ app.use('/api', ComentariosRouter);
 app.use('/api/productos', ProductosRouter);
 app.use('/api/compra', PagosRouter);
 app.use('/api/usuario', UsuarioRouter);
-app.use('/api', RouterPrediccion);
+//app.use('/api', RouterPrediccion);
 app.use('/api', RouterCompras);
 
 

@@ -1,5 +1,5 @@
 import { Router, Request, Response } from 'express';
-import { FiltradoColaborativo } from '../class/Prediccion2';
+import { FiltradoColaborativo } from '../class/Prediccion';
 import { Compra } from '../types/prediccion';
 import { guardarCompras } from '../utils/pagos/predicciones';
 import fs from 'fs';

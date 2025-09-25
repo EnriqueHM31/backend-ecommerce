@@ -1,12 +1,32 @@
 import { obtenerStripe } from "../constants/Stripe";
 import type { CartItem, Customer } from "../types/producto";
+import { supabase } from "../database/db";
 
 export class ModeloCompra {
     static async crearSesion(items: CartItem[], customer: Customer) {
         const stripe = obtenerStripe();
 
         try {
-            // Crear sesión de Checkout
+            // 1. Obtener IDs de productos
+            const productIds = items.map(i => i.product.id);
+            const { data: productos, error: prodError } = await supabase
+                .from('productos_sku')
+                .select('id, producto, stock, precio_base, activo')
+                .in('id', productIds)
+                .eq('activo', true);
+
+            if (prodError || !productos || productos.length === 0) throw new Error('No se encontraron productos activos');
+
+            // 2. Validar stock
+            for (const item of items) {
+                const productoDB = productos.find(p => p.id === item.product.id);
+                if (!productoDB) throw new Error(`Producto no encontrado o inactivo: ${item.product.producto}`);
+                if (item.quantity > productoDB.stock) {
+                    throw new Error(`Stock insuficiente para ${productoDB.producto}. Disponible: ${productoDB.stock}, Solicitado: ${item.quantity}`);
+                }
+            }
+
+            // 3. Crear sesión de Stripe
             const session = await stripe.checkout.sessions.create({
                 payment_method_types: ["card"],
                 mode: "payment",
@@ -16,41 +36,36 @@ export class ModeloCompra {
                     allowed_countries: ["MX", "US"],
                 },
                 metadata: {
-                    customer_id: customer.id, // importante para identificar al usuario luego
-                    carrito: JSON.stringify(
-                        items.map((i) => ({
-                            producto_id: i.product.id,
-                            cantidad: i.quantity,
-                        }))
-                    ),
+                    customer_id: customer.id,
+                    carrito: JSON.stringify(items.map(i => ({
+                        producto_id: i.product.id,
+                        cantidad: i.quantity
+                    }))),
                 },
-                line_items: items.map((item: CartItem) => ({
+                line_items: items.map(item => ({
                     price_data: {
                         currency: "MXN",
                         product_data: {
-
                             name: item.product.producto,
                             description: item.product.descripcion || "Producto del ecommerce",
                             images: [item.product.imagen_url],
                             metadata: {
-                                producto_id: item.product.id, // aquí puedes pasar tu ID interno
+                                producto_id: item.product.id,
                             }
                         },
                         unit_amount: Math.round(item.product.precio_base * 100),
                     },
                     quantity: item.quantity,
                 })),
-                success_url:
-                    "http://localhost:5173/success?session_id={CHECKOUT_SESSION_ID}",
+                success_url: "http://localhost:5173/success?session_id={CHECKOUT_SESSION_ID}",
                 cancel_url: "http://localhost:5173/cancel",
             });
 
-            console.log({ session });
-
             return { success: true, data: session.url };
-        } catch (error) {
+        } catch (error: any) {
             console.error("Error al crear sesión de Stripe:", error);
-            return { success: false, message: error || "Error al crear la sesión" };
+            return { success: false, message: error.message || "Error al crear la sesión" };
         }
     }
+
 }
