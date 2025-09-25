@@ -9,20 +9,21 @@ export class ModeloCompra {
         try {
             // 1. Obtener IDs de productos
             const productIds = items.map(i => i.product.id);
+            console.log({ productIds });
             const { data: productos, error: prodError } = await supabase
                 .from('productos_sku')
-                .select('id, producto, stock, precio_base, activo')
+                .select('id,sku, stock, precio_base, activo')
                 .in('id', productIds)
                 .eq('activo', true);
 
-            if (prodError || !productos || productos.length === 0) throw new Error('No se encontraron productos activos');
+            if (prodError || !productos || productos.length === 0) throw new Error('No se encontraron productos activos' + JSON.stringify(prodError));
 
             // 2. Validar stock
             for (const item of items) {
                 const productoDB = productos.find(p => p.id === item.product.id);
                 if (!productoDB) throw new Error(`Producto no encontrado o inactivo: ${item.product.producto}`);
                 if (item.quantity > productoDB.stock) {
-                    throw new Error(`Stock insuficiente para ${productoDB.producto}. Disponible: ${productoDB.stock}, Solicitado: ${item.quantity}`);
+                    throw new Error(`Stock insuficiente para ${productoDB.sku}. Disponible: ${productoDB.stock}, Solicitado: ${item.quantity}`);
                 }
             }
 

@@ -12,6 +12,7 @@ export class pedidosController {
             // 0. Validar que venga el checkout_session_id
             if (!checkout_session_id) {
                 res.status(400).json({ success: false, message: 'Falta checkout_session_id' });
+                return;
             }
 
             // 1. Verificar si ya existe pedido para esa sesión
@@ -27,6 +28,7 @@ export class pedidosController {
                     message: 'Pedido ya existía, no se duplicó',
                     data: { pedido_id: pedidoExistente.id }
                 });
+                return;
             }
 
             // 2. Verificar usuario
@@ -38,42 +40,63 @@ export class pedidosController {
 
             if (errorUsuario || !usuario) {
                 res.status(400).json({ success: false, message: 'Usuario no encontrado' });
+                return;
             }
 
-            // 3. Validar productos y calcular total
+            // 3. Obtener todos los productos de una sola vez
+            console.log({ cart_items });
+            const productIds = cart_items.map((i: { id: string }) => i.id);
+            console.log({ productIds });
+            const { data: productosDB, error: errorProductosDB } = await supabase
+                .from('productos_sku')
+                .select('id, sku, precio_base, stock')
+                .in('id', productIds);
+
+            if (errorProductosDB || !productosDB) {
+                res.status(400).json({ success: false, message: 'Error al obtener productos' });
+                return;
+            }
+
+            // 4. Validar stock y preparar items
             let total = 0;
             const itemsProcesados = [];
 
             for (const item of cart_items) {
-                const { data: producto_db, error: errorProducto } = await supabase
-                    .from('productos_sku')
-                    .select('id, sku, precio_base')
-                    .eq('id', item.id)
-                    .single();
-
-                if (errorProducto || !producto_db) {
-                    res.status(400).json({ success: false, message: 'Producto no válido' });
+                const producto_db = productosDB.find(p => p.id === item.id);
+                if (!producto_db) {
+                    res.status(400).json({ success: false, message: `Producto no válido: ${item.id}` });
+                    return;
                 }
 
                 const quantity = parseInt(item.quantity);
-                const precio_unitario = parseFloat(Number(producto_db?.precio_base).toFixed(2));
+
+                // Verificación de stock
+                if (quantity > producto_db.stock) {
+                    res.status(400).json({
+                        success: false,
+                        message: `Stock insuficiente para ${producto_db.sku}. Disponible: ${producto_db.stock}, Solicitado: ${quantity}`
+                    });
+                    return;
+                }
+
+                const precio_unitario = parseFloat(Number(producto_db.precio_base).toFixed(2));
                 const subtotal = precio_unitario * quantity;
                 total += subtotal;
 
                 itemsProcesados.push({
-                    producto_id: producto_db?.id,
+                    producto_id: producto_db.id,
                     cantidad: quantity,
                     precio_unitario,
                     subtotal,
                 });
             }
 
-            // 4. Crear el pedido principal
+            // 5. Crear el pedido principal
             const { data: pedido, error: errorPedido } = await supabase
                 .from('pedidos')
                 .insert([
                     {
-                        id: checkout_session_id, // 👈 guardamos la sesión Stripe
+                        id: checkout_session_id,
                         usuario_id: user_id,
                         total,
                         direccion_envio,
@@ -85,10 +108,9 @@ export class pedidosController {
                 .single();
 
             if (errorPedido) throw errorPedido;
-
             const pedido_id = pedido.id;
 
-            // 5. Insertar items
+            // 6. Insertar items
             const { error: errorItems } = await supabase.from('pedido_items').insert(
                 itemsProcesados.map(item => ({
                     pedido_id,
@@ -98,10 +120,35 @@ export class pedidosController {
                     subtotal: item.subtotal
                 }))
             );
-
             if (errorItems) throw errorItems;
 
-            // 6. Respuesta
+            // 7. Disminuir stock de cada producto
+            console.log({ itemsProcesados });
+            await Promise.all(itemsProcesados.map(async i => {
+                // Obtener stock actual
+                const { data: producto, error: err } = await supabase
+                    .from('productos_sku')
+                    .select('stock')
+                    .eq('id', i.producto_id)
+                    .single();
+
+                if (err || !producto) {
+                    console.error(`No se pudo actualizar stock para ${i.producto_id}`);
+                    return;
+                }
+
+                // Restar cantidad
+                const nuevoStock = producto.stock - i.cantidad;
+
+                const { error: stockError } = await supabase
+                    .from('productos_sku')
+                    .update({ stock: nuevoStock })
+                    .eq('id', i.producto_id);
+
+                if (stockError) console.error(`Error al actualizar stock producto ${i.producto_id}:`, stockError);
+            }));
+
+            // 8. Respuesta
             res.status(201).json({
                 success: true,
                 message: 'Pedido creado exitosamente',
@@ -112,11 +159,13 @@ export class pedidosController {
                     estado: 'pendiente'
                 }
             });
+
         } catch (error) {
             console.error('Error al crear pedido:', error);
             res.status(500).json({ success: false, error });
         }
     }
+
 
 
 
