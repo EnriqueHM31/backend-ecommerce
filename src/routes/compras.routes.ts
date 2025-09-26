@@ -1,13 +1,13 @@
-import { pedidosController } from '../controllers/pedidos';
+import { PedidosController } from '../controllers/pedidos';
 import { Router } from 'express';
 
 export const RouterCompras = Router();
 
 // POST /api/compras/crear-pedido
-RouterCompras.post('/crear-pedido', pedidosController.crearPedido);
+RouterCompras.post('/crear-pedido', PedidosController.crearPedido);
 
 // GET /api/compras/usuario/:user_id - Obtener TODOS los pedidos de un usuario (sin paginación)
-RouterCompras.get('/usuario/:user_id', pedidosController.obtenerPedidosPorId);
+RouterCompras.get('/usuario/:user_id', PedidosController.obtenerPedidosPorId);
 
 // PUT /api/compras/pedido/:id/estado - Actualizar estado del pedido
 

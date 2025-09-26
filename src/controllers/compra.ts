@@ -20,35 +20,57 @@ export class CompraController {
         try {
             const { items, customer }: { items: CartItem[], customer: Customer } = req.body;
 
-            console.log("ENTRO AL CONTROLADOR DE COMPRA");
+            // Validar items del carrito
             const resultadoValidarItems = CartItemsValidation.RevisarItems(items);
-
             if (!resultadoValidarItems.success) {
-                res.status(400).json({ success: false, error: JSON.stringify(resultadoValidarItems.error) });
-                return
+                res.status(400).json({
+                    success: false,
+                    message: 'Error en validación de items',
+                    error: JSON.stringify(resultadoValidarItems.error)
+                });
+                return;
             }
-            console.log("ENTRO AL validar usuario DE COMPRA");
 
-            const resultadoValidarUsuario = UsuarioValidation.RevisarUsuario({ id: customer.id, nombre: customer.name, correo: customer.email });
-
-            console.log({ resultadoValidarUsuario });
+            // Validar datos del cliente
+            const resultadoValidarUsuario = UsuarioValidation.RevisarUsuario({
+                id: customer.id,
+                nombre: customer.name,
+                correo: customer.email
+            });
 
             if (!resultadoValidarUsuario.success) {
-                res.status(400).json({ success: false, error: JSON.stringify(resultadoValidarUsuario.error) });
-                return
+                res.status(400).json({
+                    success: false,
+                    message: 'Error en validación de cliente',
+                    error: JSON.stringify(resultadoValidarUsuario.error)
+                });
+                return;
             }
 
-            console.log("ENTRO AL MODELO DE COMPRA");
+            // Crear sesión de pago
             const { success, data, message } = await ModeloCompra.crearSesion(items, customer);
 
             if (!success) {
-                res.status(400).json({ success: false, message: message, data: [] });
+                res.status(400).json({
+                    success: false,
+                    message: message,
+                    data: null
+                });
+                return;
             }
 
-            res.status(200).json({ success: true, data: data, message: message });
+            res.status(200).json({
+                success: true,
+                data: data,
+                message: message
+            });
         } catch (error) {
-            console.error("Error creando sesión de Stripe:", JSON.stringify(error));
-            res.status(500).json({ error: "Error creando la sesión de pago" + error });
+            console.error("Error creando sesión de Stripe:", error);
+            res.status(500).json({
+                success: false,
+                message: "Error interno del servidor",
+                error: "Error creando la sesión de pago"
+            });
         }
     }
 
@@ -58,55 +80,32 @@ export class CompraController {
         try {
             const { sessionId } = req.query;
 
-            // ✅ Validar sessionId
+            // Validar sessionId
             const resultadoValidarSessionId = StripeValidation.RevisarSessionId(sessionId as string);
             if (!resultadoValidarSessionId.success) {
                 res.status(400).json({
                     success: false,
                     message: resultadoValidarSessionId.error.message,
                 });
+                return;
             }
 
-            // ✅ Recuperar sesión con line_items + customer
+            // Recuperar sesión con line_items + customer
             const session = await stripe.checkout.sessions.retrieve(sessionId as string, {
                 expand: ["line_items", "customer", "line_items.data.price.product"],
             });
 
-
-
-            // ✅ Verificar si ya se envió factura (usando metadata de Stripe)
+            // Verificar si ya se envió factura (usando metadata de Stripe)
             if (session.metadata?.facturaEnviada === "true") {
                 res.status(200).json({
                     success: true,
                     message: "Factura ya fue enviada previamente",
                     data: session,
                 });
-                return
+                return;
             }
 
-            // 🚀 Generar y enviar factura PDF
-            /*await ModeloFactura.EnviarFacturaPDF({
-                nombre: session.customer_details?.name || "Cliente",
-                correo: session.customer_details?.email || "sin-correo@dominio.com",
-                monto: `$${(session.amount_total === null ? 0 : session.amount_total) / 100} MXN`,
-                fecha: new Date().toLocaleString("es-MX", { timeZone: "America/Mexico_City" }),
-
-                direccion1: session.customer_details?.address?.line1 || "",
-                direccion2: session.customer_details?.address?.line2 || "",
-                ciudad: session.customer_details?.address?.city || "",
-                estado: session.customer_details?.address?.state || "",
-                cp: session.customer_details?.address?.postal_code || "",
-                pais: session.customer_details?.address?.country || "",
-
-                items: session.line_items?.data.map((item: any) => ({
-                    producto: item.description,
-                    cantidad: item.quantity,
-                    precio: `$${(item.price.unit_amount / 100).toFixed(2)} MXN`,
-                    total: `$${(item.amount_total / 100).toFixed(2)} MXN`,
-                })) || [],
-            });
-*/
-            // ✅ Marcar como enviada en metadata de Stripe
+            // Marcar como enviada en metadata de Stripe
             await stripe.checkout.sessions.update(sessionId as string, {
                 metadata: { ...session.metadata, facturaEnviada: "true" },
             });
@@ -129,23 +128,39 @@ export class CompraController {
 
     static async ObtenerComprasPorEmail(req: Request, res: Response) {
         const stripe = obtenerStripe();
+
         try {
             const { email } = req.params;
 
-            // 1️⃣ Buscar todos los clientes con ese email
-            const customers = await stripe.customers.list({ email, limit: 100 });
-            if (customers.data.length === 0) {
-                res.json({ data: [], total: 0 });
+            if (!email) {
+                res.status(400).json({
+                    success: false,
+                    message: 'Email es requerido',
+                    data: []
+                });
+                return;
             }
 
-            // 2️⃣ Buscar todas las sesiones de todos los clientes encontrados
+            // Buscar todos los clientes con ese email
+            const customers = await stripe.customers.list({ email, limit: 100 });
+            if (customers.data.length === 0) {
+                res.json({
+                    success: true,
+                    data: [],
+                    total: 0,
+                    message: 'No se encontraron compras para este email'
+                });
+                return;
+            }
+
+            // Buscar todas las sesiones de todos los clientes encontrados
             let allSessions: any[] = [];
             for (const customer of customers.data) {
                 const sessions = await getAllSessions(stripe, customer.id);
                 allSessions.push(...sessions);
             }
 
-            // 3️⃣ Traer line_items de cada sesión
+            // Traer line_items de cada sesión
             const pedidosConItems = await Promise.all(
                 allSessions.map(async (session) => {
                     const lineItems = await getAllLineItems(stripe, session.id);
@@ -166,12 +181,22 @@ export class CompraController {
                 })
             );
 
-            // 4️⃣ Ordenar pedidos por fecha de creación
+            // Ordenar pedidos por fecha de creación
             pedidosConItems.sort((a, b) => b.created - a.created);
 
-            res.json({ data: pedidosConItems, total: pedidosConItems.length });
+            res.json({
+                success: true,
+                data: pedidosConItems,
+                total: pedidosConItems.length,
+                message: 'Compras obtenidas correctamente'
+            });
         } catch (error: any) {
-            res.status(500).json({ error: error.message });
+            console.error("Error al obtener compras por email:", error);
+            res.status(500).json({
+                success: false,
+                message: 'Error interno del servidor',
+                error: error.message
+            });
         }
     }
 }
