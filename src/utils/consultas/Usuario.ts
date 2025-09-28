@@ -1,10 +1,9 @@
 import { supabase } from "../../database/db";
 
 export interface UsuarioInsertado {
-    id: string;
+    id_usuario: string;
     nombre: string;
     correo: string;
-    avatar: string;
 }
 
 export async function CheckearUsuario(user_id: string): Promise<{ existe: boolean }> {
@@ -12,8 +11,8 @@ export async function CheckearUsuario(user_id: string): Promise<{ existe: boolea
         // maybeSingle devuelve Usuario | null
         const { data: userCheck, error } = await supabase
             .from("usuarios")
-            .select("id")
-            .eq("id", user_id)
+            .select("id_usuario")
+            .eq("id_usuario", user_id)
             .maybeSingle();
 
         if (error) throw error;
@@ -29,13 +28,12 @@ export async function InsertarUsuario(
     usuario_id: string,
     nombre: string,
     correo: string,
-    avatar: string
 ): Promise<UsuarioInsertado> {
     try {
         const { data, error } = await supabase
             .from("usuarios")
-            .insert([{ id: usuario_id, nombre, correo, avatar }])
-            .select("id, nombre, correo, avatar")
+            .insert([{ id_usuario: usuario_id, nombre, correo, id_rol: 1 }])
+            .select("id_usuario, nombre, correo")
             .maybeSingle();
 
         if (error) throw new Error(`Error al insertar usuario: ${error.message}`);

@@ -21,14 +21,13 @@ export class UsuariosModel {
      */
     static async autenticarUsuario(data: UsuarioData): Promise<UsuarioResponse> {
         try {
-            const { usuario_id, nombre, correo, avatar } = data;
+            const { usuario_id, nombre, correo } = data;
 
             // Validación con Zod
             const resultadoValidarUsuario = UsuarioValidation.RevisarUsuario({
                 id: usuario_id,
                 nombre,
                 correo,
-                avatar
             });
 
             if (!resultadoValidarUsuario.success) {
@@ -44,20 +43,20 @@ export class UsuariosModel {
 
             if (!existe) {
                 console.log('Creando usuario...');
-                await InsertarUsuario(resultadoValidarUsuario.data.id, resultadoValidarUsuario.data.nombre, resultadoValidarUsuario.data.correo, resultadoValidarUsuario.data.avatar ?? '');
+                await InsertarUsuario(resultadoValidarUsuario.data.id, resultadoValidarUsuario.data.nombre, resultadoValidarUsuario.data.correo);
 
                 return {
                     success: true,
                     creado: true,
                     message: 'Registro exitoso',
-                    data: { usuario_id, nombre, correo, avatar }
+                    data: { usuario_id, nombre, correo }
                 };
             } else {
                 return {
                     success: true,
                     creado: false,
                     message: 'Usuario ya registrado',
-                    data: { usuario_id, nombre, correo, avatar }
+                    data: { usuario_id, nombre, correo }
                 };
             }
 
@@ -90,14 +89,13 @@ export class UsuariosModel {
      */
     static async crearUsuario(data: UsuarioData): Promise<UsuarioResponse> {
         try {
-            const { usuario_id, nombre, correo, avatar } = data;
+            const { usuario_id, nombre, correo } = data;
 
             // Validación con Zod
             const resultadoValidarUsuario = UsuarioValidation.RevisarUsuario({
                 id: usuario_id,
                 nombre,
                 correo,
-                avatar
             });
 
             if (!resultadoValidarUsuario.success) {
@@ -119,13 +117,13 @@ export class UsuariosModel {
             }
 
             // Crear usuario
-            await InsertarUsuario(usuario_id, nombre, correo, avatar ?? '');
+            await InsertarUsuario(usuario_id, nombre, correo);
 
             return {
                 success: true,
                 creado: true,
                 message: 'Usuario creado exitosamente',
-                data: { usuario_id, nombre, correo, avatar }
+                data: { usuario_id, nombre, correo }
             };
 
         } catch (error) {

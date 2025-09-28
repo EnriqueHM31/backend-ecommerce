@@ -10,17 +10,14 @@ export class ModeloProductos {
         .select(`
               id,
               sku,
-              precio_base,
+              precio,
               stock,
               imagen_url,
-              activo,
-              created_at,
               productos_base (
                 id,
                 nombre,
                 descripcion,
                 marca,
-                activo,
                 categorias (
                   nombre
                 )
@@ -33,8 +30,7 @@ export class ModeloProductos {
                 camara,
                 bateria,
                 conectividad,
-                sistema_operativo,
-                activa
+                sistema_operativo
               ),
               colores (
                 nombre
@@ -47,7 +43,6 @@ export class ModeloProductos {
                 tipo
               )
             `)
-        .eq('activo', true)
 
 
       if (error) throw error

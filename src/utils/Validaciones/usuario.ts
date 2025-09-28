@@ -5,7 +5,6 @@ export const UsuarioSchema = z.object({
     id: z.string(),
     nombre: z.string(),
     correo: z.string(),
-    avatar: z.string().url().optional(),
 });
 
 
