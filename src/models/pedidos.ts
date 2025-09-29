@@ -343,4 +343,46 @@ export class PedidosModel {
             };
         }
     }
+
+
+    static async obtenerTodosLosPedidos() {
+        try {
+            const { data, error } = await supabase
+                .from("pedidos")
+                .select(`
+                    id,
+                    fecha_pedido,
+                    estado,
+                    total,
+                    direcciones (
+                        direccion_1,
+                        direccion_2,
+                        ciudad,
+                        estado,
+                        codigo_postal,
+                        pais
+                    ),
+                    pedido_items (
+                        id,
+                        producto_id,
+                        cantidad,
+                        precio_unitario,
+                        subtotal
+                    ),
+                    usuarios (
+                        id_usuario,
+                        nombre,
+                        correo
+                    )
+                `);
+
+
+            if (error) throw error;
+
+            return { success: true, data, message: "Pedidos obtenidos con éxito" };
+        } catch (error: any) {
+            return { success: false, message: error.message };
+        }
+    }
+
 }

@@ -47,6 +47,8 @@ export class CompraController {
                 return;
             }
 
+            console.log("ENTRO CREAR SESOOON");
+
             // Crear sesión de pago
             const { success, data, message } = await ModeloCompra.crearSesion(items, customer);
 

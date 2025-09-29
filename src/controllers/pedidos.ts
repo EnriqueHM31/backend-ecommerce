@@ -24,9 +24,6 @@ export class PedidosController {
         res.status(statusCode).json(resultado);
     }
 
-
-
-
     static async obtenerPedidosPorId(req: Request, res: Response) {
         const user_id = req.params.user_id;
 
@@ -52,5 +49,20 @@ export class PedidosController {
 
         const statusCode = resultado.success ? 200 : (resultado.message.includes('no encontrado') ? 404 : 400);
         res.status(statusCode).json(resultado);
+    }
+
+    static async obtenerTodosLosPedidos(_req: Request, res: Response) {
+        try {
+            const resultado = await PedidosModel.obtenerTodosLosPedidos();
+
+            const statusCode = resultado.success ? 200 : 500;
+            res.status(statusCode).json(resultado);
+        } catch (error) {
+            console.error(error);
+            res.status(500).json({
+                success: false,
+                message: "Error al obtener los pedidos",
+            });
+        }
     }
 }

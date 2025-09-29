@@ -9,5 +9,7 @@ RouterCompras.post('/crear-pedido', PedidosController.crearPedido);
 // GET /api/compras/usuario/:user_id - Obtener TODOS los pedidos de un usuario (sin paginación)
 RouterCompras.get('/usuario/:user_id', PedidosController.obtenerPedidosPorId);
 
-// PUT /api/compras/pedido/:id/estado - Actualizar estado del pedido
+//  GET /api/compras/todos - Obtener TODOS los pedidos (sin paginación)
+RouterCompras.get('/pedidos/todos', PedidosController.obtenerTodosLosPedidos);
+
 

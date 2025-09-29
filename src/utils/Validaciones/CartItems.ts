@@ -2,14 +2,12 @@ import { z } from "zod";
 import type { CartItem } from "../../types/producto";
 // Schema del producto
 export const ProductoSchema = z.object({
-    activo: z.number(),
     almacenamiento: z.string(),
     bateria: z.string().nullable(),
     camara: z.string().nullable(),
     categoria: z.string(),
     color: z.string(),
     conectividad: z.string().nullable(),
-    created_at: z.string(),
     descripcion: z.string(),
     display: z.string().nullable(),
     id: z.number(),
@@ -21,7 +19,6 @@ export const ProductoSchema = z.object({
     producto_id: z.number(),
     ram_especificacion: z.string(),
     ram_variante: z.string(),
-    recomendado: z.number(),
     sistema_operativo: z.string().nullable(),
     sku: z.string(),
     stock: z.number(),

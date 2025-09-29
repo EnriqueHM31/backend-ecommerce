@@ -3,4 +3,6 @@ import { ProductosController } from "../controllers/productos";
 
 export const ProductosRouter = Router();
 
-ProductosRouter.get("/todos", ProductosController.ListarProductos); 
+ProductosRouter.get("/todos", ProductosController.ListarProductos);
+
+ProductosRouter.get("/top", ProductosController.topProductos);
