@@ -1,0 +1,14 @@
+{
+  "extends": "../tsconfig.json",
+  "compilerOptions": {
+    "rootDir": "../",                // 👈 sobreescribes aquí
+    "types": ["jest", "node"],
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true
+  },
+  "include": [
+    "**/*.ts",
+    "../src/**/*.ts",
+    "../test/**/*.ts"                // 👈 asegura que incluya tests
+  ]
+}

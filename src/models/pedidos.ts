@@ -1,5 +1,6 @@
 import { supabase } from '@/database/db';
 import { disminuirStock, obtenerCompras, restaurarStock } from '../utils/consultas/compras';
+import { CartItem } from '@/types/producto';
 
 export interface PedidoItem {
     producto_id: string;
@@ -11,7 +12,7 @@ export interface PedidoItem {
 export interface CrearPedidoData {
     user_id: string;
     cart_items: Array<{ id: string; quantity: number }>;
-    direccion_envio: string;
+    direccion_envio: Domicilio;
     referencias: string;
     checkout_session_id: string;
 }
@@ -22,12 +23,34 @@ export interface PedidoResponse {
     data?: any;
 }
 
+export interface DomicilioResponse {
+    success: boolean;
+    message: string;
+    data?: string;
+}
+
+export interface Domicilio {
+    line1: string;
+    line2: string;
+    city: string;
+    state: string;
+    postal_code: string;
+    country: string;
+}
+
+export interface dataCrearPedido {
+    user_id: string;
+    cart_items: Array<{ id: CartItem; quantity: number }>;
+    direccion_envio: Domicilio;
+    checkout_session_id: string;
+}
+
 export class PedidosModel {
     /**
      * Crea un nuevo pedido con validaciones de stock y usuario
      */
     static async crearPedido(data: CrearPedidoData): Promise<PedidoResponse> {
-        const { user_id, cart_items, direccion_envio, referencias, checkout_session_id } = data;
+        const { user_id, cart_items, direccion_envio, checkout_session_id } = data;
 
         try {
             // 1. Verificar si ya existe pedido para esa sesión
@@ -48,8 +71,8 @@ export class PedidosModel {
             // 2. Verificar usuario
             const { data: usuario, error: errorUsuario } = await supabase
                 .from('usuarios')
-                .select('id')
-                .eq('id', user_id)
+                .select('id_usuario')
+                .eq('id_usuario', user_id)
                 .single();
 
             if (errorUsuario || !usuario) {
@@ -63,7 +86,7 @@ export class PedidosModel {
             const productIds = cart_items.map((i: { id: string }) => i.id);
             const { data: productosDB, error: errorProductosDB } = await supabase
                 .from('productos_sku')
-                .select('id, sku, precio_base, stock')
+                .select('id, sku, precio, stock')
                 .in('id', productIds);
 
             if (errorProductosDB || !productosDB) {
@@ -83,6 +106,9 @@ export class PedidosModel {
                 };
             }
 
+            // 5. Insertar el domicilio
+            const { data: domicilio_id } = await this.InsertarDomicilio(direccion_envio.line1, direccion_envio.line2, direccion_envio.city, direccion_envio.state, direccion_envio.postal_code, direccion_envio.country, user_id);
+
             // 5. Crear el pedido principal
             const { data: pedido, error: errorPedido } = await supabase
                 .from('pedidos')
@@ -90,10 +116,8 @@ export class PedidosModel {
                     {
                         id: checkout_session_id,
                         usuario_id: user_id,
+                        direccion_envio_id: domicilio_id,
                         total,
-                        direccion_envio,
-                        referencias,
-                        estado: 'pendiente',
                     }
                 ])
                 .select('id')
@@ -164,7 +188,7 @@ export class PedidosModel {
                 };
             }
 
-            const precio_unitario = parseFloat(Number(producto_db.precio_base).toFixed(2));
+            const precio_unitario = parseFloat(Number(producto_db.precio).toFixed(2));
             const subtotal = precio_unitario * quantity;
             total += subtotal;
 
@@ -177,6 +201,30 @@ export class PedidosModel {
         }
 
         return { total, itemsProcesados };
+    }
+
+    private static async InsertarDomicilio(line1: string, line2: string, city: string, state: string, postal_code: string, country: string, usuario_id: string): Promise<DomicilioResponse> {
+
+
+        const { data, error } = await supabase
+            .from('direcciones')
+            .insert([{
+                usuario_id,
+                direccion_1: line1,
+                direccion_2: line2,
+                ciudad: city,
+                estado: state,
+                codigo_postal: postal_code,
+                pais: country
+            }])
+            .select('id_direccion')
+            .single();
+
+        if (error) throw error;
+        if (!data) throw new Error('Error al insertar domicilio: resultado vacío');
+
+        return { success: true, message: 'Domicilio creado exitosamente', data: data.id_direccion };
+
     }
 
     /**

@@ -12,9 +12,8 @@ export class ModeloCompra {
             console.log({ productIds });
             const { data: productos, error: prodError } = await supabase
                 .from('productos_sku')
-                .select('id,sku, stock, precio_base, activo')
+                .select('id,sku, stock, precio')
                 .in('id', productIds)
-                .eq('activo', true);
 
             if (prodError || !productos || productos.length === 0) throw new Error('No se encontraron productos activos' + JSON.stringify(prodError));
 
