@@ -10,6 +10,8 @@ import { UsuarioRouter } from './routes/usuario.routes';
 //import { PrediccionRouter } from './routes/prediccion.routes';
 import { PORT } from './config';
 import RouterCategorias from './routes/categorias.routes';
+import RouterTecnicos from './routes/tecnicos.routes';
+import RouterCreateProductos from './routes/createProductos.routes';
 
 
 const app = express();
@@ -39,6 +41,9 @@ app.use('/api/usuario', UsuarioRouter);
 //app.use('/api', RouterPrediccion);
 app.use('/api', RouterCompras);
 app.use('/api/categorias', RouterCategorias);
+app.use('/api/tecnicos', RouterTecnicos);
+
+app.use('/api/create', RouterCreateProductos);
 
 
 app.get("/", (_req, res) => {
