@@ -59,3 +59,33 @@ npm run test:watch
 # Ejecutar con cobertura
 npm run test:coverage
 ```
+# Análisis de Tests en la Carpeta `test`
+
+## Descripción General
+Esta carpeta contiene las pruebas unitarias y de integración para la API de backend-ecommerce. El objetivo principal de estos tests es asegurar la calidad, robustez y confiabilidad de las funcionalidades implementadas en la API.
+
+## Herramientas Utilizadas
+- **Jest**: Framework principal para la ejecución de pruebas en el entorno Node.js. Permite realizar pruebas unitarias, de integración y mocks de dependencias.
+- **Mocks personalizados**: Se han creado mocks en la carpeta `__mocks__` para simular dependencias externas como Supabase y otros módulos, facilitando pruebas aisladas y controladas.
+
+## Pruebas Realizadas
+- **Controladores**: Se han testeado los controladores de pedidos y productos (`controllers/pedidos.test.ts`, `controllers/productos.test.ts`) para verificar el correcto funcionamiento de las rutas y la lógica de negocio.
+- **Utilidades**: Se han realizado pruebas sobre funciones de validación (`utils/validaciones.test.ts`) para asegurar que los datos procesados cumplen con los requisitos esperados.
+
+## Beneficios para la API
+- **Prevención de errores**: Los tests permiten detectar errores antes de que el código llegue a producción, reduciendo el riesgo de fallos en el servicio.
+- **Facilitan el mantenimiento**: Al contar con una base de pruebas, es más sencillo realizar cambios y refactorizaciones sin temor a romper funcionalidades existentes.
+- **Mejoran la calidad del software**: Garantizan que las funcionalidades clave de la API se comportan como se espera bajo diferentes escenarios.
+- **Documentación viva**: Los tests sirven como referencia para entender el comportamiento esperado de cada módulo y función.
+
+## Ejecución de Pruebas
+Para ejecutar los tests, utiliza el siguiente comando en la raíz del proyecto:
+
+```bash
+npm test
+```
+
+Esto ejecutará todas las pruebas definidas en la carpeta `test` utilizando Jest.
+
+---
+Si tienes dudas sobre algún test específico, revisa los archivos dentro de la carpeta para ver ejemplos y casos cubiertos.

@@ -13,6 +13,7 @@ export class ModeloProductos {
               precio,
               stock,
               imagen_url,
+              active,
               productos_base (
                 id,
                 nombre,
@@ -83,42 +84,45 @@ export class ModeloProductos {
       const { data: productos, error: errorProductos } = await supabase
         .from('productos_sku')
         .select(`
+        id,
+        sku,
+        stock,
+        imagen_url,
+        active,
+        precio,
+        productos_base (
           id,
-          sku,
-          precio,
-          stock,
-          imagen_url,
-          productos_base (
-            id,
-            nombre,
-            descripcion,
-            marca,
-            categorias (
-              nombre
-            )
-          ),
-          variantes (
-            id,
-            nombre_variante,
-            procesador,
-            display,
-            camara,
-            bateria,
-            conectividad,
-            sistema_operativo
-          ),
-          colores (
+          nombre,
+          descripcion,
+          marca,
+          categorias (
             nombre
-          ),
-          almacenamientos (
-            capacidad
-          ),
-          especificaciones_ram (
-            capacidad,
-            tipo
           )
-        `)
+        ),
+        variantes (
+          id,
+          nombre_variante,
+          procesador,
+          display,
+          camara,
+          bateria,
+          conectividad,
+          sistema_operativo
+        ),
+        colores (
+          nombre
+        ),
+        almacenamientos (
+          capacidad
+        ),
+        especificaciones_ram (
+          capacidad,
+          tipo
+        )
+      `)
         .in('id', productoIds)
+        .eq('active', true);
+
 
       if (errorProductos) throw errorProductos;
 
@@ -142,6 +146,69 @@ export class ModeloProductos {
       };
     }
   }
+
+  static async ListarProductosActivos() {
+    console.log('Listar productos activos')
+    try {
+      const { data: productos, error } = await supabase
+        .from('productos_sku')
+        .select(`
+              id,
+              sku,
+              precio,
+              stock,
+              imagen_url,
+              active,
+              productos_base (
+                id,
+                nombre,
+                descripcion,
+                marca,
+                categorias (
+                  nombre
+                )
+              ),
+              variantes (
+                id,
+                nombre_variante,
+                procesador,
+                display,
+                camara,
+                bateria,
+                conectividad,
+                sistema_operativo
+              ),
+              colores (
+                nombre
+              ),
+              almacenamientos (
+                capacidad
+              ),
+              especificaciones_ram (
+                capacidad,
+                tipo
+              )
+            `)
+        .eq('active', true)
+
+      if (error) throw error
+
+      return {
+        success: true,
+        message: 'Productos obtenidos correctamente',
+        data: productos
+      }
+    } catch (error: any) {
+      console.error('Error al obtener productos:', error)
+      return {
+        success: false,
+        message: error.message || 'Error al obtener los productos',
+        data: []
+      }
+    }
+  }
+
+
 
 
 

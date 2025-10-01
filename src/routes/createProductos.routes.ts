@@ -4,6 +4,8 @@ import { CreateProductosController } from '../controllers/createProductos';
 
 const RouterCreateProductos = Router();
 
-RouterCreateProductos.post('/', CreateProductosController.createProductosSku);
+RouterCreateProductos.post('/productos-sku', CreateProductosController.createProductosSku);
+
+RouterCreateProductos.put('/productos-sku/:id', CreateProductosController.deleteProductosSku);
 
 export default RouterCreateProductos;
