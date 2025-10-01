@@ -350,36 +350,47 @@ export class PedidosModel {
             const { data, error } = await supabase
                 .from("pedidos")
                 .select(`
-                    id,
-                    fecha_pedido,
-                    estado,
-                    total,
-                    direcciones (
-                        direccion_1,
-                        direccion_2,
-                        ciudad,
-                        estado,
-                        codigo_postal,
-                        pais
-                    ),
-                    pedido_items (
-                        id,
-                        producto_id,
-                        cantidad,
-                        precio_unitario,
-                        subtotal
-                    ),
-                    usuarios (
-                        id_usuario,
-                        nombre,
-                        correo
-                    )
-                `);
+              id,
+              fecha_pedido,
+              estado,
+              total,
+              direcciones (
+                  direccion_1,
+                  direccion_2,
+                  ciudad,
+                  estado,
+                  codigo_postal,
+                  pais
+              ),
+              pedido_items (
+                  id,
+                  producto_id,
+                  cantidad,
+                  precio_unitario,
+                  subtotal
+              ),
+              usuarios (
+                  id_usuario,
+                  nombre,
+                  correo
+              )
+            `);
+            console.log({ data })
+
+            const pedidosConHoraLocal = data?.map(pedido => ({
+                ...pedido,
+                fecha_pedido: new Date(pedido.fecha_pedido + 'Z').toLocaleString('es-MX', {
+                    timeZone: 'America/Mexico_City'
+                })
+            }));
+
+
+            console.log({ pedidosConHoraLocal })
 
 
             if (error) throw error;
 
-            return { success: true, data, message: "Pedidos obtenidos con éxito" };
+            return { success: true, data: pedidosConHoraLocal, message: "Pedidos obtenidos con éxito" };
         } catch (error: any) {
             return { success: false, message: error.message };
         }

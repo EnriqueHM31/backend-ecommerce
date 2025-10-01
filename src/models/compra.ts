@@ -1,12 +1,14 @@
+import { DIRECCION_PAYMENT } from "../config";
 import { obtenerStripe } from "../constants/Stripe";
-import type { CartItem, Customer } from "../types/producto";
 import { supabase } from "../database/db";
+import type { CartItem, Customer } from "../types/producto";
 
 export class ModeloCompra {
     static async crearSesion(items: CartItem[], customer: Customer) {
         const stripe = obtenerStripe();
 
         try {
+
             // 1. Obtener IDs de productos
             const productIds = items.map(i => i.product.id);
             console.log({ productIds });
@@ -57,9 +59,12 @@ export class ModeloCompra {
                     },
                     quantity: item.quantity,
                 })),
-                success_url: "http://localhost:5173/success?session_id={CHECKOUT_SESSION_ID}",
-                cancel_url: "http://localhost:5173/cancel",
+                success_url: `${DIRECCION_PAYMENT}/success?session_id={CHECKOUT_SESSION_ID}`,
+                cancel_url: `${DIRECCION_PAYMENT}/cancel`,
             });
+
+
+
 
             return { success: true, data: session.url };
         } catch (error: any) {

@@ -1,12 +1,13 @@
+import { supabase } from "@/database/db";
 import { obtenerStripe } from "../constants/Stripe";
 import { ModeloCompra } from "../models/compra";
 import { CartItem } from "../types/producto";
 //import { ModeloFactura } from "../utils/contacto/factura";
+import { Request, Response } from "express";
 import { getAllLineItems, getAllSessions } from "../utils/pagos/stripe";
 import { CartItemsValidation } from "../utils/validaciones/cartItems";
 import { StripeValidation } from "../utils/validaciones/sprite";
 import { UsuarioValidation } from "../utils/validaciones/usuario";
-import { Request, Response } from "express";
 
 interface Customer {
     id: string;
@@ -97,6 +98,8 @@ export class CompraController {
                 expand: ["line_items", "customer", "line_items.data.price.product"],
             });
 
+
+
             // Verificar si ya se envió factura (usando metadata de Stripe)
             if (session.metadata?.facturaEnviada === "true") {
                 res.status(200).json({
@@ -106,7 +109,28 @@ export class CompraController {
                 });
                 return;
             }
-
+            /*
+                        await ModeloFactura.EnviarFacturaPDF({
+                            nombre: session.customer_details?.name || "Cliente",
+                            correo: session.customer_details?.email || "sin-correo@dominio.com",
+                            monto: `$${(session.amount_total === null ? 0 : session.amount_total) / 100} MXN`,
+                            fecha: new Date().toLocaleString("es-MX", { timeZone: "America/Mexico_City" }),
+            
+                            direccion1: session.customer_details?.address?.line1 || "",
+                            direccion2: session.customer_details?.address?.line2 || "",
+                            ciudad: session.customer_details?.address?.city || "",
+                            estado: session.customer_details?.address?.state || "",
+                            cp: session.customer_details?.address?.postal_code || "",
+                            pais: session.customer_details?.address?.country || "",
+            
+                            items: session.line_items?.data.map((item: any) => ({
+                                producto: item.description,
+                                cantidad: item.quantity,
+                                precio: `$${(item.price.unit_amount / 100).toFixed(2)} MXN`,
+                                total: `$${(item.amount_total / 100).toFixed(2)} MXN`,
+                            })) || [],
+                        });
+            */
             // Marcar como enviada en metadata de Stripe
             await stripe.checkout.sessions.update(sessionId as string, {
                 metadata: { ...session.metadata, facturaEnviada: "true" },
@@ -132,12 +156,17 @@ export class CompraController {
         const stripe = obtenerStripe();
 
         try {
-            const { email } = req.params;
+            const { email, id } = req.params;
 
-            if (!email) {
-                res.status(400).json({
+            const { data: pedidos, error: pedidosError } = await supabase
+                .from('pedidos')
+                .select('id')
+                .eq('usuario_id', id)
+
+            if (pedidosError || !pedidos || pedidos.length === 0) {
+                res.status(200).json({
                     success: false,
-                    message: 'Email es requerido',
+                    message: 'No se encontraron pedidos',
                     data: []
                 });
                 return;

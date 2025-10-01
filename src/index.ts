@@ -10,8 +10,8 @@ import { UsuarioRouter } from './routes/usuario.routes';
 //import { PrediccionRouter } from './routes/prediccion.routes';
 import { PORT } from './config';
 import RouterCategorias from './routes/categorias.routes';
-import RouterTecnicos from './routes/tecnicos.routes';
 import RouterCreateProductos from './routes/createProductos.routes';
+import RouterTecnicos from './routes/tecnicos.routes';
 
 
 const app = express();
@@ -19,6 +19,7 @@ app.use(express.json());
 
 const allowedOrigins = ['http://localhost:3000', 'http://localhost:3001', 'http://localhost:5173',
     'http://192.168.1.104:5173', 'https://dentista-ckilsr2uh-enrique-s-projects-104cc828.vercel.app', 'https://dentista-web-eight.vercel.app', "http://192.168.56.1:5173", "https://ecommerce-recomendaciones.vercel.app"];
+
 
 
 
@@ -32,7 +33,6 @@ app.use(cors({
     },
     credentials: true
 }));
-
 
 app.use('/api', ComentariosRouter);
 app.use('/api/productos', ProductosRouter);

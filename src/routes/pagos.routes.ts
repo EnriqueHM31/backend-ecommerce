@@ -9,6 +9,6 @@ PagosRouter.post("/checkout-session", CompraController.RealizarCompra);
 
 PagosRouter.get("/checkout-session", CompraController.ObtenerCompraIdSession);
 
-PagosRouter.get("/pedidos/:email", CompraController.ObtenerComprasPorEmail);
+PagosRouter.get("/pedidos/:email/:id", CompraController.ObtenerComprasPorEmail);
 
 

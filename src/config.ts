@@ -14,3 +14,5 @@ export const TIPO_SERVICIO_MESSAGE = "gmail"
 // DATABASE
 export const SUPABASE_URL = process.env.SUPABASE_URL;
 export const SUPABASE_ANON_KEY = process.env.SUPABASE_ANON_KEY;
+
+export const DIRECCION_PAYMENT = process.env.DIRECCION_PAYMENT;
