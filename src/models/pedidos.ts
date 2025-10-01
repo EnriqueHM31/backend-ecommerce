@@ -396,4 +396,58 @@ export class PedidosModel {
         }
     }
 
+    static async updateEstadoPedido(pedido_id: string, nuevo_estado: string): Promise<PedidoResponse> {
+        const estados_validos = ['pendiente', 'confirmado', 'enviado', 'entregado', 'cancelado'];
+
+        try {
+            // Validación de estado
+            if (!nuevo_estado || !estados_validos.includes(nuevo_estado)) {
+                return {
+                    success: false,
+                    message: 'Estado no válido',
+                    data: { estados_validos }
+                };
+            }
+
+            // 1. Obtener estado actual del pedido
+            const { data: pedido, error: errorPedido } = await supabase
+                .from('pedidos')
+                .select('estado')
+                .eq('id', pedido_id)
+                .single();
+
+            if (errorPedido || !pedido) {
+                return {
+                    success: false,
+                    message: 'Pedido no encontrado'
+                };
+            }
+            const estado_actual = pedido.estado;
+
+
+            // 4. Actualizar estado del pedido
+            const { error: errorUpdate } = await supabase
+                .from('pedidos')
+                .update({ estado: nuevo_estado })
+                .eq('id', pedido_id);
+
+            if (errorUpdate) throw errorUpdate;
+
+            return {
+                success: true,
+                message: `Estado del pedido actualizado a: ${nuevo_estado}`,
+                data: {
+                    pedido_id,
+                    estado_anterior: estado_actual,
+                    estado_nuevo: nuevo_estado
+                }
+            };
+        } catch (error) {
+            console.error('Error al actualizar estado:', error);
+            return {
+                success: false,
+                message: 'Error interno del servidor'
+            };
+        }
+    }
 }

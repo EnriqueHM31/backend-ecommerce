@@ -13,3 +13,8 @@ RouterCompras.get('/usuario/:user_id', PedidosController.obtenerPedidosPorId);
 RouterCompras.get('/pedidos/todos', PedidosController.obtenerTodosLosPedidos);
 
 
+// GET /api/compras/pedido/status/:id - Obtener el estado de un pedido
+RouterCompras.put('/pedidos/status/:id', PedidosController.updateEstadoPedido);
+
+
+

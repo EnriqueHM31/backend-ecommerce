@@ -65,4 +65,23 @@ export class PedidosController {
             });
         }
     }
+
+    static async updateEstadoPedido(req: Request, res: Response) {
+
+        const pedido_id = req.params.id
+        const { nuevo_estado } = req.body;
+
+        if (!pedido_id || !nuevo_estado) {
+            res.status(400).json({
+                success: false,
+                message: 'ID de pedido no válido'
+            });
+            return;
+        }
+
+        const resultado = await PedidosModel.updateEstadoPedido(pedido_id, nuevo_estado);
+
+        const statusCode = resultado.success ? 200 : 400;
+        res.status(statusCode).json(resultado);
+    }
 }
