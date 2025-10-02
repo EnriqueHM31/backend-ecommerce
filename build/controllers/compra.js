@@ -10,7 +10,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.CompraController = void 0;
-const db_1 = require("@/database/db");
+const db_1 = require("../database/db");
 const Stripe_1 = require("../constants/Stripe");
 const compra_1 = require("../models/compra");
 const stripe_1 = require("../utils/pagos/stripe");
@@ -150,9 +150,11 @@ class CompraController {
                     res.status(400).json({ success: false, error: usuarioError.message });
                 const usuarioDB = (_b = usuario === null || usuario === void 0 ? void 0 : usuario[0]) !== null && _b !== void 0 ? _b : null;
                 // 6️⃣ Construir objeto final
-                const pedidoConItemsYDireccion = Object.assign(Object.assign({}, pedido), { fecha_pedido: new Date(pedido.fecha_pedido + 'Z').toLocaleString('es-MX', {
+                const pedidoConItemsYDireccion = Object.assign(Object.assign({}, pedido), {
+                    fecha_pedido: new Date(pedido.fecha_pedido + 'Z').toLocaleString('es-MX', {
                         timeZone: 'America/Mexico_City'
-                    }), items: itemsConProductos, direccion, usuario: usuarioDB });
+                    }), items: itemsConProductos, direccion, usuario: usuarioDB
+                });
                 res.status(200).json({ success: true, data: pedidoConItemsYDireccion });
             }
             catch (err) {
@@ -309,9 +311,11 @@ class CompraController {
                     var _a, _b;
                     return (Object.assign(Object.assign({}, pedido), { items: itemsConProductos.filter(item => item.pedido_id === pedido.id), direccion: (_a = direcciones === null || direcciones === void 0 ? void 0 : direcciones.find(d => d.id_direccion === pedido.direccion_envio_id)) !== null && _a !== void 0 ? _a : null, usuario: (_b = usuarios === null || usuarios === void 0 ? void 0 : usuarios.find(u => u.id_usuario === pedido.usuario_id)) !== null && _b !== void 0 ? _b : null }));
                 });
-                const pedidosConHoraLocal = pedidosConItemsYDireccion === null || pedidosConItemsYDireccion === void 0 ? void 0 : pedidosConItemsYDireccion.map(pedido => (Object.assign(Object.assign({}, pedido), { fecha_pedido: new Date(pedido.fecha_pedido + 'Z').toLocaleString('es-MX', {
+                const pedidosConHoraLocal = pedidosConItemsYDireccion === null || pedidosConItemsYDireccion === void 0 ? void 0 : pedidosConItemsYDireccion.map(pedido => (Object.assign(Object.assign({}, pedido), {
+                    fecha_pedido: new Date(pedido.fecha_pedido + 'Z').toLocaleString('es-MX', {
                         timeZone: 'America/Mexico_City'
-                    }) })));
+                    })
+                })));
                 res.status(200).json({ success: true, data: pedidosConHoraLocal });
             }
             catch (err) {

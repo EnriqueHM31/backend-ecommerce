@@ -10,7 +10,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.ModeloCreateProductos = void 0;
-const db_1 = require("@/database/db");
+const db_1 = require("../database/db");
 class ModeloCreateProductos {
     static createProductos(sku, producto_base_id, variante_id, color_id, almacenamiento_id, ram_id, stock, imagen_url, precio) {
         return __awaiter(this, void 0, void 0, function* () {
@@ -30,18 +30,18 @@ class ModeloCreateProductos {
                 const { data: productos, error } = yield db_1.supabase
                     .from('productos_sku')
                     .insert([
-                    {
-                        sku,
-                        producto_base_id,
-                        variante_id,
-                        color_id,
-                        almacenamiento_id,
-                        ram_id,
-                        stock,
-                        imagen_url,
-                        precio,
-                    },
-                ])
+                        {
+                            sku,
+                            producto_base_id,
+                            variante_id,
+                            color_id,
+                            almacenamiento_id,
+                            ram_id,
+                            stock,
+                            imagen_url,
+                            precio,
+                        },
+                    ])
                     .select(`
     id,
     sku,
