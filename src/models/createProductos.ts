@@ -1,5 +1,5 @@
 
-import { supabase } from "@/database/db";
+import { supabase } from "../database/db";
 export class ModeloCreateProductos {
   static async createProductos(
     sku: string,

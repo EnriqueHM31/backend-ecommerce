@@ -1,4 +1,4 @@
-import { supabase } from "@/database/db";
+import { supabase } from "../database/db";
 import { obtenerStripe } from "../constants/Stripe";
 import { ModeloCompra } from "../models/compra";
 import { CartItem } from "../types/producto";
