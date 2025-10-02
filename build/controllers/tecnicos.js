@@ -9,21 +9,23 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.AutenticacionController = void 0;
-const usuarios_1 = require("../models/usuarios");
-class AutenticacionController {
-    static Auth(req, res) {
+exports.TecnicosController = void 0;
+const tecnicos_1 = require("../models/tecnicos");
+class TecnicosController {
+    static obtenerTecnicos(_req, res) {
         return __awaiter(this, void 0, void 0, function* () {
-            const { usuario_id, nombre, correo, avatar } = req.body;
-            const resultado = yield usuarios_1.UsuariosModel.autenticarUsuario({
-                usuario_id,
-                nombre,
-                correo,
-                avatar
-            });
-            const statusCode = resultado.success ? 203 : 400;
-            res.status(statusCode).json(resultado);
+            try {
+                const resultDataProductos = yield tecnicos_1.ModeloTecnicos.ListarTecnicos();
+                if (!resultDataProductos.success) {
+                    res.status(400).json({ success: false, message: resultDataProductos.message });
+                    return;
+                }
+                res.status(200).json({ success: true, data: resultDataProductos.data, message: resultDataProductos.message });
+            }
+            catch (error) {
+                res.status(500).json({ success: false, message: "Error interno del servidor" });
+            }
         });
     }
 }
-exports.AutenticacionController = AutenticacionController;
+exports.TecnicosController = TecnicosController;

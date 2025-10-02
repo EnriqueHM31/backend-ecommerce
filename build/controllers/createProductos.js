@@ -9,13 +9,15 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.ProductosController = void 0;
-const productos_1 = require("../models/productos");
-class ProductosController {
-    static ListarProductos(_req, res) {
+exports.CreateProductosController = void 0;
+const createProductos_1 = require("../models/createProductos");
+class CreateProductosController {
+    static createProductosSku(req, res) {
         return __awaiter(this, void 0, void 0, function* () {
             try {
-                const resultDataProductos = yield productos_1.ModeloProductos.ListarProductos();
+                const { sku, producto_base_id, variante_id, color_id, almacenamiento_id, ram_id, stock, imagen_url, precio } = req.body;
+                console.log({ sku, producto_base_id, variante_id, color_id, almacenamiento_id, ram_id, stock, imagen_url, precio });
+                const resultDataProductos = yield createProductos_1.ModeloCreateProductos.createProductos(sku, producto_base_id, variante_id, color_id, almacenamiento_id, ram_id, stock, imagen_url, precio);
                 if (!resultDataProductos.success) {
                     res.status(400).json({ success: false, message: resultDataProductos.message });
                     return;
@@ -27,25 +29,11 @@ class ProductosController {
             }
         });
     }
-    static topProductos(_req, res) {
+    static deleteProductosSku(req, res) {
         return __awaiter(this, void 0, void 0, function* () {
             try {
-                const resultDataProductos = yield productos_1.ModeloProductos.topProductos();
-                if (!resultDataProductos.success) {
-                    res.status(400).json({ success: false, message: resultDataProductos.message });
-                    return;
-                }
-                res.status(200).json({ success: true, data: resultDataProductos.data, message: resultDataProductos.message });
-            }
-            catch (error) {
-                res.status(500).json({ success: false, message: "Error interno del servidor" });
-            }
-        });
-    }
-    static ListarProductosActivos(_req, res) {
-        return __awaiter(this, void 0, void 0, function* () {
-            try {
-                const resultDataProductos = yield productos_1.ModeloProductos.ListarProductosActivos();
+                const { id } = req.params;
+                const resultDataProductos = yield createProductos_1.ModeloCreateProductos.deleteProductosSku(id);
                 if (!resultDataProductos.success) {
                     res.status(400).json({ success: false, message: resultDataProductos.message });
                     return;
@@ -58,4 +46,4 @@ class ProductosController {
         });
     }
 }
-exports.ProductosController = ProductosController;
+exports.CreateProductosController = CreateProductosController;

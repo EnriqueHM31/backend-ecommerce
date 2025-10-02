@@ -14,17 +14,40 @@ exports.InsertarUsuario = InsertarUsuario;
 const db_1 = require("../../database/db");
 function CheckearUsuario(user_id) {
     return __awaiter(this, void 0, void 0, function* () {
-        const [userCheck] = yield db_1.db.execute('SELECT id FROM customer WHERE id = ?', [user_id]);
-        if (userCheck.length !== 0)
-            return { existe: true };
-        return { existe: false };
+        try {
+            // maybeSingle devuelve Usuario | null
+            const { data: userCheck, error } = yield db_1.supabase
+                .from("usuarios")
+                .select("id_usuario")
+                .eq("id_usuario", user_id)
+                .maybeSingle();
+            if (error)
+                throw error;
+            return { existe: !!userCheck };
+        }
+        catch (err) {
+            console.error("Error verificando usuario:", err);
+            throw err;
+        }
     });
 }
-function InsertarUsuario(usuario_id, nombre, correo, avatar) {
+function InsertarUsuario(usuario_id, nombre, correo) {
     return __awaiter(this, void 0, void 0, function* () {
-        const connection = yield db_1.db.getConnection();
-        const [resultInsert] = yield connection.query("INSERT INTO customer (id, nombre, correo, avatar) VALUES (?, ?, ?, ?)", [usuario_id, nombre, correo, avatar]);
-        if (!resultInsert)
-            throw new Error("Error al insertar usuario");
+        try {
+            const { data, error } = yield db_1.supabase
+                .from("usuarios")
+                .insert([{ id_usuario: usuario_id, nombre, correo, id_rol: 1 }])
+                .select("id_usuario, nombre, correo")
+                .maybeSingle();
+            if (error)
+                throw new Error(`Error al insertar usuario: ${error.message}`);
+            if (!data)
+                throw new Error("Error al insertar usuario: resultado vacío");
+            return data;
+        }
+        catch (err) {
+            console.error("Error insertando usuario:", err);
+            throw err;
+        }
     });
 }

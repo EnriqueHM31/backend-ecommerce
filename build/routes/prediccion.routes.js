@@ -13,13 +13,13 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = require("express");
-const Prediccion2_1 = require("../class/Prediccion2");
+const Prediccion_1 = require("../class/Prediccion");
 const predicciones_1 = require("../utils/pagos/predicciones");
 const fs_1 = __importDefault(require("fs"));
 const prediccion_1 = require("../constants/prediccion");
 const db_1 = require("../database/db");
 const RouterPrediccion = (0, express_1.Router)();
-const sistemaRecomendacion = new Prediccion2_1.FiltradoColaborativo();
+const sistemaRecomendacion = new Prediccion_1.FiltradoColaborativo();
 const cargarCompras = () => {
     if (!fs_1.default.existsSync(prediccion_1.DATA_FILE))
         return [];
@@ -139,7 +139,17 @@ RouterPrediccion.post('/cargar', (_req, res) => __awaiter(void 0, void 0, void 0
 RouterPrediccion.get('/usuario/:usuario', validarUsuario, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const { usuario } = req.params;
-        const { limite = '5', metodo = 'coseno', } = req.query;
+        const { limite = '4', metodo = 'coseno', } = req.query;
+        if (!usuario) {
+            const populares = sistemaRecomendacion.obtenerProductosPopulares();
+            res.json({
+                success: true,
+                usuario,
+                recomendaciones: null,
+                populares,
+                total: populares === null || populares === void 0 ? void 0 : populares.length
+            });
+        }
         const topK = parseInt(limite);
         const algoritmo = metodo;
         if (isNaN(topK) || topK <= 0 || topK > 50) {
@@ -154,13 +164,14 @@ RouterPrediccion.get('/usuario/:usuario', validarUsuario, (req, res) => __awaite
                 error: 'El método debe ser "coseno" o "pearson"'
             });
         }
-        const recomendaciones = yield sistemaRecomendacion.predecir(usuario, topK, algoritmo);
+        const { recomendaciones, populares } = yield sistemaRecomendacion.predecir(usuario, topK, algoritmo);
         res.json({
             success: true,
             usuario,
             metodo: algoritmo,
             recomendaciones,
-            total: recomendaciones.length
+            populares,
+            total: (recomendaciones === null || recomendaciones === void 0 ? void 0 : recomendaciones.length) || (populares === null || populares === void 0 ? void 0 : populares.length)
         });
     }
     catch (error) {
@@ -243,30 +254,23 @@ RouterPrediccion.post("/usuario/recomendar", (req, res) => __awaiter(void 0, voi
     try {
         const compras = req.body.compras;
         const { id_usuario } = req.body;
-        const connection = yield db_1.db.getConnection();
         if (!compras || compras.length === 0) {
-            const [resultItems] = yield connection.query(`SELECT 
-    pi.cantidad,
-    ps.sku,
-    pb.nombre_variante
-FROM 
-    pedido_items pi
-JOIN 
-    pedidos p ON p.id = pi.pedido_id
-JOIN 
-    productos_sku ps ON ps.id = pi.producto_id
-JOIN
-    variantes pb ON ps.variante_id = pb.id
-WHERE 
-    p.usuario_id = ?;
-`, [id_usuario]);
-            if (!resultItems) {
+            const { data: resultItems, error } = yield db_1.supabase.rpc('get_user_purchases', {
+                user_id_param: id_usuario
+            });
+            if (error) {
+                console.error('Error fetching user purchases:', error);
+                res.status(500).json({ error: 'Error al obtener compras del usuario' });
+                return;
+            }
+            if (!resultItems || resultItems.length === 0) {
                 const { populares } = yield sistemaRecomendacion.agregarUsuario(compras);
                 res.json({
                     mensaje: "✅ Usuario agregado y modelo actualizado",
                     recomendaciones: null,
                     populares
                 });
+                return;
             }
             const transformados = resultItems.map((item) => ({
                 usuario: id_usuario,

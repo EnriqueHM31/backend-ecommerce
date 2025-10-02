@@ -20,15 +20,16 @@ exports.ModificarEstado = ModificarEstado;
 const db_1 = require("../../database/db");
 function CheckearProducto(product, quantity) {
     return __awaiter(this, void 0, void 0, function* () {
-        const [productCheck] = yield db_1.db.execute(`
-        SELECT id, producto, precio_base, stock, activo 
-        FROM productos_sku 
-        WHERE id = ? AND activo = 1
-    `, [product.id]);
-        if (productCheck) {
+        const { data: productCheck, error } = yield db_1.supabase
+            .from('productos_sku')
+            .select('id, producto, precio_base, stock, activo')
+            .eq('id', product.id)
+            .eq('activo', 1)
+            .single();
+        if (error || !productCheck) {
             throw new Error(`Producto no encontrado o inactivo: ${product.producto}`);
         }
-        const producto_db = productCheck[0];
+        const producto_db = productCheck;
         // Verificar stock disponible
         if (producto_db.stock < quantity) {
             throw new Error(`Stock insuficiente para ${producto_db.producto}. Disponible: ${producto_db.stock}, Solicitado: ${quantity}`);
@@ -38,81 +39,130 @@ function CheckearProducto(product, quantity) {
 }
 function CrearCompra(user_id_1, total_1) {
     return __awaiter(this, arguments, void 0, function* (user_id, total, direccion_envio = '', referencias = '') {
-        const [pedidoResult] = yield db_1.db.execute(`
-        INSERT INTO pedidos (usuario_id, total, direccion_envio, referencias)
-        VALUES (?, ?, ?, ?)
-    `, [user_id, total.toFixed(2), direccion_envio, referencias]);
-        const pedido_id = pedidoResult[0].insertId;
+        const { data: pedidoResult, error } = yield db_1.supabase
+            .from('pedidos')
+            .insert({
+            usuario_id: user_id,
+            total: total.toFixed(2),
+            direccion_envio: direccion_envio,
+            referencias: referencias
+        })
+            .select('id')
+            .single();
+        if (error) {
+            throw new Error(`Error al crear pedido: ${error.message}`);
+        }
+        const pedido_id = pedidoResult.id;
         return { pedido_id };
     });
 }
 function InsertarItems(pedido_id, item) {
     return __awaiter(this, void 0, void 0, function* () {
-        const [itemsResult] = yield db_1.db.execute(`
-        INSERT INTO pedido_items (pedido_id, producto_id, cantidad, precio_unitario, subtotal)
-        VALUES (?, ?, ?, ?, ?)
-    `, [pedido_id, item.producto_id, item.cantidad, item.precio_unitario, item.subtotal
-        ]);
-        if (!itemsResult)
-            throw new Error("Error al crear el pedido");
+        const { data: itemsResult, error } = yield db_1.supabase
+            .from('pedido_items')
+            .insert({
+            pedido_id: pedido_id,
+            producto_id: item.producto_id,
+            cantidad: item.cantidad,
+            precio_unitario: item.precio_unitario,
+            subtotal: item.subtotal
+        });
+        if (error)
+            throw new Error(`Error al crear el pedido: ${error.message}`);
+        console.log({ itemsResult });
     });
 }
 function obtenerCompras(user_id) {
     return __awaiter(this, void 0, void 0, function* () {
-        const [pedidos] = yield db_1.db.execute(`
-        SELECT 
-            p.id,
-            p.fecha_pedido,
-            p.estado,
-            p.total,
-            COUNT(pi.id) as total_items
-        FROM pedidos p
-        LEFT JOIN pedido_items pi ON p.id = pi.pedido_id
-        WHERE p.usuario_id = ?
-        GROUP BY p.id
-        ORDER BY p.fecha_pedido DESC
-    `, [user_id]);
+        const { data: pedidos, error } = yield db_1.supabase
+            .from('pedidos')
+            .select(`
+            id,
+            fecha_pedido,
+            estado,
+            total,
+            pedido_items(count)
+        `)
+            .eq('usuario_id', user_id)
+            .order('fecha_pedido', { ascending: false });
+        if (error) {
+            throw new Error(`Error al obtener compras: ${error.message}`);
+        }
         return { pedidos };
     });
 }
 function CheckearCompra(pedido_id) {
     return __awaiter(this, void 0, void 0, function* () {
-        const [pedidoCheck] = yield db_1.db.execute('SELECT * FROM pedidos WHERE id = ?', [pedido_id]);
-        const estado_actual = pedidoCheck[0].estado;
-        if (!pedidoCheck[0]) {
+        const { data: pedidoCheck, error } = yield db_1.supabase
+            .from('pedidos')
+            .select('*')
+            .eq('id', pedido_id)
+            .single();
+        if (error || !pedidoCheck) {
             throw new Error('Pedido no encontrado');
         }
+        const estado_actual = pedidoCheck.estado;
         return { estado_actual };
     });
 }
 function disminuirStock(pedido_id) {
     return __awaiter(this, void 0, void 0, function* () {
-        const [itemsResult] = yield db_1.db.execute(`
-    UPDATE productos_sku ps
-    JOIN pedido_items pi ON ps.id = pi.producto_id
-    SET ps.stock = ps.stock - pi.cantidad
-    WHERE pi.pedido_id = ?
-`, [pedido_id]);
-        if (!itemsResult)
-            throw new Error("Error al crear el pedido");
+        // First get the items for this order
+        const { data: items, error: itemsError } = yield db_1.supabase
+            .from('pedido_items')
+            .select('producto_id, cantidad')
+            .eq('pedido_id', pedido_id);
+        if (itemsError) {
+            throw new Error(`Error al obtener items del pedido: ${itemsError.message}`);
+        }
+        if (!items || items.length === 0) {
+            throw new Error("No se encontraron items para el pedido");
+        }
+        // Update stock for each item
+        for (const item of items) {
+            const { error: updateError } = yield db_1.supabase.rpc('decrease_stock', {
+                product_id: item.producto_id,
+                quantity: item.cantidad
+            });
+            if (updateError) {
+                throw new Error(`Error al disminuir stock: ${updateError.message}`);
+            }
+        }
     });
 }
 function restaurarStock(pedido_id) {
     return __awaiter(this, void 0, void 0, function* () {
-        const [itemsResult] = yield db_1.db.execute(`
-        UPDATE productos_sku ps
-        JOIN pedido_items pi ON ps.id = pi.producto_id
-        SET ps.stock = ps.stock + pi.cantidad
-        WHERE pi.pedido_id = ?
-    `, [pedido_id]);
-        if (!itemsResult)
-            throw new Error("Error al crear el pedido");
+        // First get the items for this order
+        const { data: items, error: itemsError } = yield db_1.supabase
+            .from('pedido_items')
+            .select('producto_id, cantidad')
+            .eq('pedido_id', pedido_id);
+        if (itemsError) {
+            throw new Error(`Error al obtener items del pedido: ${itemsError.message}`);
+        }
+        if (!items || items.length === 0) {
+            throw new Error("No se encontraron items para el pedido");
+        }
+        // Restore stock for each item
+        for (const item of items) {
+            const { error: updateError } = yield db_1.supabase.rpc('increase_stock', {
+                product_id: item.producto_id,
+                quantity: item.cantidad
+            });
+            if (updateError) {
+                throw new Error(`Error al restaurar stock: ${updateError.message}`);
+            }
+        }
     });
 }
 function ModificarEstado(pedido_id, nuevo_estado) {
     return __awaiter(this, void 0, void 0, function* () {
-        const [result] = yield db_1.db.execute('UPDATE pedidos SET estado = ? WHERE id = ?', [nuevo_estado, pedido_id]);
-        if (!result)
-            throw new Error("Error al actualizar estado");
+        const { error } = yield db_1.supabase
+            .from('pedidos')
+            .update({ estado: nuevo_estado })
+            .eq('id', pedido_id);
+        if (error) {
+            throw new Error(`Error al actualizar estado: ${error.message}`);
+        }
     });
 }

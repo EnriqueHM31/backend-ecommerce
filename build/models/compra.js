@@ -10,19 +10,33 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.ModeloCompra = void 0;
-const Pedido_1 = require("../class/Pedido");
+const config_1 = require("../config");
 const Stripe_1 = require("../constants/Stripe");
+const db_1 = require("../database/db");
 class ModeloCompra {
-    static RealizarCompra(items, customer) {
+    static crearSesion(items, customer) {
         return __awaiter(this, void 0, void 0, function* () {
             const stripe = (0, Stripe_1.obtenerStripe)();
             try {
-                // Crear pedido en tu base de datos
-                const pedido = yield Pedido_1.PedidosService.crearPedido(customer.id, items);
-                if (!pedido.success) {
-                    throw new Error("Error al crear el pedido");
+                // 1. Obtener IDs de productos
+                const productIds = items.map(i => i.product.id);
+                console.log({ productIds });
+                const { data: productos, error: prodError } = yield db_1.supabase
+                    .from('productos_sku')
+                    .select('id,sku, stock, precio')
+                    .in('id', productIds);
+                if (prodError || !productos || productos.length === 0)
+                    throw new Error('No se encontraron productos activos' + JSON.stringify(prodError));
+                // 2. Validar stock
+                for (const item of items) {
+                    const productoDB = productos.find(p => p.id === item.product.id);
+                    if (!productoDB)
+                        throw new Error(`Producto no encontrado o inactivo: ${item.product.producto}`);
+                    if (item.quantity > productoDB.stock) {
+                        throw new Error(`Stock insuficiente para ${productoDB.sku}. Disponible: ${productoDB.stock}, Solicitado: ${item.quantity}`);
+                    }
                 }
-                // Crear sesión de Checkout
+                // 3. Crear sesión de Stripe
                 const session = yield stripe.checkout.sessions.create({
                     payment_method_types: ["card"],
                     mode: "payment",
@@ -32,34 +46,35 @@ class ModeloCompra {
                         allowed_countries: ["MX", "US"],
                     },
                     metadata: {
-                        customer_name: customer.name,
-                        customer_email: customer.email,
+                        customer_id: customer.id,
+                        carrito: JSON.stringify(items.map(i => ({
+                            producto_id: i.product.id,
+                            cantidad: i.quantity
+                        }))),
                     },
-                    line_items: items.map((item) => ({
+                    line_items: items.map(item => ({
                         price_data: {
                             currency: "MXN",
                             product_data: {
                                 name: item.product.producto,
                                 description: item.product.descripcion || "Producto del ecommerce",
                                 images: [item.product.imagen_url],
+                                metadata: {
+                                    producto_id: item.product.id,
+                                }
                             },
                             unit_amount: Math.round(item.product.precio_base * 100),
                         },
                         quantity: item.quantity,
                     })),
-                    success_url: "http://localhost:5173/success?session_id={CHECKOUT_SESSION_ID}",
-                    cancel_url: "http://localhost:5173/cancel",
-                    customer_creation: "always",
+                    success_url: `${config_1.DIRECCION_PAYMENT}/success?session_id={CHECKOUT_SESSION_ID}`,
+                    cancel_url: `${config_1.DIRECCION_PAYMENT}/cancel`,
                 });
-                if (!session) {
-                    return { success: false, data: null, message: "Error al crear la sesión de Stripe" };
-                }
-                console.log("SESSION", session);
-                return { success: true, data: session.url, message: "Compra realizada con éxito" };
+                return { success: true, data: session.url };
             }
             catch (error) {
-                console.error("Error al crear la compra:", error);
-                return { success: false, data: null, message: error || "Error al crear la compra" };
+                console.error("Error al crear sesión de Stripe:", error);
+                return { success: false, message: error.message || "Error al crear la sesión" };
             }
         });
     }

@@ -4,27 +4,24 @@ exports.CartItemsValidation = exports.CartItemsSchema = exports.CartItemSchema =
 const zod_1 = require("zod");
 // Schema del producto
 exports.ProductoSchema = zod_1.z.object({
-    activo: zod_1.z.number(),
     almacenamiento: zod_1.z.string(),
     bateria: zod_1.z.string().nullable(),
     camara: zod_1.z.string().nullable(),
     categoria: zod_1.z.string(),
     color: zod_1.z.string(),
     conectividad: zod_1.z.string().nullable(),
-    created_at: zod_1.z.string(),
     descripcion: zod_1.z.string(),
-    display: zod_1.z.string(),
+    display: zod_1.z.string().nullable(),
     id: zod_1.z.number(),
     imagen_url: zod_1.z.string().url(), // asumo que es url
     marca: zod_1.z.string(),
-    precio_base: zod_1.z.string(),
+    precio_base: zod_1.z.number(),
     procesador: zod_1.z.string(),
     producto: zod_1.z.string(),
     producto_id: zod_1.z.number(),
     ram_especificacion: zod_1.z.string(),
     ram_variante: zod_1.z.string(),
-    recomendado: zod_1.z.number(),
-    sistema_operativo: zod_1.z.string(),
+    sistema_operativo: zod_1.z.string().nullable(),
     sku: zod_1.z.string(),
     stock: zod_1.z.number(),
 });

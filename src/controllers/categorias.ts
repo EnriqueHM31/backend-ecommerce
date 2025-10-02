@@ -1,4 +1,4 @@
-import { ModeloCategorias } from '@/models/categorias';
+import { ModeloCategorias } from '../models/categorias';
 import { Request, Response } from 'express';
 export class CategoriasController {
     static async obtenerCategorias(_req: Request, res: Response) {

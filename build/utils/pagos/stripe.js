@@ -19,7 +19,7 @@ function getAllSessions(stripe, customerId) {
         while (hasMore) {
             const sessions = yield stripe.checkout.sessions.list({
                 customer: customerId,
-                limit: 100,
+                limit: 1000,
                 starting_after: startingAfter,
             });
             allSessions.push(...sessions.data);

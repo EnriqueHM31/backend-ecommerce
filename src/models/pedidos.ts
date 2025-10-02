@@ -1,6 +1,6 @@
-import { obtenerStripe } from '@/constants/Stripe';
-import { supabase } from '@/database/db';
-import { CartItem } from '@/types/producto';
+import { obtenerStripe } from '../constants/Stripe';
+import { supabase } from '../database/db';
+import { CartItem } from '../types/producto';
 import { disminuirStock, obtenerCompras, restaurarStock } from '../utils/consultas/compras';
 
 export interface PedidoItem {

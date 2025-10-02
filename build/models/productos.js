@@ -14,53 +14,203 @@ const db_1 = require("../database/db");
 class ModeloProductos {
     static ListarProductos() {
         return __awaiter(this, void 0, void 0, function* () {
-            console.log("Listar productos");
-            const connection = yield db_1.db.getConnection();
+            console.log('Listar productos');
             try {
-                const [resultProductos] = yield connection.query(`
-                SELECT 
-    sku.id as id,                                    -- ID único para cada producto individual
-    pb.id as producto_id,                            -- Para agrupación en el adapter
-    sku.sku,                                         -- SKU único
-    v.nombre_variante as producto,                   -- Nombre del producto
-    pb.descripcion,
-    cat.nombre as categoria,
-    pb.marca,
-    col.nombre as color,
-    alm.capacidad as almacenamiento,
-    ram.capacidad as ram_variante,
-    v.procesador as ram_especificacion,
-    v.procesador,
-    v.display,
-    v.camara,
-    v.bateria,
-    v.conectividad,
-    v.sistema_operativo,
-    sku.precio_base,
-    sku.stock,
-    sku.imagen_url,
-    v.recomendado,
-    sku.activo,
-    sku.created_at
-FROM productos_sku sku
-INNER JOIN productos_base pb ON sku.producto_base_id = pb.id
-INNER JOIN variantes v ON sku.variante_id = v.id
-INNER JOIN categorias cat ON pb.categoria_id = cat.id
-INNER JOIN colores col ON sku.color_id = col.id
-INNER JOIN almacenamientos alm ON sku.almacenamiento_id = alm.id
-INNER JOIN ram_specs ram ON sku.ram_id = ram.id
-WHERE sku.activo = TRUE AND pb.activo = TRUE AND v.activa = TRUE
-ORDER BY pb.nombre, v.nombre_variante, col.nombre, alm.capacidad;
-                `);
-                if (!resultProductos)
-                    throw new Error('Error obteniendo productos');
-                return { success: true, message: "productos obtenidas correctamente", data: resultProductos };
+                const { data: productos, error } = yield db_1.supabase
+                    .from('productos_sku')
+                    .select(`
+              id,
+              sku,
+              precio,
+              stock,
+              imagen_url,
+              active,
+              productos_base (
+                id,
+                nombre,
+                descripcion,
+                marca,
+                categorias (
+                  nombre
+                )
+              ),
+              variantes (
+                id,
+                nombre_variante,
+                procesador,
+                display,
+                camara,
+                bateria,
+                conectividad,
+                sistema_operativo
+              ),
+              colores (
+                nombre
+              ),
+              almacenamientos (
+                capacidad
+              ),
+              especificaciones_ram (
+                capacidad,
+                tipo
+              )
+            `);
+                if (error)
+                    throw error;
+                return {
+                    success: true,
+                    message: 'Productos obtenidos correctamente',
+                    data: productos
+                };
             }
             catch (error) {
-                return { success: false, message: error || "Error al obtener las productos", data: {} };
+                console.error('Error al obtener productos:', error);
+                return {
+                    success: false,
+                    message: error.message || 'Error al obtener los productos',
+                    data: []
+                };
             }
-            finally {
-                connection.release();
+        });
+    }
+    static topProductos() {
+        return __awaiter(this, void 0, void 0, function* () {
+            console.log('Listar top 5 productos más vendidos');
+            try {
+                // Llamamos a la función SQL
+                const { data: topIds, error: errorTop } = yield db_1.supabase
+                    .rpc('top_productos');
+                if (errorTop)
+                    throw errorTop;
+                if (!topIds || topIds.length === 0)
+                    return { success: true, message: 'No hay productos vendidos', data: [] };
+                console.log({ topIds });
+                const productoIds = topIds.map((p) => p.producto_id);
+                // Traer todos los datos de esos productos
+                const { data: productos, error: errorProductos } = yield db_1.supabase
+                    .from('productos_sku')
+                    .select(`
+        id,
+        sku,
+        stock,
+        imagen_url,
+        active,
+        precio,
+        productos_base (
+          id,
+          nombre,
+          descripcion,
+          marca,
+          categorias (
+            nombre
+          )
+        ),
+        variantes (
+          id,
+          nombre_variante,
+          procesador,
+          display,
+          camara,
+          bateria,
+          conectividad,
+          sistema_operativo
+        ),
+        colores (
+          nombre
+        ),
+        almacenamientos (
+          capacidad
+        ),
+        especificaciones_ram (
+          capacidad,
+          tipo
+        )
+      `)
+                    .in('id', productoIds)
+                    .eq('active', true);
+                if (errorProductos)
+                    throw errorProductos;
+                // Unir total_vendido
+                const productosConTotal = productos.map((p) => {
+                    var _a;
+                    const total_vendido = ((_a = topIds.find((t) => t.producto_id === p.id)) === null || _a === void 0 ? void 0 : _a.total_vendido) || 0;
+                    return Object.assign(Object.assign({}, p), { total_vendido });
+                });
+                return {
+                    success: true,
+                    message: 'Top 5 productos más vendidos obtenidos correctamente',
+                    data: productosConTotal
+                };
+            }
+            catch (error) {
+                console.error('Error al obtener productos:', error);
+                return {
+                    success: false,
+                    message: error.message || 'Error al obtener los productos',
+                    data: []
+                };
+            }
+        });
+    }
+    static ListarProductosActivos() {
+        return __awaiter(this, void 0, void 0, function* () {
+            console.log('Listar productos activos');
+            try {
+                const { data: productos, error } = yield db_1.supabase
+                    .from('productos_sku')
+                    .select(`
+              id,
+              sku,
+              precio,
+              stock,
+              imagen_url,
+              active,
+              productos_base (
+                id,
+                nombre,
+                descripcion,
+                marca,
+                categorias (
+                  nombre
+                )
+              ),
+              variantes (
+                id,
+                nombre_variante,
+                procesador,
+                display,
+                camara,
+                bateria,
+                conectividad,
+                sistema_operativo
+              ),
+              colores (
+                nombre
+              ),
+              almacenamientos (
+                capacidad
+              ),
+              especificaciones_ram (
+                capacidad,
+                tipo
+              )
+            `)
+                    .eq('active', true);
+                if (error)
+                    throw error;
+                return {
+                    success: true,
+                    message: 'Productos obtenidos correctamente',
+                    data: productos
+                };
+            }
+            catch (error) {
+                console.error('Error al obtener productos:', error);
+                return {
+                    success: false,
+                    message: error.message || 'Error al obtener los productos',
+                    data: []
+                };
             }
         });
     }
