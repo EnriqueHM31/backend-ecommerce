@@ -6,7 +6,7 @@ export async function getAllSessions(stripe: any, customerId: string) {
     while (hasMore) {
         const sessions: any = await stripe.checkout.sessions.list({
             customer: customerId,
-            limit: 100,
+            limit: 1000,
             starting_after: startingAfter,
         });
 

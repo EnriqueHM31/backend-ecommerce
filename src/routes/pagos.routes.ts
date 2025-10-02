@@ -7,8 +7,8 @@ export const PagosRouter = Router();
 
 PagosRouter.post("/checkout-session", CompraController.RealizarCompra);
 
-PagosRouter.get("/checkout-session", CompraController.ObtenerCompraIdSession);
+PagosRouter.get("/checkout-session", CompraController.ObtenerCompraPorSessionId);
 
-PagosRouter.get("/pedidos/:email/:id", CompraController.ObtenerComprasPorEmail);
+PagosRouter.get("/pedidos/:id", CompraController.ObtenerCompraDeUnUsuarioPorId);
 
 

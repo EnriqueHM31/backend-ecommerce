@@ -6,7 +6,6 @@ import { CartItem } from "../types/producto";
 import { Request, Response } from "express";
 import { getAllLineItems, getAllSessions } from "../utils/pagos/stripe";
 import { CartItemsValidation } from "../utils/validaciones/cartItems";
-import { StripeValidation } from "../utils/validaciones/sprite";
 import { UsuarioValidation } from "../utils/validaciones/usuario";
 
 interface Customer {
@@ -77,78 +76,116 @@ export class CompraController {
         }
     }
 
-    static async ObtenerCompraIdSession(req: Request, res: Response) {
-        const stripe = obtenerStripe();
 
+    static async ObtenerCompraPorSessionId(req: Request, res: Response) {
         try {
             const { sessionId } = req.query;
 
-            // Validar sessionId
-            const resultadoValidarSessionId = StripeValidation.RevisarSessionId(sessionId as string);
-            if (!resultadoValidarSessionId.success) {
-                res.status(400).json({
-                    success: false,
-                    message: resultadoValidarSessionId.error.message,
-                });
+            if (!sessionId) {
+                res.status(400).json({ success: false, message: "No se proporcionó sessionId" });
                 return;
             }
 
-            // Recuperar sesión con line_items + customer
-            const session = await stripe.checkout.sessions.retrieve(sessionId as string, {
-                expand: ["line_items", "customer", "line_items.data.price.product"],
-            });
+            // 1️⃣ Traer el pedido por sessionId
+            const { data: pedidos, error: pedidosError } = await supabase
+                .from("pedidos")
+                .select("*")
+                .eq("id", sessionId as string);
 
-
-
-            // Verificar si ya se envió factura (usando metadata de Stripe)
-            if (session.metadata?.facturaEnviada === "true") {
-                res.status(200).json({
-                    success: true,
-                    message: "Factura ya fue enviada previamente",
-                    data: session,
-                });
+            if (pedidosError) res.status(400).json({ success: false, error: pedidosError.message });
+            if (!pedidos || pedidos.length === 0) {
+                res.status(404).json({ success: false, message: "No se encontró el pedido" });
                 return;
             }
-            /*
-                        await ModeloFactura.EnviarFacturaPDF({
-                            nombre: session.customer_details?.name || "Cliente",
-                            correo: session.customer_details?.email || "sin-correo@dominio.com",
-                            monto: `$${(session.amount_total === null ? 0 : session.amount_total) / 100} MXN`,
-                            fecha: new Date().toLocaleString("es-MX", { timeZone: "America/Mexico_City" }),
-            
-                            direccion1: session.customer_details?.address?.line1 || "",
-                            direccion2: session.customer_details?.address?.line2 || "",
-                            ciudad: session.customer_details?.address?.city || "",
-                            estado: session.customer_details?.address?.state || "",
-                            cp: session.customer_details?.address?.postal_code || "",
-                            pais: session.customer_details?.address?.country || "",
-            
-                            items: session.line_items?.data.map((item: any) => ({
-                                producto: item.description,
-                                cantidad: item.quantity,
-                                precio: `$${(item.price.unit_amount / 100).toFixed(2)} MXN`,
-                                total: `$${(item.amount_total / 100).toFixed(2)} MXN`,
-                            })) || [],
-                        });
-            */
-            // Marcar como enviada en metadata de Stripe
-            await stripe.checkout.sessions.update(sessionId as string, {
-                metadata: { ...session.metadata, facturaEnviada: "true" },
+
+            const pedido = pedidos[0];
+
+            // 2️⃣ Traer items del pedido
+            const { data: items, error: itemsError } = await supabase
+                .from("pedido_items")
+                .select("*")
+                .eq("pedido_id", sessionId as string);
+
+            if (itemsError) res.status(400).json({ success: false, error: itemsError.message });
+
+            if (!items || items.length === 0) {
+                res.status(404).json({ success: false, message: "No se encontró el pedido" });
+                return;
+            }
+
+            // 3️⃣ Traer productos_sku relacionados
+            const productoSkuIds = items.map(i => i.producto_id);
+            const { data: productosSku, error: skuError } = await supabase
+                .from("productos_sku")
+                .select(`
+              id,
+              sku,
+              stock,
+              imagen_url,
+              active,
+              precio,
+              productos_base(id,nombre,descripcion,marca,categorias(nombre)),
+              variantes(id,nombre_variante,procesador,display,camara,bateria,conectividad,sistema_operativo),
+              colores(nombre),
+              almacenamientos(capacidad),
+              especificaciones_ram(capacidad,tipo)
+            `)
+                .in("id", productoSkuIds);
+
+            if (skuError) res.status(400).json({ success: false, error: skuError.message });
+
+            if (!productosSku || productosSku.length === 0) {
+                res.status(404).json({ success: false, message: "No se encontró el pedido" });
+                return;
+            }
+
+            // 4️⃣ Mapear productos en items
+            const itemsConProductos = items.map(item => {
+                const sku = productosSku.find(p => p.id === item.producto_id);
+                return {
+                    ...item,
+                    cantidad: item.cantidad ?? 1,
+                    producto: sku
+                };
             });
 
-            res.status(200).json({
-                success: true,
-                message: "Factura enviada exitosamente",
-                data: session,
-            });
+            // 5️⃣ Traer dirección del pedido
+            const { data: direcciones, error: direccionError } = await supabase
+                .from("direcciones")
+                .select("*")
+                .eq("id_direccion", pedido.direccion_envio_id);
 
-        } catch (error) {
-            console.error("Error al obtener sesión de Stripe:", error);
-            res.status(500).json({
-                success: false,
-                message: "Error al obtener la sesión de compra",
-                data: null,
-            });
+            if (direccionError) res.status(400).json({ success: false, error: direccionError.message });
+
+            const direccion = direcciones?.[0] ?? null;
+
+
+            const { data: usuario, error: usuarioError } = await supabase
+                .from("usuarios")
+                .select("*")
+                .eq("id_usuario", pedido.usuario_id);
+
+            if (usuarioError) res.status(400).json({ success: false, error: usuarioError.message });
+            const usuarioDB = usuario?.[0] ?? null;
+            // 6️⃣ Construir objeto final
+            const pedidoConItemsYDireccion = {
+                ...pedido,
+                fecha_pedido: new Date(pedido.fecha_pedido + 'Z').toLocaleString('es-MX', {
+                    timeZone: 'America/Mexico_City'
+                }),
+                items: itemsConProductos,
+                direccion,
+                usuario: usuarioDB
+            };
+
+
+
+
+            res.status(200).json({ success: true, data: pedidoConItemsYDireccion });
+
+        } catch (err: any) {
+            console.error(err);
+            res.status(500).json({ success: false, message: "Error interno del servidor" });
         }
     }
 
@@ -230,4 +267,114 @@ export class CompraController {
             });
         }
     }
+
+    static async ObtenerCompraDeUnUsuarioPorId(req: Request, res: Response) {
+        try {
+            const { id } = req.params;
+
+            // 1️⃣ Traer pedidos del usuario
+            const { data: pedidos, error: pedidosError } = await supabase
+                .from("pedidos")
+                .select("*")
+                .eq("usuario_id", id);
+
+            if (pedidosError) res.status(400).json({ error: pedidosError.message });
+            if (!pedidos || pedidos.length === 0) {
+                res.status(404).json({ message: "No se encontraron pedidos" });
+                return;
+            }
+
+            // 2️⃣ Traer items de todos los pedidos
+            const pedidoIds = pedidos.map(p => p.id);
+            const { data: items, error: itemsError } = await supabase
+                .from("pedido_items")
+                .select("*")
+                .in("pedido_id", pedidoIds);
+
+            if (itemsError) res.status(400).json({ error: itemsError.message });
+
+            if (!items || items.length === 0) {
+                res.status(404).json({ message: "No se encontraron items" });
+                return;
+            }
+
+            // 3️⃣ Traer productos_sku relacionados
+            const productoSkuIds = items.map(i => i.producto_id);
+            const { data: productosSku, error: skuError } = await supabase
+                .from("productos_sku")
+                .select(`
+              id,
+              sku,
+              stock,
+              imagen_url,
+              active,
+              precio,
+              productos_base(id,nombre,descripcion,marca,categorias(nombre)),
+              variantes(id,nombre_variante,procesador,display,camara,bateria,conectividad,sistema_operativo),
+              colores(nombre),
+              almacenamientos(capacidad),
+              especificaciones_ram(capacidad,tipo)
+            `)
+                .in("id", productoSkuIds);
+
+            if (skuError) {
+                res.status(400).json({ error: skuError.message });
+                return;
+            }
+            // 4️⃣ Mapear productos en items
+            const itemsConProductos = items.map(item => {
+                const sku = productosSku.find(p => p.id === item.producto_id);
+                return {
+                    ...item,
+                    cantidad: item.cantidad ?? 1,
+                    producto: sku
+                };
+            });
+
+            // 5️⃣ Traer todas las direcciones relacionadas con los pedidos
+            const direccionIds = pedidos.map(p => p.direccion_envio_id);
+            console.log({ direccionIds });
+            const { data: direcciones, error: direccionError } = await supabase
+                .from("direcciones") // ajusta el nombre de la tabla si es distinto
+                .select("*")
+                .in("id_direccion", direccionIds);
+
+            if (direccionError) res.status(400).json({ error: direccionError.message });
+
+            const usuariosIds = pedidos.map(p => p.usuario_id);
+            const { data: usuarios, error: usuarioError } = await supabase
+                .from("usuarios")
+                .select("*")
+                .in("id_usuario", usuariosIds);
+
+            if (usuarioError) res.status(400).json({ error: usuarioError.message });
+
+
+            // 6️⃣ Agrupar items y agregar dirección a cada pedido
+            const pedidosConItemsYDireccion = pedidos.map(pedido => ({
+                ...pedido,
+                items: itemsConProductos.filter(item => item.pedido_id === pedido.id),
+                direccion: direcciones?.find(d => d.id_direccion === pedido.direccion_envio_id) ?? null,
+                usuario: usuarios?.find(u => u.id_usuario === pedido.usuario_id) ?? null
+            }));
+
+            const pedidosConHoraLocal = pedidosConItemsYDireccion?.map(pedido => ({
+                ...pedido,
+                fecha_pedido: new Date(pedido.fecha_pedido + 'Z').toLocaleString('es-MX', {
+                    timeZone: 'America/Mexico_City'
+                })
+            }));
+
+            res.status(200).json({ success: true, data: pedidosConHoraLocal });
+
+        } catch (err: any) {
+            console.error(err);
+            res.status(500).json({ error: "Error interno del servidor" });
+        }
+    }
+
+
+
+
+
 }

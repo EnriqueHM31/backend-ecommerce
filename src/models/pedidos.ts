@@ -1,6 +1,7 @@
+import { obtenerStripe } from '@/constants/Stripe';
 import { supabase } from '@/database/db';
-import { disminuirStock, obtenerCompras, restaurarStock } from '../utils/consultas/compras';
 import { CartItem } from '@/types/producto';
+import { disminuirStock, obtenerCompras, restaurarStock } from '../utils/consultas/compras';
 
 export interface PedidoItem {
     producto_id: string;
@@ -50,8 +51,9 @@ export class PedidosModel {
      * Crea un nuevo pedido con validaciones de stock y usuario
      */
     static async crearPedido(data: CrearPedidoData): Promise<PedidoResponse> {
-        const { user_id, cart_items, direccion_envio, checkout_session_id } = data;
+        const { checkout_session_id } = data;
 
+        const stripe = obtenerStripe();
         try {
             // 1. Verificar si ya existe pedido para esa sesión
             const { data: pedidoExistente, error: errorBuscar } = await supabase
@@ -68,11 +70,17 @@ export class PedidosModel {
                 };
             }
 
+            const session = await stripe.checkout.sessions.retrieve(checkout_session_id, {
+                expand: ['line_items', 'customer']
+            });
+
+            const line_items = session.metadata?.carrito;
+
             // 2. Verificar usuario
             const { data: usuario, error: errorUsuario } = await supabase
                 .from('usuarios')
                 .select('id_usuario')
-                .eq('id_usuario', user_id)
+                .eq('id_usuario', session.metadata?.customer_id)
                 .single();
 
             if (errorUsuario || !usuario) {
@@ -82,8 +90,12 @@ export class PedidosModel {
                 };
             }
 
+            console.log({ hola: JSON.parse(line_items ?? '[]') })
+
             // 3. Obtener todos los productos de una sola vez
-            const productIds = cart_items.map((i: { id: string }) => i.id);
+            const productIds = JSON.parse(line_items ?? '[]').map((i: { producto_id: string }) => i.producto_id);
+
+            console.log({ productIds })
             const { data: productosDB, error: errorProductosDB } = await supabase
                 .from('productos_sku')
                 .select('id, sku, precio, stock')
@@ -96,8 +108,10 @@ export class PedidosModel {
                 };
             }
 
+            console.log({ productosDB })
+
             // 4. Validar stock y preparar items
-            const { total, itemsProcesados, error: errorValidacion } = await this.validarStockYPrepararItems(cart_items, productosDB);
+            const { total, itemsProcesados, error: errorValidacion } = await this.validarStockYPrepararItems(JSON.parse(line_items ?? '[]'), productosDB);
 
             if (errorValidacion) {
                 return {
@@ -106,9 +120,28 @@ export class PedidosModel {
                 };
             }
 
-            // 5. Insertar el domicilio
-            const { data: domicilio_id } = await this.InsertarDomicilio(direccion_envio.line1, direccion_envio.line2, direccion_envio.city, direccion_envio.state, direccion_envio.postal_code, direccion_envio.country, user_id);
+            console.log({ itemsProcesados })
+            console.log({ total })
 
+            const line1 = session.customer_details?.address?.line1;
+            const line2 = session.customer_details?.address?.line2;
+            const city = session.customer_details?.address?.city;
+            const state = session.customer_details?.address?.state;
+            const postal_code = session.customer_details?.address?.postal_code;
+            const country = session.customer_details?.address?.country;
+            const user_id = session.metadata?.customer_id;
+
+            if (!line1 || !line2 || !city || !state || !postal_code || !country || !user_id) {
+                return {
+                    success: false,
+                    message: 'Error al obtener datos de cliente'
+                };
+            }
+
+            // 5. Insertar el domicilio
+            const { data: domicilio_id } = await this.InsertarDomicilio(line1, line2, city, state, postal_code, country, user_id);
+
+            console.log({ domicilio_id });
             // 5. Crear el pedido principal
             const { data: pedido, error: errorPedido } = await supabase
                 .from('pedidos')
@@ -125,6 +158,8 @@ export class PedidosModel {
 
             if (errorPedido) throw errorPedido;
             const pedido_id = pedido.id;
+
+            console.log({ pedido });
 
             // 6. Insertar items
             const { error: errorItems } = await supabase.from('pedido_items').insert(
@@ -165,36 +200,36 @@ export class PedidosModel {
      * Valida stock y prepara los items del pedido
      */
     private static async validarStockYPrepararItems(
-        cart_items: Array<{ id: string; quantity: number }>,
+        cart_items: Array<{ producto_id: string; cantidad: number }>,
         productosDB: any[]
     ): Promise<{ total: number; itemsProcesados: PedidoItem[]; error?: string }> {
         let total = 0;
         const itemsProcesados: PedidoItem[] = [];
 
         for (const item of cart_items) {
-            const producto_db = productosDB.find(p => p.id === item.id);
+            const producto_db = productosDB.find(p => p.id === item.producto_id);
             if (!producto_db) {
-                return { total: 0, itemsProcesados: [], error: `Producto no válido: ${item.id}` };
+                return { total: 0, itemsProcesados: [], error: `Producto no válido: ${item.producto_id}` };
             }
 
-            const quantity = item.quantity;
+            const cantidad = item.cantidad;
 
             // Verificación de stock
-            if (quantity > producto_db.stock) {
+            if (cantidad > producto_db.stock) {
                 return {
                     total: 0,
                     itemsProcesados: [],
-                    error: `Stock insuficiente para ${producto_db.sku}. Disponible: ${producto_db.stock}, Solicitado: ${quantity}`
+                    error: `Stock insuficiente para ${producto_db.sku}. Disponible: ${producto_db.stock}, Solicitado: ${cantidad}`
                 };
             }
 
             const precio_unitario = parseFloat(Number(producto_db.precio).toFixed(2));
-            const subtotal = precio_unitario * quantity;
+            const subtotal = precio_unitario * cantidad;
             total += subtotal;
 
             itemsProcesados.push({
                 producto_id: producto_db.id,
-                cantidad: quantity,
+                cantidad: cantidad,
                 precio_unitario,
                 subtotal,
             });
@@ -385,7 +420,6 @@ export class PedidosModel {
             }));
 
 
-            console.log({ pedidosConHoraLocal })
 
 
             if (error) throw error;
